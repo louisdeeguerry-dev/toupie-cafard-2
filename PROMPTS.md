@@ -107,3 +107,17 @@ Chaque échange sur le projet est consigné ici : prompt optimisé + ce qui a é
   (sons Kenney CC0, mains glb MIT, icônes, kit presse, outils capsules Steam / vidéo, scripts de build).
 - 2 nouveaux dépôts vérifiés ajoutés : webxr-input-profiles, simplex-noise.js.
 - Limite : dépôt privé `github-dashboard` et étoiles GitHub de l'utilisateur non lisibles depuis la session.
+
+---
+
+## 2026-11-24 — Accès au dépôt privé github-dashboard
+
+**Prompt optimisé**
+> Rôle : assistant de pilotage de projet.
+> Objectif : m'expliquer comment redonner à Claude l'accès au dépôt privé
+> `louisdeeguerry-dev/github-dashboard`, et l'intégrer au catalogue une fois accessible.
+> Critère de réussite : contenu du dépôt lu et décrit dans `RESSOURCES.md`, sans le modifier.
+
+**Réalisé**
+- Accès obtenu directement (rattachement en lecture à la session) : aucune action requise de l'utilisateur.
+- Dépôt lu (dernier commit `2127b1a`) et décrit dans `RESSOURCES.md`. Dépôt non modifié.

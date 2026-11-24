@@ -13,7 +13,7 @@
 | `toupie-cafards/toupie-cafards.github.io` | Jeu principal « Toupie contre Cafards » : Three.js, Capacitor (Android/iOS), build Steam & CrazyGames, kit presse, i18n |
 | `louisdeeguerry-dev/toupie-cafards` | Ancienne adresse (page de redirection « a déménagé ») |
 | `louisdeeguerry-dev/voxel-sword` | Prototype « Voxel Sword » |
-| `louisdeeguerry-dev/github-dashboard` | Tableau de bord GitHub (privé) |
+| `louisdeeguerry-dev/github-dashboard` | Tableau de bord (privé) des stats de dépôts GitHub : étoiles, forks, abonnés, issues/PR, rafraîchi toutes les heures. Node ≥ 20 sans dépendance, source GitHub REST + secours ecosyste.ms, tests `node --test`. Réutilisable pour suivre la popularité de Toupie Cafard 2 (réglage `REPOS`). |
 
 Briques déjà utilisées dans ces projets : `three.module.js`, `GLTFLoader.js`, `BufferGeometryUtils.js`,
 Capacitor 8 (app, haptics, splash-screen, status-bar, assets), Electron + SteamPipe.
