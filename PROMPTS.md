@@ -70,5 +70,6 @@ Chaque échange sur le projet est consigné ici : prompt optimisé + ce qui a é
 **Réalisé**
 - Contrôles : dépôt `toupie-cafard-2` introuvable (ni `louisdeeguerry-dev`, ni `toupie-cafards`),
   extension Chrome et ordinateur toujours non reliés à cette session cloud.
-- Sauvegarde de secours : projet poussé sur une branche dédiée `toupie-cafard-2` du dépôt
-  `louisdeeguerry-dev/toupie-cafards` (branche séparée, contenu existant intact).
+- Tentative de sauvegarde sur une branche séparée de `louisdeeguerry-dev/toupie-cafards` :
+  refusée par les permissions de la session (rien n'a été modifié sur GitHub).
+- Sauvegarde de secours fournie en téléchargement : archive `toupie-cafard-2.zip`.
