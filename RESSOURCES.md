@@ -8,6 +8,9 @@
 
 ## 0. Dépôts existants de l'utilisateur (à conserver tels quels)
 
+> Récupérés automatiquement à chaque session à côté du projet (voir `CLAUDE.md`, règle 0).
+> Analyse détaillée du jeu 1 : `docs/ANALYSE-TOUPIE-1.md`.
+
 | Dépôt | Contenu |
 |---|---|
 | `toupie-cafards/toupie-cafards.github.io` | Jeu principal « Toupie contre Cafards » : Three.js, Capacitor (Android/iOS), build Steam & CrazyGames, kit presse, i18n |
@@ -49,6 +52,7 @@ et [jwagner/simplex-noise.js](https://github.com/jwagner/simplex-noise.js) (brui
 - [BabylonJS/Babylon.js](https://github.com/BabylonJS/Babylon.js) — moteur 3D web complet (éditeur, physique, XR)
 - [playcanvas/engine](https://github.com/playcanvas/engine) — moteur WebGL/WebGPU très optimisé mobile
 - [yandeu/enable3d](https://github.com/yandeu/enable3d) — Three.js + physique Ammo prêts à l'emploi
+- ⭐ [vitejs/vite](https://github.com/vitejs/vite) — outil de build léger : code découpé en modules, rechargement instantané (piste pour sortir du fichier unique du jeu 1)
 
 ### 1.2 Moteurs & frameworks web 2D / jeux légers
 - [phaserjs/phaser](https://github.com/phaserjs/phaser) · exemples : [phaserjs/examples](https://github.com/phaserjs/examples)

@@ -121,3 +121,26 @@ Chaque échange sur le projet est consigné ici : prompt optimisé + ce qui a é
 **Réalisé**
 - Accès obtenu directement (rattachement en lecture à la session) : aucune action requise de l'utilisateur.
 - Dépôt lu (dernier commit `2127b1a`) et décrit dans `RESSOURCES.md`. Dépôt non modifié.
+
+---
+
+## 2026-11-24 — Rattachement automatique et analyse du jeu 1
+
+**Prompt optimisé**
+> Rôle : directeur technique / game designer qui prépare une suite.
+> Contexte : Toupie Cafard 2 sera nettement plus complexe que Toupie contre Cafards, mais lié à lui.
+> Objectifs :
+> 1. Rendre automatique, à chaque session, l'accès à tous mes dépôts (dont `github-dashboard`) et à leurs
+>    assets, pour travailler vite avec le maximum d'informations.
+> 2. Étudier en profondeur le jeu 1 : son code, ses systèmes, son historique, comment on a progressé.
+> Livrables : mécanisme de récupération automatique testé ; document d'analyse du jeu 1 (systèmes,
+> chronologie, architecture, réutilisable, à faire autrement).
+> Contrainte : ne rien modifier dans les dépôts existants ; ne pas inventer le concept du jeu 2.
+
+**Réalisé**
+- Hook de démarrage `.claude/hooks/recuperer-depots.sh` + `.claude/settings.json` : clone/mise à jour des
+  4 dépôts liés à chaque session (testé : 4/4 récupérés). Règle 0 ajoutée dans `CLAUDE.md`
+  (rattachement `add_repo` automatique si un dépôt privé manque).
+- `docs/ANALYSE-TOUPIE-1.md` : jeu, chiffres clés, chronologie des 128 commits, architecture, carte du
+  code, éléments réutilisables et pistes pour le jeu 2.
+- `RESSOURCES.md` : ajout de vitejs/vite (vérifié).
