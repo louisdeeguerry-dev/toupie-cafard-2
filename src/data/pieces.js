@@ -73,6 +73,8 @@ export const PIECES = [
     niveaux: { elan: 6, glisse: 5, equilibre: -8, endurance: -3 }, desc: 'Très fine : énormément de vitesse, mais énormément moins d\'équilibre.' },
   { id: 'pointe-foreuse', slot: 'pointe', nom: 'Pointe foreuse', rarete: 'rare', forme: 'foreuse', couleur: 0xb8860b,
     niveaux: { equilibre: 7, inertie: 2, elan: -5, endurance: -4 }, desc: 'Plantée dans le bureau : énormément de stabilité, mais lente et vite fatiguée.' },
+  { id: 'pointe-diamant', slot: 'pointe', nom: 'Pointe diamant', rarete: 'legendaire', forme: 'diamant', couleur: 0xbfefff,
+    niveaux: { endurance: 6, glisse: 4, poids: -5, lames: -5 }, desc: 'Ne s\'use presque pas et glisse à merveille, mais la toupie devient légère et inoffensive.' },
   { id: 'pointe-bille', slot: 'pointe', nom: 'Pointe bille', rarete: 'epique', forme: 'bille', couleur: 0xecf0f1,
     niveaux: { endurance: 5, glisse: 3, lames: -4, equilibre: -4 }, desc: 'Roule sans frotter : tourne très longtemps, mais tient mal et frappe mollement.' },
 
@@ -117,6 +119,8 @@ export const PIECES = [
     niveaux: { elan: 5, puissance: -5 }, desc: 'Lance fort et loin, mais prend la place de l\'engrenage.' },
   { id: 'ressort-catapulte', slot: 'ressort', nom: 'Ressort catapulte', rarete: 'epique', forme: 'catapulte', couleur: 0xd35400,
     niveaux: { elan: 8, puissance: -6, precision: -2 }, desc: 'Propulse la toupie comme un boulet, mais elle tourne peu.' },
+  { id: 'ressort-detente', slot: 'ressort', nom: 'Ressort à double détente', rarete: 'legendaire', forme: 'detente', couleur: 0xffc531,
+    niveaux: { elan: 5, puissance: 5, precision: -6, equilibre: -4 }, desc: 'Lance fort ET fait tourner vite, mais la jauge devient capricieuse et la toupie part de travers.' },
 ];
 
 export const PIECE = Object.fromEntries(PIECES.map(p => [p.id, p]));
@@ -125,16 +129,27 @@ export const DEPART = {
   engrenage: 'engrenage-standard', ressort: 'ressort-standard',
 };
 
-// Tirage d'une boîte mystère : rareté d'abord, puis un objet au hasard de cette rareté.
-// Objets : les pièces (hors pièces de départ, doublons possibles = niveaux) et les terrains de duel pas encore possédés
-// (rares à légendaires, jamais en double). terrainsPossedes : liste d'ids.
-export function tirerBoite(terrainsPossedes = [], rand = Math.random) {
-  const total = Object.values(RARETES).reduce((a, r) => a + r.chance, 0);
-  let x = rand() * total, rarete = 'commune';
-  for (const [id, r] of Object.entries(RARETES)) { if ((x -= r.chance) < 0) { rarete = id; break; } }
-  const pool = [
-    ...PIECES.filter(p => p.rarete === rarete && !Object.values(DEPART).includes(p.id)).map(piece => ({ type: 'piece', piece })),
-    ...TERRAINS.filter(t => t.rarete === rarete && !terrainsPossedes.includes(t.id)).map(terrain => ({ type: 'terrain', terrain })),
-  ];
-  return pool[Math.floor(rand() * pool.length)];
+// ---------------------------------------------------------------- Boîte mystère
+// 1. On tire une rareté (55 / 30 / 12 / 3 %).
+// 2. Commune, rare, épique : une pièce de cette rareté (doublons possibles = niveaux de pièce).
+// 3. Légendaire : la moitié du temps un TERRAIN (tant qu'il en reste à trouver ; tous les terrains ont la même chance,
+//    jamais en double), sinon un autre lot légendaire : une pièce légendaire ou un coffre d'écrous.
+// GARANTIE : la 30e boîte d'affilée sans lot légendaire est forcément légendaire.
+export const GARANTIE_LEGENDAIRE = 30;
+export const PART_TERRAINS = 0.5;
+export const COFFRE = { id: 'coffre-ecrous', nom: 'Coffre d\'écrous', icone: '🧰', ecrous: 300, desc: 'De quoi acheter 3 boîtes mystère.' };
+
+export function tirerBoite(terrainsPossedes = [], { garantie = false } = {}, rand = Math.random) {
+  let rarete = 'legendaire';
+  if (!garantie) {
+    const total = Object.values(RARETES).reduce((a, r) => a + r.chance, 0);
+    let x = rand() * total;
+    for (const [id, r] of Object.entries(RARETES)) { if ((x -= r.chance) < 0) { rarete = id; break; } }
+  }
+  const pieces = PIECES.filter(p => p.rarete === rarete && !Object.values(DEPART).includes(p.id)).map(piece => ({ type: 'piece', piece, rarete }));
+  if (rarete !== 'legendaire') return pieces[Math.floor(rand() * pieces.length)];
+  const terrains = TERRAINS.filter(t => t.rarete && !terrainsPossedes.includes(t.id));
+  if (terrains.length && rand() < PART_TERRAINS) return { type: 'terrain', terrain: terrains[Math.floor(rand() * terrains.length)], rarete };
+  const autres = [...pieces, { type: 'coffre', coffre: COFFRE, rarete }];
+  return autres[Math.floor(rand() * autres.length)];
 }

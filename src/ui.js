@@ -1,5 +1,5 @@
 // Interface : atelier, boîte mystère, recherche de partie, HUD, bilan + boutique, fin de partie.
-import { SLOTS, PIECES, PIECE, RARETES, tirerBoite, niveauxPiece, multiplicateurNiveau, NIVEAU_PIECE_MAX } from './data/pieces.js';
+import { SLOTS, PIECES, PIECE, RARETES, tirerBoite, niveauxPiece, multiplicateurNiveau, NIVEAU_PIECE_MAX, GARANTIE_LEGENDAIRE } from './data/pieces.js';
 import { TERRAINS, TERRAIN } from './data/terrains.js';
 import { BUREAU, STAT_ACHATS, PRIORITE, MANCHE_PRIORITE } from './data/boutique.js';
 import { PARTIE } from './config.js';
@@ -72,6 +72,9 @@ export function creerAtelier(save, { onChange, onJouer, onBoite }) {
     rendreStats();
     $('bilanCollection').textContent = `${Object.keys(save.collection).length}/${PIECES.length} pièces`;
     $('ouvrirBoite').textContent = `📦 Ouvrir (${save.boites})`;
+    const reste = GARANTIE_LEGENDAIRE - save.boitesSansLegendaire;
+    $('garantie').innerHTML = `✨ Lot légendaire garanti ${reste <= 1 ? '<b>à la prochaine boîte</b>' : `dans <b>${reste}</b> boîtes au plus`}
+      — pièce légendaire, coffre d'écrous ou terrain de duel (${TERRAINS.filter(t => t.rarete && !save.terrains.includes(t.id)).length} terrain(s) à trouver, même chance chacun).`;
     $('ouvrirBoite').disabled = save.boites <= 0;
     $('acheterBoite').textContent = `+1 📦 ${PRIX_BOITE} ${MONNAIE.icone}`;
     $('acheterBoite').disabled = save.ecrous < PRIX_BOITE;
@@ -88,13 +91,13 @@ export function creerAtelier(save, { onChange, onJouer, onBoite }) {
       const verrou = t.rarete && !save.terrains.includes(t.id), r = t.rarete && RARETES[t.rarete];
       return `<button class="terrain ${save.terrain === t.id ? 'choisi' : ''}" data-terrain="${t.id}" ${verrou ? 'disabled' : ''} title="${esc(t.desc)}">
         <span class="ic">${t.icone}</span><span><b>${t.nom}</b>${r ? ` <span class="rar" style="color:${r.couleur}">${r.nom}</span>` : ''}<br>
-        <span class="petit">${verrou ? '🔒 à trouver dans les boîtes mystère' : esc(t.desc)}</span></span></button>`;
+        <span class="petit">${verrou ? '🔒 lot légendaire des boîtes mystère' : esc(t.desc)}</span></span></button>`;
     }).join('');
     const avec = save.terrain !== 'aucun';
     $('terrainInfo').innerHTML = `Contre les cafards, le bureau est toujours neutre. ${avec
       ? `<b>Avec un terrain, tu commences la partie à ${PARTIE.argentAvecTerrain} 💰</b> (au lieu de ${PARTIE.argentSansTerrain}).`
       : `<b>Sans terrain, tu commences avec ${PARTIE.argentSansTerrain} 💰.</b> Choisir un terrain coûte cet argent de départ.`}
-      Si ton adversaire a aussi un terrain, c'est la <b>priorité de terrain</b> qui décide : des points achetés en partie à partir de la manche ${MANCHE_PRIORITE}, secrets pour l'adversaire. Le plus de points impose son terrain ; à égalité, bureau neutre. Les terrains se trouvent dans les boîtes mystère (rares à légendaires, jamais en double).`;
+      Si ton adversaire a aussi un terrain, c'est la <b>priorité de terrain</b> qui décide : des points achetés en partie à partir de la manche ${MANCHE_PRIORITE}, secrets pour l'adversaire. Le plus de points impose son terrain ; à égalité, bureau neutre. Les terrains sont des lots légendaires des boîtes mystère (même chance pour chacun, jamais en double).`;
   }
 
   function rendreStats() {
@@ -160,10 +163,22 @@ export function ouvrirBoite(save, { onFini }) {
   carton.onclick = () => {
     carton.onclick = null;
     save.boites--;
-    const lot = tirerBoite(save.terrains);
+    const lot = tirerBoite(save.terrains, { garantie: save.boitesSansLegendaire >= GARANTIE_LEGENDAIRE - 1 });
+    save.boitesSansLegendaire = lot.rarete === 'legendaire' ? 0 : save.boitesSansLegendaire + 1;
     carton.className = 'carton ouvert';
     son('boite');
     $('boiteAide').textContent = '';
+    if (lot.type === 'coffre') {
+      const c = lot.coffre, r = RARETES.legendaire;
+      save.ecrous += c.ecrous;
+      return setTimeout(() => {
+        $('revelation').innerHTML = `<div class="panneau revelation" style="border-color:${r.couleur};box-shadow:0 0 40px ${r.couleur}66">
+          <div class="rar" style="color:${r.couleur};font-weight:900">${r.nom}</div>
+          <div class="grand">${c.icone} ${esc(c.nom)}</div><div class="desc">+${c.ecrous} ${MONNAIE.icone} ${MONNAIE.nom} — ${esc(c.desc)}</div>
+          <div class="actions" style="margin-top:14px"><button class="btn" id="boiteGarder">Super !</button></div></div>`;
+        $('boiteGarder').onclick = () => { montrer('boite', false); onFini(c, false); };
+      }, 450);
+    }
     if (lot.type === 'terrain') {
       const t = lot.terrain, r = RARETES[t.rarete];
       save.terrains.push(t.id);

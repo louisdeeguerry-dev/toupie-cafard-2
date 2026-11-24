@@ -21,6 +21,7 @@ function neuf() {
     niveauxPieces: {}, // niveau choisi pour chaque pièce (doublons)
     terrain: 'aucun', // terrain de duel choisi
     terrains: [], // terrains de duel trouvés dans les boîtes mystère
+    boitesSansLegendaire: 0, // compteur de la garantie (légendaire assuré à la 30e boîte)
   };
 }
 

@@ -31,6 +31,15 @@ function pointe(p) {
       }
       break;
     }
+    case 'diamant': {
+      const d = new THREE.Mesh(new THREE.OctahedronGeometry(0.008, 0), mat(p.couleur, { metalness: 0.2, roughness: 0.05, emissive: 0x2a5a6a, emissiveIntensity: 0.4 }));
+      d.scale.y = 1.3; d.position.y = 0.0104;
+      const col = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.006, 0.006, 20), mat(0xd4af37));
+      col.position.y = 0.017;
+      g.add(d, col);
+      h = 0.02;
+      break;
+    }
     case 'bille': {
       const b = new THREE.Mesh(new THREE.SphereGeometry(0.007, 20, 14), mat(p.couleur, { metalness: 0.9, roughness: 0.1 }));
       b.position.y = 0.007;

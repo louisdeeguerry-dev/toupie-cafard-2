@@ -257,3 +257,23 @@ Chaque échange sur le projet est consigné ici : prompt optimisé + ce qui a é
   pièces de même rareté, jamais en double (≈ 2,4 %, 1,2 % et 0,6 % par boîte avant de les avoir).
 - Sauvegarde : liste des terrains possédés ; un terrain non possédé ne peut pas être choisi.
 - Tests : `tests/equilibre.mjs` (égalité neutre, terrains sans doublon), atelier et partie complète dans le navigateur : 0 erreur.
+
+---
+
+## 2026-11-24 — Garantie toutes les 30 boîtes, lots légendaires variés, terrains à chance égale
+
+**Prompt optimisé**
+> Rôle : game designer (économie du gacha) + développeur.
+> Objectifs :
+> 1. Ajouter une **garantie** : un lot légendaire assuré toutes les 30 boîtes.
+> 2. Les lots légendaires ne doivent **pas être uniquement des terrains** : prévoir d'autres récompenses légendaires.
+> 3. **Tous les terrains ont la même chance** de sortir (plus de terrain rare / épique / légendaire).
+> Contraintes : terrains toujours sans doublon ; nouvelles pièces équilibrées (somme des niveaux nulle).
+
+**Réalisé**
+- Terrains : tous légendaires, chance égale entre eux (vérifiée par test), jamais en double.
+- Lot légendaire : 50 % terrain (s'il en reste), sinon pièce légendaire ou **Coffre d'écrous** (+300 🔩).
+- 2 nouvelles pièces légendaires équilibrées : **Pointe diamant** et **Ressort à double détente** (36 pièces au total).
+- **Garantie** : la 30e boîte d'affilée sans légendaire est légendaire ; compteur sauvegardé et affiché à l'atelier.
+- Tests : équilibrage, égalité des terrains, garantie toujours légendaire avec des lots variés ; 6 boîtes garanties
+  ouvertes dans le navigateur (pièces, terrains, doublon) ; 0 erreur. Médiane : 1er terrain en ~30 boîtes, les 3 en ~110.

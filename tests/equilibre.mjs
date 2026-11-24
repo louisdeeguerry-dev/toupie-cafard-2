@@ -18,10 +18,25 @@ ok(terrainDuel(a, c).terrain === 'rebond', 'seul terrain choisi');
 ok(terrainDuel(c, c).terrain === null, 'aucun terrain = bureau neutre');
 ok(terrainDuel({ ...a, niveaux: { priorite: 2 } }, { ...b, niveaux: { priorite: 2 } }).terrain === null, 'égalité de priorité = bureau neutre');
 // Boîtes : les terrains sortent seulement en rare+, jamais en double
-import { tirerBoite } from '../src/data/pieces.js';
-const vus = {};
-for (let i = 0; i < 20000; i++) { const l = tirerBoite([]); if (l.type === 'terrain') vus[l.terrain.id] = (vus[l.terrain.id] || 0) + 1; }
-ok(vus.rebond && vus.collant && vus.cuve && !vus.aucun, 'les 3 terrains sortent des boîtes : ' + JSON.stringify(vus));
+import { tirerBoite, GARANTIE_LEGENDAIRE } from '../src/data/pieces.js';
+const vus = {}, N = 200000;
+for (let i = 0; i < N; i++) { const l = tirerBoite([]); if (l.type === 'terrain') vus[l.terrain.id] = (vus[l.terrain.id] || 0) + 1; }
+ok(vus.rebond && vus.collant && vus.cuve && !vus.aucun, 'les 3 terrains sortent des boîtes');
+const ch = Object.values(vus), ecart = (Math.max(...ch) - Math.min(...ch)) / (N / 200);
+ok(ecart < 0.3, 'même chance pour chaque terrain : ' + JSON.stringify(vus));
 for (let i = 0; i < 5000; i++) { const l = tirerBoite(['rebond', 'collant', 'cuve']); if (l.type === 'terrain') { ok(false, 'terrain en double'); break; } }
+// Garantie : une boîte garantie est toujours légendaire, et peut donner autre chose qu'un terrain
+const garanties = Array.from({ length: 2000 }, () => tirerBoite([], { garantie: true }));
+ok(garanties.every(l => l.rarete === 'legendaire'), 'boîte garantie = toujours légendaire');
+ok(garanties.some(l => l.type === 'piece') && garanties.some(l => l.type === 'coffre') && garanties.some(l => l.type === 'terrain'), 'lots légendaires variés (pièces, coffre, terrains)');
+// Simulation joueur : boîtes ouvertes avant de trouver tous les terrains (avec la garantie de ${GARANTIE_LEGENDAIRE})
+const essais = [];
+for (let e = 0; e < 2000; e++) {
+  let poss = [], sans = 0, n = 0;
+  while (poss.length < 3) { n++; const l = tirerBoite(poss, { garantie: sans >= GARANTIE_LEGENDAIRE - 1 }); sans = l.rarete === 'legendaire' ? 0 : sans + 1; if (l.type === 'terrain') poss.push(l.terrain.id); }
+  essais.push(n);
+}
+essais.sort((x, y) => x - y);
+console.log(`Boîtes pour trouver les 3 terrains : médiane ${essais[1000]}, 90 % des joueurs en moins de ${essais[1800]}`);
 console.log(erreurs ? `${erreurs} erreur(s)` : `OK : ${PIECES.length} pièces équilibrées sur ${NIVEAU_PIECE_MAX} niveaux, priorité de terrain correcte`);
 process.exit(erreurs ? 1 : 0);

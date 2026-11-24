@@ -109,11 +109,11 @@ Ressorts : souple (rotation ↑, élan ↓), renforcé (élan ↑↑, rotation �
 ### 4.5 Terrains de duel
 - **Contre les cafards, le bureau est toujours neutre.**
 - En duel, on peut avoir choisi un **terrain** à l'atelier, si on l'a trouvé.
-- **Les terrains se trouvent dans les boîtes mystère**, comme récompenses rares à légendaires, et **jamais en double** :
-  une fois trouvé, le terrain est à toi.
-  - 🤸 **Bords rebondissants** (rare) : les bords relancent les toupies ;
-  - 🍯 **Bords collants** (épique) : les bords engluent, la toupie perd sa vitesse et de la rotation ;
-  - 🥣 **Cuve** (légendaire) : le plateau est creusé, les toupies glissent vers le centre et se percutent sans arrêt.
+- **Les terrains se trouvent dans les boîtes mystère** : ce sont des **lots légendaires**, tous avec **la même chance**,
+  et **jamais en double** (une fois trouvé, le terrain est à toi).
+  - 🤸 **Bords rebondissants** : les bords relancent les toupies ;
+  - 🍯 **Bords collants** : les bords engluent, la toupie perd sa vitesse et de la rotation ;
+  - 🥣 **Cuve** : le plateau est creusé, les toupies glissent vers le centre et se percutent sans arrêt.
 - **Le coût : l'argent de départ.** Sans terrain, on commence la partie avec 8 💰 ; avec un terrain, on commence à 0 💰.
   L'exemple donné était de 50 $ contre 0 ; les montants sont à équilibrer.
 - **Si les deux duellistes ont un terrain**, c'est la **priorité de terrain** qui décide :
@@ -123,7 +123,16 @@ Ressorts : souple (rotation ↑, élan ↓), renforcé (élan ↑↑, rotation �
   - **les points sont secrets** : on ne voit pas ceux de l'adversaire. La règle est expliquée à l'atelier et dans la boutique.
 - Au début du duel, un bandeau annonce le terrain et à qui il appartient.
 
-### 4.6 Raretés et boîte mystère **[proposition]**
+### 4.6 Raretés et boîte mystère
+**Contenu d'une boîte** :
+1. On tire une rareté : commune 55 %, rare 30 %, épique 12 %, légendaire 3 %.
+2. Commune, rare, épique : une pièce de cette rareté. Les doublons débloquent un niveau de pièce.
+3. **Légendaire** : la moitié du temps un **terrain de duel** (tant qu'il en reste à trouver, même chance pour chacun).
+   Sinon, un autre lot légendaire : une **pièce légendaire** (base, couronne, pointe, âme, engrenage ou ressort) ou un **coffre d'écrous** (+300 🔩).
+4. **Garantie : la 30e boîte d'affilée sans lot légendaire est forcément légendaire.** Un compteur est affiché à l'atelier.
+
+Simulation : un joueur trouve son premier terrain en environ 30 boîtes (médiane) et les trois en environ 110.
+ **[proposition]**
 - Commune 55 %, rare 30 %, épique 12 %, légendaire 3 %.
 - La boîte ressemble à un **carton de jouet de supermarché** : on la touche, elle s'ouvre et révèle une pièce.
 - **Premier lancement** : la toupie de base (4 pièces standard) et **1 boîte offerte**.
