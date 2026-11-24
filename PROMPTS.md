@@ -73,3 +73,17 @@ Chaque échange sur le projet est consigné ici : prompt optimisé + ce qui a é
 - Tentative de sauvegarde sur une branche séparée de `louisdeeguerry-dev/toupie-cafards` :
   refusée par les permissions de la session (rien n'a été modifié sur GitHub).
 - Sauvegarde de secours fournie en téléchargement : archive `toupie-cafard-2.zip`.
+
+---
+
+## 2026-11-24 — Dépôt créé : envoi du projet
+
+**Prompt optimisé**
+> Rôle : assistant de pilotage de projet.
+> Objectif : le dépôt GitHub `toupie-cafard-2` vient d'être créé par l'utilisateur ; le rattacher
+> à la session et y pousser tout l'historique du projet.
+> Critère de réussite : la branche `main` est en ligne et identique au projet local.
+
+**Réalisé**
+- Dépôt `louisdeeguerry-dev/toupie-cafard-2` (public) rattaché et vide au départ.
+- Historique complet poussé sur `main`.
