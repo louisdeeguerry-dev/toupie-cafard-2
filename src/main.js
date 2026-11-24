@@ -8,6 +8,7 @@ import { majFx } from './fx.js';
 import { activerAudio } from './audio.js';
 import * as UI from './ui.js';
 import { VERSION } from './config.js';
+import { recompenser } from './progression.js';
 
 let save = charger();
 let mode = 'atelier';
@@ -33,9 +34,9 @@ function boite() {
 
 function demarrer() {
   activerAudio();
-  nouvellePartie({ ...save.equipe });
+  nouvellePartie({ ...save.equipe }, { mode: save.mode });
   UI.montrer('atelier', false);
-  UI.rechercher(partie.joueurs.map(j => j.nom), () => {
+  UI.rechercher(partie.joueurs.map(j => j.nom), save.mode, () => {
     mode = 'partie';
     UI.montrer('hud');
     commencerManche();
@@ -61,12 +62,9 @@ brancherInterface({
   },
   fin(r) {
     UI.majHud();
-    save.parties++;
-    if (r.place === 1) save.victoires++;
-    save.meilleure = save.meilleure ? Math.min(save.meilleure, r.place) : r.place;
-    save.boites += r.boites;
+    const gains = recompenser(save, r.place, r.mode);
     sauver(save);
-    setTimeout(() => UI.afficherFin(r, retourAtelier), 600);
+    setTimeout(() => UI.afficherFin(r, gains, retourAtelier), 600);
   },
 });
 
@@ -74,12 +72,14 @@ function retourAtelier() {
   abandonner();
   mode = 'atelier';
   UI.montrer('hud', false);
+  UI.montrer('panneauStats', false);
   UI.montrer('atelier');
   atelier.rendre();
   majVitrine();
 }
 
 lanceur.onLancer = lancer;
+document.getElementById('btnStats').addEventListener('click', UI.basculerStats);
 document.getElementById('quitter').addEventListener('click', () => {
   if (confirmerQuitter()) retourAtelier();
 });

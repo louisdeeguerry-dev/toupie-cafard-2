@@ -21,7 +21,7 @@ const OUT = process.argv[2], W = +process.argv[3] || 1280, H = +process.argv[4] 
     const e = await p.evaluate(() => {
       const P = __tc2.partie, { cafards, toupies } = __tc2.interne;
       const vis = id => !document.getElementById(id).classList.contains('cache');
-      if (vis('fin')) return { fin: true, place: P.moi.place, manche: P.manche, vague: P.vague };
+      if (vis('fin')) return { fin: true, place: P.moi.place, manche: P.manche, vague: P.vague, texte: document.getElementById('finContenu').innerText.slice(0, 400) };
       if (vis('bilan')) {
         // achats : alterne bureau / toupie
         const btns = [...document.querySelectorAll('#bilanContenu .amelio:not([disabled])')];
@@ -30,8 +30,7 @@ const OUT = process.argv[2], W = +process.argv[3] || 1280, H = +process.argv[4] 
         return { achat: true };
       }
       if (P.phase === 'jeu') {
-        const moi = toupies.find(t => t.camp === 'joueur');
-        if (moi && (!moi.lancee || moi.tombe) && P.lancers > 0) {
+        if (P.lancers > 0 && !P.mesToupies.some(t => t.lancee && !t.tombe)) {
           if (P.type === 'duel') { __tc2.lancerDirect((Math.random() - .5) * .6, 0, -1, 0.85 + Math.random() * .2); return { lance: 'duel' }; }
           const c = cafards.filter(c => !c.mort && c.chute <= 0);
           if (c.length) { const k = c[Math.floor(Math.random() * c.length)]; __tc2.lancerDirect(k.x, 0.0001, -1, 0.9); return { lance: 'cafards' }; }
@@ -42,7 +41,7 @@ const OUT = process.argv[2], W = +process.argv[3] || 1280, H = +process.argv[4] 
     if (e.bilan) journal.push(`manche ${e.manche} vies ${e.vies} argent ${e.argent} tempsJeu ${e.t}s bots ${e.bots}`);
     if (e.achat && !shopShot) { shopShot = true; await p.screenshot({ path: OUT + '/c-boutique.png' }); }
     if (e.lance === 'duel' && !duelShot) { duelShot = true; await p.waitForTimeout(500); await p.screenshot({ path: OUT + '/b-duel.png' }); }
-    if (e.fin) { journal.push(`FIN place ${e.place}, manches ${e.manche}, vagues ${e.vague}, ${(Date.now() - t0) / 1000}s réelles (x4)`); await p.waitForTimeout(800); await p.screenshot({ path: OUT + '/d-fin.png' }); break; }
+    if (e.fin) { journal.push(e.texte); journal.push(`FIN place ${e.place}, manches ${e.manche}, vagues ${e.vague}, ${(Date.now() - t0) / 1000}s réelles (x4)`); await p.waitForTimeout(800); await p.screenshot({ path: OUT + '/d-fin.png' }); break; }
   }
   console.log(journal.join('\n'));
   console.log('ERREURS', JSON.stringify(errs));

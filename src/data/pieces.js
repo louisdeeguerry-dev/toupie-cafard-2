@@ -1,19 +1,12 @@
 // Le catalogue des pièces de toupie. Une toupie = 4 emplacements : base, couronne, pointe, âme.
-// Chaque pièce donne des avantages ET des inconvénients (modificateurs ajoutés aux stats de base).
+// Chaque pièce donne des NIVEAUX dans les stats du jeu 1 (voir src/stats.js), avec des avantages ET des inconvénients.
+// On choisit ses pièces AVANT la partie : une fois la partie lancée, la toupie est verrouillée jusqu'à la fin.
 
 export const SLOTS = [
   { id: 'base', nom: 'Base', icone: '⚙️', desc: 'Le cœur de la toupie : son poids et sa tenue.' },
   { id: 'couronne', nom: 'Couronne', icone: '👑', desc: 'Le tour de la toupie : c\'est elle qui frappe les cafards et les autres toupies.' },
   { id: 'pointe', nom: 'Pointe', icone: '🔻', desc: 'Ce qui touche le plateau : vitesse et équilibre.' },
-  { id: 'ame', nom: 'Âme', icone: '✴️', desc: 'Le signe sur le dessus de la toupie : un pouvoir passif.' },
-];
-
-export const STATS = [
-  { id: 'attaque', nom: 'Attaque', icone: '⚔️', desc: 'Dégâts infligés aux cafards et aux toupies adverses' },
-  { id: 'vitesse', nom: 'Vitesse', icone: '💨', desc: 'Vitesse de lancer et de déplacement' },
-  { id: 'endurance', nom: 'Endurance', icone: '🔋', desc: 'Durée de rotation : plus elle est haute, plus la toupie tourne longtemps' },
-  { id: 'equilibre', nom: 'Équilibre', icone: '⚖️', desc: 'Résistance aux chocs : une toupie instable perd beaucoup de rotation quand on la frappe' },
-  { id: 'poids', nom: 'Poids', icone: '🪨', desc: 'Plus elle est lourde, moins elle est repoussée' },
+  { id: 'ame', nom: 'Âme', icone: '✴️', desc: 'Le signe sur le dessus de la toupie : un pouvoir.' },
 ];
 
 export const RARETES = {
@@ -23,57 +16,65 @@ export const RARETES = {
   legendaire: { nom: 'Légendaire', couleur: '#ffb020', chance: 3 },
 };
 
-// forme : utilisée par topMesh.js pour dessiner la pièce
+// niveaux : ajoutés aux stats (ids de src/stats.js) ; forme : utilisée par topMesh.js pour dessiner la pièce
 export const PIECES = [
   // ---------- BASES ----------
   { id: 'base-standard', slot: 'base', nom: 'Base standard', rarete: 'commune', forme: 'standard', couleur: 0x8f99a5,
-    stats: {}, desc: 'Équilibrée, sans surprise.' },
+    niveaux: {}, desc: 'Équilibrée, sans surprise.' },
   { id: 'base-plomb', slot: 'base', nom: 'Base en plomb', rarete: 'rare', forme: 'lourde', couleur: 0x4f5864,
-    stats: { poids: 3, equilibre: 1, vitesse: -2 }, desc: 'Très lourde : dure à bousculer, mais lente.' },
+    niveaux: { poids: 6, inertie: 3, glisse: -3, elan: -3 }, desc: 'Très lourde : dure à bousculer, mais lente.' },
   { id: 'base-alu', slot: 'base', nom: 'Base alu ajourée', rarete: 'rare', forme: 'legere', couleur: 0xd7dde3,
-    stats: { vitesse: 2, endurance: 1, poids: -2 }, desc: 'Légère et rapide, mais facile à repousser.' },
+    niveaux: { elan: 4, glisse: 3, poids: -4 }, desc: 'Légère et rapide, mais facile à repousser.' },
   { id: 'base-gyro', slot: 'base', nom: 'Base gyroscope', rarete: 'epique', forme: 'gyro', couleur: 0x2e8b7a,
-    stats: { equilibre: 3, endurance: 1, attaque: -1 }, desc: 'Un anneau intérieur qui la garde droite.' },
+    niveaux: { equilibre: 6, inertie: 2, lames: -2 }, desc: 'Un anneau intérieur qui la garde droite.' },
   { id: 'base-noyau', slot: 'base', nom: 'Noyau de météorite', rarete: 'legendaire', forme: 'noyau', couleur: 0x6b2f9e,
-    stats: { poids: 3, attaque: 2, endurance: 1, vitesse: -1 }, desc: 'Une pierre tombée du ciel, lourde et dure.' },
+    niveaux: { poids: 5, lames: 4, puissance: 3, elan: -2 }, desc: 'Une pierre tombée du ciel, lourde et dure.' },
 
   // ---------- COURONNES ----------
   { id: 'couronne-standard', slot: 'couronne', nom: 'Couronne ronde', rarete: 'commune', forme: 'standard', couleur: 0xc0392b,
-    stats: {}, desc: 'Un anneau tout simple.' },
+    niveaux: {}, desc: 'Un anneau tout simple.' },
+  { id: 'couronne-large', slot: 'couronne', nom: 'Couronne large', rarete: 'commune', forme: 'large', couleur: 0x16a085,
+    niveaux: { diametre: 5, poids: 1, glisse: -2 }, desc: 'Plus grande : touche plus de cafards, mais freine un peu.' },
   { id: 'couronne-dents', slot: 'couronne', nom: 'Couronne dentée', rarete: 'rare', forme: 'dents', couleur: 0xe67e22,
-    stats: { attaque: 3, endurance: -2 }, desc: 'Des dents qui mordent, mais qui freinent.' },
+    niveaux: { lames: 5, critique: 3, endurance: -3 }, desc: 'Des dents qui mordent, mais qui freinent.' },
   { id: 'couronne-bouclier', slot: 'couronne', nom: 'Couronne bouclier', rarete: 'rare', forme: 'bouclier', couleur: 0x2c6fbb,
-    stats: { equilibre: 2, poids: 1, attaque: -2 }, desc: 'Lisse et épaisse : encaisse les chocs, frappe peu.' },
+    niveaux: { inertie: 6, diametre: 2, lames: -3 }, desc: 'Lisse et épaisse : encaisse les chocs, frappe peu.' },
   { id: 'couronne-lames', slot: 'couronne', nom: 'Couronne à lames', rarete: 'epique', forme: 'lames', couleur: 0xd8dde4,
-    stats: { attaque: 5, equilibre: -2, endurance: -1 }, desc: 'Quatre lames tranchantes. Dangereuse… pour tout le monde.' },
+    niveaux: { lames: 8, critique: 4, equilibre: -4, endurance: -2 }, desc: 'Quatre lames tranchantes. Dangereuse… pour tout le monde.' },
   { id: 'couronne-inertie', slot: 'couronne', nom: 'Anneau d\'inertie', rarete: 'legendaire', forme: 'inertie', couleur: 0xffc531,
-    stats: { endurance: 3, poids: 2, attaque: 1, vitesse: -1 }, desc: 'Un anneau d\'or massif qui garde l\'élan.' },
+    niveaux: { endurance: 5, poids: 3, puissance: 3, elan: -2 }, desc: 'Un anneau d\'or massif qui garde l\'élan.' },
 
   // ---------- POINTES ----------
   { id: 'pointe-standard', slot: 'pointe', nom: 'Pointe standard', rarete: 'commune', forme: 'standard', couleur: 0x7f8c8d,
-    stats: {}, desc: 'Ni trop fine, ni trop large.' },
+    niveaux: {}, desc: 'Ni trop fine, ni trop large.' },
   { id: 'pointe-ventouse', slot: 'pointe', nom: 'Pointe ventouse', rarete: 'commune', forme: 'ventouse', couleur: 0x27ae60,
-    stats: { equilibre: 2, vitesse: -1 }, desc: 'Colle un peu au bureau : stable, un peu lente.' },
+    niveaux: { equilibre: 4, glisse: -3 }, desc: 'Colle un peu au bureau : stable, mais glisse mal.' },
   { id: 'pointe-clou', slot: 'pointe', nom: 'Pointe clou', rarete: 'rare', forme: 'clou', couleur: 0xaab4bd,
-    stats: { vitesse: 4, attaque: 1, equilibre: -4 }, desc: 'Très fine : énormément de vitesse, mais très peu d\'équilibre.' },
+    niveaux: { elan: 6, glisse: 5, equilibre: -5 }, desc: 'Très fine : énormément de vitesse, mais très peu d\'équilibre.' },
   { id: 'pointe-foreuse', slot: 'pointe', nom: 'Pointe foreuse', rarete: 'rare', forme: 'foreuse', couleur: 0xb8860b,
-    stats: { equilibre: 4, vitesse: -3, endurance: -2 }, desc: 'Plantée dans le bureau : énormément de stabilité, mais lente et vite fatiguée.' },
+    niveaux: { equilibre: 7, inertie: 2, elan: -5, endurance: -4 }, desc: 'Plantée dans le bureau : énormément de stabilité, mais lente et vite fatiguée.' },
   { id: 'pointe-bille', slot: 'pointe', nom: 'Pointe bille', rarete: 'epique', forme: 'bille', couleur: 0xecf0f1,
-    stats: { endurance: 3, vitesse: 1, attaque: -1 }, desc: 'Roule sans frotter : tourne très longtemps.' },
+    niveaux: { endurance: 5, glisse: 3, lames: -2 }, desc: 'Roule sans frotter : tourne très longtemps.' },
 
-  // ---------- ÂMES (passifs) ----------
+  // ---------- ÂMES (pouvoirs, repris des pouvoirs du jeu 1) ----------
   { id: 'ame-vide', slot: 'ame', nom: 'Sans âme', rarete: 'commune', forme: 'vide', couleur: 0x95a5a6,
-    stats: {}, passif: null, desc: 'Pas de pouvoir.' },
-  { id: 'ame-flamme', slot: 'ame', nom: 'Âme de flamme', rarete: 'rare', forme: 'flamme', couleur: 0xff6b1a,
-    stats: {}, passif: 'flamme', desc: '+50 % de dégâts tant que la toupie va vite.' },
+    niveaux: {}, desc: 'Pas de pouvoir.' },
+  { id: 'ame-oeil', slot: 'ame', nom: 'Œil de lynx', rarete: 'rare', forme: 'oeil', couleur: 0x1abc9c,
+    niveaux: { precision: 5, critique: 3 }, desc: 'Vise juste : zone PARFAIT plus large et coups critiques.' },
   { id: 'ame-aimant', slot: 'ame', nom: 'Âme aimant', rarete: 'rare', forme: 'aimant', couleur: 0xe74c3c,
-    stats: {}, passif: 'aimant', desc: 'Attirée par le cafard ou la toupie la plus proche.' },
-  { id: 'ame-ressort', slot: 'ame', nom: 'Âme ressort', rarete: 'epique', forme: 'ressort', couleur: 0x3498db,
-    stats: {}, passif: 'ressort', desc: 'Chaque rebond sur un bord la relance au lieu de la freiner.' },
+    niveaux: { agressivite: 5 }, desc: 'Attirée par le cafard ou la toupie la plus proche.' },
+  { id: 'ame-ressort', slot: 'ame', nom: 'Âme ressort', rarete: 'rare', forme: 'ressort', couleur: 0x3498db,
+    niveaux: { rebond: 8 }, desc: 'Garde presque toute sa vitesse en rebondissant sur les bords.' },
+  { id: 'ame-flamme', slot: 'ame', nom: 'Âme de flamme', rarete: 'epique', forme: 'flamme', couleur: 0xff6b1a,
+    niveaux: { feu: 6 }, desc: 'Laisse une traînée de feu qui brûle les cafards.' },
   { id: 'ame-sangsue', slot: 'ame', nom: 'Âme sangsue', rarete: 'epique', forme: 'sangsue', couleur: 0x2ecc71,
-    stats: {}, passif: 'sangsue', desc: 'Chaque cafard écrasé lui rend de la rotation.' },
+    niveaux: { souffle: 6 }, desc: 'Chaque cafard écrasé lui rend de la rotation.' },
+  { id: 'ame-orage', slot: 'ame', nom: 'Âme d\'orage', rarete: 'epique', forme: 'orage', couleur: 0x8fd3ff,
+    niveaux: { eclair: 6 }, desc: 'Ses coups lancent des éclairs qui sautent de cafard en cafard.' },
+  { id: 'ame-cyclone', slot: 'ame', nom: 'Âme cyclone', rarete: 'epique', forme: 'cyclone', couleur: 0xb2bec3,
+    niveaux: { tornade: 6 }, desc: 'Aspire les cafards proches.' },
   { id: 'ame-carapace', slot: 'ame', nom: 'Âme carapace', rarete: 'legendaire', forme: 'carapace', couleur: 0xf1c40f,
-    stats: {}, passif: 'carapace', desc: 'Le premier gros choc reçu en duel est annulé.' },
+    niveaux: { inertie: 2 }, passif: 'carapace', desc: 'Le premier gros choc reçu en duel est annulé.' },
 ];
 
 export const PIECE = Object.fromEntries(PIECES.map(p => [p.id, p]));

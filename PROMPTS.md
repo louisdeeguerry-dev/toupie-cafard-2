@@ -179,3 +179,33 @@ Chaque échange sur le projet est consigné ici : prompt optimisé + ce qui a é
 - Tests automatiques (Playwright) : parcours complet, partie entière jouée par un robot jusqu'à la fin,
   21 pièces construites sans erreur, tirage des raretés conforme, affichage téléphone. 0 erreur JavaScript.
 - `docs/CONCEPT.md` (game design v0.1 + 8 questions ouvertes), `LICENCES-TIERS.md`, README.
+
+---
+
+## 2026-11-24 — Stats du jeu 1, toupie verrouillée, progression et modes de partie
+
+**Prompt optimisé**
+> Rôle : game designer + développeur gameplay.
+> Contexte : la référence « Spam » est **SPAM** (Ticroco Entreprise, Steam, 7 oct. 2026), un deck-builder
+> en 1 contre 1 au tour par tour. On ne garde de SPAM que le côté **gacha** (ouvertures aléatoires) et le **deck-building**.
+> Décisions de l'utilisateur :
+> 1. Reprendre **toutes les stats de toupie de Toupie contre Cafards** dans Toupie Cafard 2, et les **afficher toutes**.
+> 2. **Interdiction de changer de pièce pendant une partie** : la toupie est choisie avant et verrouillée jusqu'à la fin.
+> 3. Fin de partie : gagner de la **monnaie**, de l'**expérience** et un **rang** selon sa place ; il y aura des
+>    **parties normales** et des **parties classées**.
+> 4. Les propositions du prototype v0.1 sont validées.
+> Livrables : système de stats du jeu 1 (mêmes noms et formules, valeurs réelles affichées partout) ; pièces
+> réexprimées dans ces stats ; pouvoirs du jeu 1 fonctionnels ; progression hors partie (monnaie, XP, niveaux,
+> rangs, modes) ; concept mis à jour ; tests.
+
+**Réalisé**
+- `src/stats.js` : les 18 stats de toupie et de lanceur du jeu 1 (Endurance, Diamètre, Poids, Glisse, Lames, Inertie, Équilibre,
+  Rebond, Agressivité, Coup critique, Traînée de feu, Second souffle, Éclairs en chaîne, Tourbillon, Puissance,
+  Élan, Précision, Multi-lancer), avec les formules et les unités du jeu 1.
+- Pièces (25) réexprimées en niveaux de stats ; les âmes donnent les pouvoirs du jeu 1 (3 nouvelles : Orage, Cyclone, Œil de lynx).
+- Physique : critique, feu, souffle, éclairs, tourbillon, agressivité, multi-lancer, trampolines ; bureau : Nid, Prime,
+  Trèfle doré, Combo, Appât, Tirelire.
+- Affichage de toutes les stats : panneau de l'atelier (avec aperçu), bouton 📊 en partie, boutique avant → après.
+- `src/progression.js` : parties normales et classées, Écrous 🔩, XP et niveaux (1 boîte par niveau), 8 rangs, achat de boîtes.
+- Toupie verrouillée en partie (gelée au lancement de la partie, aucun changement de pièce possible).
+- Tests : partie complète par le robot sans erreur, 25 pièces construites, tirages conformes, téléphone OK.

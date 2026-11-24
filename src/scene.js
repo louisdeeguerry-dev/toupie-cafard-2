@@ -107,7 +107,7 @@ export function cadrer() {
   vitrineCam.aspect = w / h;
   // La toupie s'affiche à côté du panneau de l'atelier (à droite en paysage, en bas en portrait)
   vitrineCam.fov = portrait ? 52 : 35;
-  if (w > 720) vitrineCam.setViewOffset(w, h, Math.min(240, w * 0.18), 0, w, h);
+  if (w > 720) vitrineCam.setViewOffset(w, h, Math.min(40, w * 0.03), 0, w, h); // entre les deux panneaux
   else vitrineCam.setViewOffset(w, h, 0, h * 0.25, w, h);
   vitrineCam.updateProjectionMatrix();
 }

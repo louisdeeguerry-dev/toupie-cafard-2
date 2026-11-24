@@ -1,42 +1,103 @@
-// Calcul des stats d'une toupie et traduction en grandeurs physiques.
-import { STATS, PIECE } from './data/pieces.js';
-import { AMELIORATIONS } from './data/boutique.js';
-import { STAT_BASE, STAT_MIN } from './config.js';
+// Les stats de la toupie : TOUTES celles de Toupie contre Cafards (jeu 1), avec les mêmes noms et la même
+// logique (des niveaux qui se convertissent en valeurs réelles : secondes, cm, grammes, tr/min…).
+// Les pièces donnent des niveaux (+ ou −), la boutique en partie en ajoute.
+import { PIECE } from './data/pieces.js';
 
-// equipe : { base, couronne, pointe, ame } (ids de pièces) ; niveaux : { aiguiser: 2, ... }
-export function statsToupie(equipe, niveaux = {}) {
-  const s = Object.fromEntries(STATS.map(st => [st.id, STAT_BASE]));
-  for (const id of Object.values(equipe)) {
-    const p = PIECE[id];
-    if (!p) continue;
-    for (const [k, v] of Object.entries(p.stats)) s[k] += v;
-  }
-  for (const a of AMELIORATIONS) if (a.stat && niveaux[a.id]) s[a.stat] += niveaux[a.id];
-  for (const k of Object.keys(s)) s[k] = Math.max(STAT_MIN, s[k]);
-  return s;
-}
+export const GROUPES = [
+  { id: 'toupie', nom: 'Toupie', icone: '🌀' },
+  { id: 'lanceur', nom: 'Lanceur', icone: '🚀' },
+];
 
-export function passifToupie(equipe) {
-  return PIECE[equipe.ame]?.passif || null;
-}
+// special : pouvoir à 0 par défaut (affiché « — » tant qu'on ne l'a pas)
+export const STATS = [
+  { id: 'endurance', groupe: 'toupie', nom: 'Endurance', icone: '🔋', desc: 'Perd sa rotation moins vite : tourne plus longtemps.',
+    fmt: s => `${tempsRotation(s).toFixed(1)} s de rotation` },
+  { id: 'diametre', groupe: 'toupie', nom: 'Diamètre', icone: '📏', desc: 'Une toupie plus large touche plus de cafards.',
+    fmt: s => `${(s.rayon * 200).toFixed(1)} cm` },
+  { id: 'poids', groupe: 'toupie', nom: 'Poids', icone: '🪨', desc: 'Frappe plus fort et se fait moins repousser.',
+    fmt: s => `${Math.round(s.masse)} g` },
+  { id: 'glisse', groupe: 'toupie', nom: 'Glisse', icone: '⛸️', desc: 'Pointe plus fine : glisse plus loin et se promène plus vite.',
+    fmt: s => `balade ${Math.round((s.derive / s.frottement) * 100)} cm/s` },
+  { id: 'lames', groupe: 'toupie', nom: 'Lames', icone: '⚔️', desc: 'Plus de dégâts par contact, sur les cafards comme sur les toupies.',
+    fmt: s => `×${s.lames.toFixed(2)} dégâts` },
+  { id: 'inertie', groupe: 'toupie', nom: 'Inertie', icone: '🛞', desc: 'Perd moins de rotation dans les chocs (cafards et toupies adverses).',
+    fmt: s => Math.abs(s.inertie - 1) < 0.005 ? 'perte au choc normale' : s.inertie < 1 ? `−${Math.round((1 - s.inertie) * 100)} % de perte au choc` : `+${Math.round((s.inertie - 1) * 100)} % de perte au choc` },
+  { id: 'equilibre', groupe: 'toupie', nom: 'Équilibre', icone: '⚖️', desc: 'Reste debout même en tournant lentement.',
+    fmt: s => `tombe sous ${Math.round(s.seuilChute * 100)} %` },
+  { id: 'rebond', groupe: 'toupie', nom: 'Rebond', icone: '🏓', desc: 'Garde sa vitesse en rebondissant sur les bords.',
+    fmt: s => `${Math.round(s.rebond * 100)} % conservé` },
+  { id: 'agressivite', groupe: 'toupie', nom: 'Agressivité', icone: '😠', special: true, desc: 'La toupie se dirige vers les cafards et les toupies proches.',
+    fmt: s => s.attraction ? `attraction ${s.attraction.toFixed(2)}` : '—' },
+  { id: 'critique', groupe: 'toupie', nom: 'Coup critique', icone: '💥', special: true, desc: 'Chance d\'infliger un coup ×3. Au-delà de 100 %, le surplus rend les critiques encore plus forts.',
+    fmt: s => s.crit ? `${Math.round(s.crit * 100)} % de chance${s.critMult > 3 ? `, coups ×${s.critMult.toFixed(2)}` : ''}` : '—' },
+  { id: 'feu', groupe: 'toupie', nom: 'Traînée de feu', icone: '🔥', special: true, desc: 'Enflamme le plateau sur son passage : les cafards qui marchent dans les flammes brûlent.',
+    fmt: s => s.feu ? `brûlure ${Math.round(s.feu * 100)} % d'un coup/s, ${s.feuDuree.toFixed(1)} s` : '—' },
+  { id: 'souffle', groupe: 'toupie', nom: 'Second souffle', icone: '🌬️', special: true, desc: 'Chaque cafard écrasé redonne un peu de rotation (plafonné à chaque lancer).',
+    fmt: s => s.souffle ? `+${Math.round(s.souffle * 100)} % par cafard, ${Math.round(s.souffleMax * 100)} % max` : '—' },
+  { id: 'eclair', groupe: 'toupie', nom: 'Éclairs en chaîne', icone: '⚡', special: true, desc: 'Quand la toupie frappe, un éclair peut rebondir sur un cafard voisin.',
+    fmt: s => s.eclair ? `${Math.round(s.eclair * 100)} % de chance, ${Math.round(s.eclairDegats * 100)} % des dégâts, ${s.eclairRebonds} rebond${s.eclairRebonds > 1 ? 's' : ''}` : '—' },
+  { id: 'tornade', groupe: 'toupie', nom: 'Tourbillon', icone: '🌪️', special: true, desc: 'La toupie aspire les cafards proches vers elle.',
+    fmt: s => s.tornade ? `rayon ${Math.round(s.tornadeRayon * 100)} cm` : '—' },
+  { id: 'puissance', groupe: 'lanceur', nom: 'Puissance', icone: '🚀', desc: 'La toupie démarre en tournant plus vite (c\'est sa « vie » en duel).',
+    fmt: s => `${Math.round(s.tours).toLocaleString('fr-FR')} tr/min` },
+  { id: 'elan', groupe: 'lanceur', nom: 'Élan', icone: '💨', desc: 'La toupie part plus vite et plus loin.',
+    fmt: s => `${Math.round(s.vitesse * 100)} cm/s` },
+  { id: 'precision', groupe: 'lanceur', nom: 'Précision', icone: '🎯', desc: 'Zone « PARFAIT » de la jauge plus large (+8 % de puissance).',
+    fmt: s => `zone de ${Math.round(s.parfait * 100)} %` },
+  { id: 'multi', groupe: 'lanceur', nom: 'Multi-lancer', icone: '🌀', special: true, desc: 'Lance plusieurs toupies d\'un coup.',
+    fmt: s => `${s.toupies} toupie${s.toupies > 1 ? 's' : ''} par lancer` },
+];
+export const STAT = Object.fromEntries(STATS.map(s => [s.id, s]));
 
-// Grandeurs physiques (unités : mètres, secondes). Les stats tournent autour de 5.
-export function physique(s) {
+// Niveaux → valeurs réelles (mêmes formules que le jeu 1, recalées pour des parties courtes)
+export function calculer(niv) {
+  const L = id => Math.max(-5, niv[id] || 0), P = id => Math.max(0, niv[id] || 0);
   return {
-    rayon: 0.042,
-    vitesseLancer: 0.55 + 0.085 * s.vitesse, // m/s à pleine puissance
-    derive: 0.10 + 0.012 * s.vitesse, // la toupie « danse » sur le bureau
-    frottement: 0.32,
-    rotation: 100 * (0.7 + 0.07 * s.endurance), // la « vie » de la toupie
-    usure: 0.075 * (1.35 - 0.05 * s.endurance), // perte de rotation par seconde (proportionnelle)
-    seuilChute: Math.min(0.42, Math.max(0.08, 0.34 - 0.022 * s.equilibre)), // tombe sous cette fraction de sa rotation
-    instabilite: Math.max(0.35, 1.45 - 0.08 * s.equilibre), // multiplicateur des pertes de rotation dues aux chocs
-    masse: 0.6 + 0.12 * s.poids,
-    degats: 0.6 + 0.45 * s.attaque,
+    rayon: 0.04 * (1 + 0.07 * L('diametre')),
+    masse: 20 * (1 + 0.15 * L('poids')),
+    inertie: 1 / (1 + 0.12 * L('inertie')),
+    usure: 0.12 / (1 + 0.15 * L('endurance')),
+    frottement: 0.32 / (1 + 0.1 * L('glisse')),
+    derive: 0.14 * (1 + 0.1 * L('glisse')),
+    lames: 1 + 0.15 * L('lames'),
+    seuilChute: 0.25 / (1 + 0.1 * L('equilibre')),
+    rebond: Math.min(0.95, 0.6 + 0.04 * L('rebond')),
+    attraction: 0.12 * P('agressivite'),
+    crit: Math.min(1, 0.04 * P('critique')),
+    critMult: 3 * Math.max(1, 0.04 * P('critique')),
+    feu: P('feu') ? 0.25 + 0.08 * P('feu') : 0,
+    feuDuree: 1 + 0.08 * P('feu'),
+    souffle: P('souffle') ? 0.03 + 0.012 * P('souffle') : 0,
+    souffleMax: 0.25 + 0.03 * P('souffle'),
+    eclair: Math.min(0.7, 0.07 * P('eclair')),
+    eclairRebonds: 1 + Math.floor(P('eclair') / 6),
+    eclairDegats: 0.5 + 0.03 * P('eclair'),
+    tornade: P('tornade') ? 0.12 + 0.03 * P('tornade') : 0,
+    tornadeRayon: 0.1 + 0.012 * P('tornade'),
+    tours: 600 * (1 + 0.18 * L('puissance')),
+    vitesse: 0.95 * (1 + 0.1 * L('elan')),
+    parfait: Math.min(0.4, 0.1 + 0.02 * L('precision')),
+    toupies: 1 + P('multi'),
   };
 }
 
-// Puissance globale d'une toupie (utilisée pour simuler les duels entre bots)
-export function puissance(s) {
-  return s.attaque * 1.2 + s.vitesse + s.endurance * 1.1 + s.equilibre + s.poids * 0.9;
+// Durée de rotation estimée (sans chocs) pour un lancer à pleine puissance — même calcul que le jeu 1
+export function tempsRotation(s) { return Math.log(1 / s.seuilChute) / s.usure; }
+
+// Niveaux d'une toupie = somme des niveaux de ses pièces + améliorations achetées en partie
+export function niveauxToupie(equipe, achats = {}) {
+  const n = {};
+  for (const id of Object.values(equipe)) for (const [k, v] of Object.entries(PIECE[id]?.niveaux || {})) n[k] = (n[k] || 0) + v;
+  for (const st of STATS) if (achats[st.id]) n[st.id] = (n[st.id] || 0) + achats[st.id];
+  return n;
+}
+
+export function statsToupie(equipe, achats = {}) { return calculer(niveauxToupie(equipe, achats)); }
+
+export function passifToupie(equipe) { return PIECE[equipe.ame]?.passif || null; }
+
+// Puissance globale (pour simuler les duels entre bots) : somme pondérée des niveaux
+export function puissance(equipe, achats = {}) {
+  const n = niveauxToupie(equipe, achats);
+  return 40 + Object.entries(n).reduce((a, [k, v]) => a + v * (STAT[k]?.special ? 1.3 : 1), 0);
 }

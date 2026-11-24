@@ -6,7 +6,7 @@ import { DESK_X, RAIL_Z, RAIL_MARGIN } from './config.js';
 
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), plan = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 const hit = new THREE.Vector3();
-const jauge = document.getElementById('jauge'), jaugeRemplie = jauge.querySelector('.remplie');
+const jauge = document.getElementById('jauge'), jaugeRemplie = jauge.querySelector('.remplie'), zoneEl = jauge.querySelector('.zone');
 
 export const lanceur = {
   actif: false,
@@ -15,6 +15,7 @@ export const lanceur = {
   dir: new THREE.Vector2(0, -1),
   t: 0,
   onLancer: null,
+  zoneParfait: 0.1, // largeur de la zone PARFAIT (stat Précision)
 };
 
 // ---------------------------------------------------------------- Modèle 3D
@@ -74,7 +75,7 @@ function relacher() {
   lanceur.etat = 'libre';
   if (!lanceur.actif) return;
   const g = valeurJauge();
-  const parfait = g > 0.9;
+  const parfait = g > 1 - lanceur.zoneParfait;
   lanceur.onLancer?.({ x: lanceur.x, z: RAIL_Z - 0.04, dx: lanceur.dir.x, dz: lanceur.dir.y, puissance: parfait ? 1.08 : g, parfait });
 }
 canvas.addEventListener('pointerup', relacher);
@@ -103,5 +104,6 @@ export function majLanceur(dt) {
   visee.scale.z = 0.4 + g * 0.9;
   visee.material.opacity = lanceur.etat === 'charge' ? 0.95 : 0.4;
   jaugeRemplie.style.width = (valeurJauge() * 100).toFixed(1) + '%';
-  jauge.classList.toggle('parfait', valeurJauge() > 0.9);
+  jauge.classList.toggle('parfait', valeurJauge() > 1 - lanceur.zoneParfait);
+  zoneEl.style.left = ((1 - lanceur.zoneParfait) * 100).toFixed(1) + '%';
 }

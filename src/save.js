@@ -12,6 +12,12 @@ function neuf() {
     parties: 0,
     victoires: 0,
     meilleure: 0,
+    ecrous: 0, // monnaie (achète des boîtes mystère)
+    xp: 0,
+    niveau: 1,
+    rangPoints: 0, // parties classées
+    meilleurRang: 0,
+    mode: 'normale',
   };
 }
 

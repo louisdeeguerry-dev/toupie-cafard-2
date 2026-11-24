@@ -132,6 +132,14 @@ function couronne(p, y) {
       }
       break;
     }
+    case 'large': {
+      const t = new THREE.Mesh(new THREE.TorusGeometry(R + 0.008, 0.007, 12, 48), m);
+      t.rotation.x = Math.PI / 2; t.position.y = y;
+      const d2 = new THREE.Mesh(new THREE.CylinderGeometry(R + 0.008, R + 0.008, 0.003, 48), mat(0x2b2f36, { metalness: 0.3 }));
+      d2.position.y = y;
+      g.add(t, d2);
+      break;
+    }
     case 'inertie': {
       const t = new THREE.Mesh(new THREE.TorusGeometry(R + 0.002, 0.008, 14, 48), mat(p.couleur, { metalness: 1, roughness: 0.2 }));
       t.rotation.x = Math.PI / 2; t.position.y = y;
@@ -172,6 +180,33 @@ function ame(p, y) {
       break;
     }
     case 'sangsue': sym = new THREE.Mesh(new THREE.SphereGeometry(0.005, 14, 10), mat(p.couleur, lum)); sym.scale.y = 1.4; sym.position.y = s + 0.002; break;
+    case 'oeil': {
+      sym = new THREE.Group();
+      const blanc = new THREE.Mesh(new THREE.SphereGeometry(0.006, 14, 10), mat(0xffffff, { emissive: 0x555555 }));
+      const pupille = new THREE.Mesh(new THREE.SphereGeometry(0.003, 10, 8), mat(p.couleur, lum));
+      blanc.scale.y = 0.6; pupille.position.y = 0.003; pupille.scale.y = 0.5;
+      sym.add(blanc, pupille); sym.position.y = s;
+      break;
+    }
+    case 'orage': {
+      sym = new THREE.Group();
+      for (let i = 0; i < 3; i++) {
+        const z = new THREE.Mesh(new THREE.BoxGeometry(0.0025, 0.0025, 0.007), mat(p.couleur, lum));
+        z.position.set((i % 2 ? 1 : -1) * 0.0015, s + 0.001 + i * 0.002, (i - 1) * 0.004);
+        z.rotation.y = i % 2 ? 0.6 : -0.6;
+        sym.add(z);
+      }
+      break;
+    }
+    case 'cyclone': {
+      sym = new THREE.Group();
+      for (let i = 0; i < 3; i++) {
+        const t = new THREE.Mesh(new THREE.TorusGeometry(0.0065 - i * 0.0018, 0.0011, 6, 16), mat(p.couleur, lum));
+        t.rotation.x = Math.PI / 2; t.position.y = s + i * 0.0022;
+        sym.add(t);
+      }
+      break;
+    }
     case 'carapace': sym = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.003, 6), mat(p.couleur, lum)); sym.position.y = s; break;
     default: sym = new THREE.Mesh(new THREE.SphereGeometry(0.004, 12, 8), mat(p.couleur)); sym.position.y = s;
   }
