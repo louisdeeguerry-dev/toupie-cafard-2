@@ -156,7 +156,7 @@ const rappels = {
     const st = mesStats(), fenetre = st.comboFenetre, bonusCombo = st.comboBonus;
     partie.combo = partie.tempsJeu - partie.dernierKill < fenetre ? partie.combo + 1 : 1;
     partie.dernierKill = partie.tempsJeu;
-    const brut = VAGUE.prime * VAGUE.primeEtape(etape()) * (c.t?.prime || 1) * st.prime * (c.dore ? 5 : 1) * (1 + bonusCombo * (partie.combo - 1));
+    const brut = VAGUE.prime * VAGUE.primeEtape(etape()) * (c.t?.prime || 1) * st.prime * (c.dore ? 4 : 1) * (1 + bonusCombo * (partie.combo - 1));
     const gain = Math.max(1, Math.round(brut));
     partie.argent += gain; partie.gainsManche += gain; partie.tues++;
     tache(c.x, c.z, c.r * 1.3, c.dore ? 0x8a6a10 : 0x3a2a12);
@@ -263,10 +263,11 @@ function terminerManche(bilan) {
       (Math.random() < pa / (pa + pb) ? b : a).vies -= PARTIE.degatsDuel(etape());
     }
   }
-  // Les bots s'améliorent comme un joueur moyen
+  // Les bots s'améliorent comme un joueur moyen : de plus en plus de niveaux de combat à chaque étape
+  const combat = STAT_ACHATS.filter(x => x.groupe !== 'bureau' && x.id !== 'multi');
   for (const b of vivants().filter(j => j.bot)) {
-    if (Math.random() < 0.8) {
-      const a = hasard(STAT_ACHATS.filter(x => !x.id.match(/multi/)));
+    for (let k = 0; k < 1 + Math.floor(etape() / 2); k++) {
+      const a = hasard(combat);
       b.niveaux[a.id] = Math.min(a.max, (b.niveaux[a.id] || 0) + 1);
     }
     // Les bots qui ont un terrain misent parfois en priorité de terrain (en secret)

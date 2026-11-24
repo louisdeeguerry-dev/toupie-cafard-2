@@ -184,7 +184,18 @@ Simulation : un joueur trouve son premier terrain en environ 30 boîtes (médian
   chaque nouvelle espèce. Les choix sont donc stratégiques : il faut préparer sa toupie pour la suite.
 - **Pourquoi ça bloque l'abus** : celui qui ne fait que de l'économie gagne plus au début, mais sa toupie ne tue plus
   rien une fois les cafards évolués, donc il ne gagne plus rien, et les dégâts des duels montent à chaque étape.
-  Les tests par robot le confirment : la stratégie « tout en économie » finit 7e, la stratégie « puissance » gagne.
+  Les multiplicateurs d'argent sont modérés, les prix montent de plus en plus vite (impossible de tout acheter
+  d'un coup) et les bots se renforcent à chaque manche.
+- **Mesures** (`tests/strategies.js`, robot qui vise comme un bon joueur, 8 joueurs) :
+
+  | Stratégie | Résultat |
+  |---|---|
+  | « Sacrifice » : que de l'économie, duels perdus exprès aux étapes 1 et 2, puis tout dans la toupie | **7e**, éliminé à l'étape 3 |
+  | Mixte (alterne bureau et toupie) | 4e |
+  | Puissance (toupie et lanceur seulement) | 3e |
+
+  Une première version, avec des multiplicateurs trop forts, laissait la stratégie économie accumuler 500 💰 et tout gagner.
+  Elle a été corrigée.
 
 ### 6.1 Manches contre les cafards
 - Les cafards tombent du ciel sur le bureau.

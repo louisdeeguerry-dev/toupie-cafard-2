@@ -27,10 +27,10 @@ export const PARTIE = {
 // Les cafards ÉVOLUENT après chaque duel : vie ×1,15 par étape, et de nouvelles espèces (voir src/data/cafards.js).
 export const VAGUE = {
   nombre: n => 10 + Math.floor((n - 1) * 0.7), // 10 cafards au début
-  objectif: nb => Math.ceil(nb * 0.55),
+  objectif: nb => Math.ceil(nb * 0.5),
   vieCafard: (n, etape) => 2.2 * Math.pow(1.06, n - 1) * Math.pow(1.15, etape - 1),
   prime: 1, // 💰 par cafard normal (les autres espèces rapportent plus)
-  primeEtape: etape => 1 + 0.35 * (etape - 1), // les cafards évolués rapportent plus : investir dans la toupie reste rentable
+  primeEtape: etape => 1 + 0.25 * (etape - 1), // les cafards évolués rapportent plus : investir dans la toupie reste rentable
   bonusObjectif: n => 2 + Math.floor(n / 2), // 💰 si l'objectif est atteint
 };
 

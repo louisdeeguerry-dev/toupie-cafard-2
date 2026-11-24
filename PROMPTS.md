@@ -303,3 +303,6 @@ Chaque échange sur le projet est consigné ici : prompt optimisé + ce qui a é
   aperçu de la prochaine vague et annonce de l'évolution dans la boutique.
 - Robot de simulation (visée « bon joueur ») comparant 3 stratégies d'achat : « tout économie » s'effondre après
   l'évolution (7e), « puissance » gagne. Difficulté recalibrée en 3 passes d'après ces mesures.
+- 2e passe d'équilibrage (mesurée) : la stratégie économie accumulait 500 💰 et gagnait → multiplicateurs d'argent
+  réduits (Prime, Trèfle, Combo, primes d'évolution), prix en n², bots qui achètent 1 + étape/2 niveaux de combat par manche.
+  Résultat : « sacrifice » (économie + duels perdus exprès) 7e, mixte 4e, puissance 3e. Outil : `tests/strategies.js`.
