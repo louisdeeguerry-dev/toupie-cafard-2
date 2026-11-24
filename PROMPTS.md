@@ -144,3 +144,38 @@ Chaque échange sur le projet est consigné ici : prompt optimisé + ce qui a é
 - `docs/ANALYSE-TOUPIE-1.md` : jeu, chiffres clés, chronologie des 128 commits, architecture, carte du
   code, éléments réutilisables et pistes pour le jeu 2.
 - `RESSOURCES.md` : ajout de vitejs/vite (vérifié).
+
+---
+
+## 2026-11-24 — Concept du jeu et premier prototype
+
+**Prompt optimisé**
+> Rôle : game designer + développeur gameplay Three.js.
+> Contexte : Toupie Cafard 2, suite de Toupie contre Cafards, même univers (bureau, cafards, toupie, lanceur).
+> Concept décrit par l'utilisateur :
+> - Jeu en joueur contre joueur façon Teamfight Tactics (auto-battler), avec un côté deck-builder
+>   (référence citée : « Spam, le jeu de cartes », à identifier : Slay the Spire ? Marvel Snap ?).
+> - Partie courte, 5 vies. Cycle : 3 vagues contre les cafards, puis 1 manche contre un joueur, et on recommence.
+> - Avant la partie, on fabrique sa toupie à partir de 4 pièces : base (centre), couronne (le tour, qui fait
+>   les dégâts), pointe (qui touche le plateau), âme (signe sur le dessus, qui donne un passif).
+>   Chaque pièce a des avantages et des inconvénients (ex. pointe clou : vitesse ↑↑ / équilibre ↓↓ ;
+>   pointe foreuse : stabilité ↑↑ / vitesse et endurance ↓).
+> - Au départ : toupie basique + une boîte mystère offerte (style carton de jouet de supermarché) contenant une pièce.
+> - Matchmaking complété par des bots pendant toute la phase de test.
+> - En partie : choisir entre investir dans le bureau et les cafards (capitaliser de l'argent) ou dans la
+>   toupie (être assez fort pour tuer les cafards).
+> - Lanceur : suit la souris le long du bord bas du bureau ; clic = lanceur figé ; tant qu'on reste appuyé,
+>   on oriente la direction ; relâcher = lancer.
+> Livrables : document de concept (règles, propositions marquées, questions ouvertes) ; prototype jouable de
+> cette boucle, testé sur ordinateur et téléphone.
+> Contraintes : réutiliser ce qui existe (Three.js, sons Kenney du jeu 1) ; code découpé en modules ;
+> données d'équilibrage séparées du moteur ; ne pas copier de jeu existant (noms et visuels originaux).
+
+**Réalisé**
+- Prototype jouable (`index.html` + `src/`, 14 modules) : atelier à 4 emplacements (21 pièces), boîte mystère,
+  matchmaking simulé (8 joueurs), cycle 3 vagues + 1 duel, 5 vies, dégâts croissants par étape, boutique
+  bureau/toupie avec intérêts, lanceur souris/doigt avec jauge PARFAIT, duels physiques contre des bots,
+  classement final et boîtes gagnées.
+- Tests automatiques (Playwright) : parcours complet, partie entière jouée par un robot jusqu'à la fin,
+  21 pièces construites sans erreur, tirage des raretés conforme, affichage téléphone. 0 erreur JavaScript.
+- `docs/CONCEPT.md` (game design v0.1 + 8 questions ouvertes), `LICENCES-TIERS.md`, README.
