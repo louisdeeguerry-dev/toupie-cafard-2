@@ -1,7 +1,7 @@
 // Les stats de la toupie : TOUTES celles de Toupie contre Cafards (jeu 1), avec les mêmes noms et la même
 // logique (des niveaux qui se convertissent en valeurs réelles : secondes, cm, grammes, tr/min…).
 // Les pièces donnent des niveaux (+ ou −), la boutique en partie en ajoute.
-import { PIECE } from './data/pieces.js';
+import { PIECE, niveauxPiece } from './data/pieces.js';
 
 export const GROUPES = [
   { id: 'toupie', nom: 'Toupie', icone: '🌀' },
@@ -49,19 +49,23 @@ export const STATS = [
 ];
 export const STAT = Object.fromEntries(STATS.map(s => [s.id, s]));
 
-// Niveaux → valeurs réelles (mêmes formules que le jeu 1, recalées pour des parties courtes)
+// Niveaux → valeurs réelles (mêmes formules que le jeu 1, recalées pour des parties courtes).
+// Symétrie : +L niveaux multiplient par (1 + a×L), −L niveaux divisent par le même nombre. Un malus ne pèse donc
+// jamais plus lourd que le bonus équivalent (important pour l'équilibre des pièces et de leurs niveaux).
+const f = (a, L) => (L >= 0 ? 1 + a * L : 1 / (1 + a * -L));
+
 export function calculer(niv) {
-  const L = id => Math.max(-5, niv[id] || 0), P = id => Math.max(0, niv[id] || 0);
+  const L = id => niv[id] || 0, P = id => Math.max(0, niv[id] || 0);
   return {
-    rayon: 0.04 * (1 + 0.07 * L('diametre')),
-    masse: 20 * (1 + 0.15 * L('poids')),
-    inertie: 1 / (1 + 0.12 * L('inertie')),
-    usure: 0.12 / (1 + 0.15 * L('endurance')),
-    frottement: 0.32 / (1 + 0.1 * L('glisse')),
-    derive: 0.14 * (1 + 0.1 * L('glisse')),
-    lames: 1 + 0.15 * L('lames'),
-    seuilChute: 0.25 / (1 + 0.1 * L('equilibre')),
-    rebond: Math.min(0.95, 0.6 + 0.04 * L('rebond')),
+    rayon: 0.04 * f(0.07, L('diametre')),
+    masse: 20 * f(0.15, L('poids')),
+    inertie: 1 / f(0.12, L('inertie')),
+    usure: 0.12 / f(0.15, L('endurance')),
+    frottement: 0.32 / f(0.1, L('glisse')),
+    derive: 0.14 * f(0.1, L('glisse')),
+    lames: f(0.15, L('lames')),
+    seuilChute: Math.min(0.6, 0.25 / f(0.06, L('equilibre'))),
+    rebond: Math.max(0.2, Math.min(0.95, 0.6 + 0.04 * L('rebond'))),
     attraction: 0.12 * P('agressivite'),
     crit: Math.min(1, 0.04 * P('critique')),
     critMult: 3 * Math.max(1, 0.04 * P('critique')),
@@ -74,9 +78,9 @@ export function calculer(niv) {
     eclairDegats: 0.5 + 0.03 * P('eclair'),
     tornade: P('tornade') ? 0.12 + 0.03 * P('tornade') : 0,
     tornadeRayon: 0.1 + 0.012 * P('tornade'),
-    tours: 600 * (1 + 0.18 * L('puissance')),
-    vitesse: 0.95 * (1 + 0.1 * L('elan')),
-    parfait: Math.min(0.4, 0.1 + 0.02 * L('precision')),
+    tours: 600 * f(0.18, L('puissance')),
+    vitesse: 0.95 * f(0.1, L('elan')),
+    parfait: Math.max(0.03, Math.min(0.4, 0.1 + 0.02 * L('precision'))),
     toupies: 1 + P('multi'),
   };
 }
@@ -84,20 +88,24 @@ export function calculer(niv) {
 // Durée de rotation estimée (sans chocs) pour un lancer à pleine puissance — même calcul que le jeu 1
 export function tempsRotation(s) { return Math.log(1 / s.seuilChute) / s.usure; }
 
-// Niveaux d'une toupie = somme des niveaux de ses pièces + améliorations achetées en partie
-export function niveauxToupie(equipe, achats = {}) {
+// Niveaux d'une toupie = somme des niveaux de ses pièces (selon le niveau de chaque pièce) + améliorations achetées en partie
+// nivPieces : { idPiece: niveau de la pièce (1 par défaut) }
+export function niveauxToupie(equipe, achats = {}, nivPieces = {}) {
   const n = {};
-  for (const id of Object.values(equipe)) for (const [k, v] of Object.entries(PIECE[id]?.niveaux || {})) n[k] = (n[k] || 0) + v;
+  for (const id of Object.values(equipe)) {
+    if (!PIECE[id]) continue;
+    for (const [k, v] of Object.entries(niveauxPiece(PIECE[id], nivPieces[id] || 1))) n[k] = (n[k] || 0) + v;
+  }
   for (const st of STATS) if (achats[st.id]) n[st.id] = (n[st.id] || 0) + achats[st.id];
   return n;
 }
 
-export function statsToupie(equipe, achats = {}) { return calculer(niveauxToupie(equipe, achats)); }
+export function statsToupie(equipe, achats = {}, nivPieces = {}) { return calculer(niveauxToupie(equipe, achats, nivPieces)); }
 
 export function passifToupie(equipe) { return PIECE[equipe.ame]?.passif || null; }
 
 // Puissance globale (pour simuler les duels entre bots) : somme pondérée des niveaux
-export function puissance(equipe, achats = {}) {
-  const n = niveauxToupie(equipe, achats);
+export function puissance(equipe, achats = {}, nivPieces = {}) {
+  const n = niveauxToupie(equipe, achats, nivPieces);
   return 40 + Object.entries(n).reduce((a, [k, v]) => a + v * (STAT[k]?.special ? 1.3 : 1), 0);
 }

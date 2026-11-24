@@ -65,6 +65,7 @@ scene.add(plateau);
 
 // Rebords (la toupie rebondit dessus)
 const rebordMat = new THREE.MeshStandardMaterial({ color: 0x3b2516, roughness: 0.6 });
+const REBORD_NEUTRE = { color: 0x3b2516, emissive: 0x000000, roughness: 0.6 };
 for (const [w, d, x, z] of [
   [DESK_X * 2 + 0.06, 0.03, 0, -DESK_Z - 0.015], [DESK_X * 2 + 0.06, 0.03, 0, DESK_Z + 0.015],
   [0.03, DESK_Z * 2, -DESK_X - 0.015, 0], [0.03, DESK_Z * 2, DESK_X + 0.015, 0],
@@ -92,6 +93,25 @@ function rail(z) {
 rail(RAIL_Z);
 export const railAdverse = rail(-RAIL_Z);
 railAdverse.visible = false;
+
+// ---------------------------------------------------------------- Décor des terrains de duel
+const cuve = new THREE.Group();
+for (const r of [0.12, 0.24, 0.36, 0.48]) {
+  const anneau = new THREE.Mesh(new THREE.RingGeometry(r - 0.004, r, 64), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.08 + r * 0.25, depthWrite: false }));
+  anneau.rotation.x = -Math.PI / 2;
+  anneau.position.y = 0.0006;
+  anneau.scale.set(DESK_X / 0.55, DESK_Z / 0.55, 1);
+  cuve.add(anneau);
+}
+cuve.visible = false;
+scene.add(cuve);
+export function decorTerrain(id) {
+  const c = id === 'rebond' ? { color: 0x2f80ed, emissive: 0x0b3b8a, roughness: 0.3 }
+    : id === 'collant' ? { color: 0x7dbb3a, emissive: 0x1f3d05, roughness: 0.1 }
+    : REBORD_NEUTRE;
+  rebordMat.color.setHex(c.color); rebordMat.emissive.setHex(c.emissive); rebordMat.roughness = c.roughness;
+  cuve.visible = id === 'cuve';
+}
 
 // ---------------------------------------------------------------- Caméra adaptée à l'écran
 export function cadrer() {

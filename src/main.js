@@ -9,6 +9,7 @@ import { activerAudio } from './audio.js';
 import * as UI from './ui.js';
 import { VERSION } from './config.js';
 import { recompenser } from './progression.js';
+import { TERRAIN } from './data/terrains.js';
 
 let save = charger();
 let mode = 'atelier';
@@ -34,7 +35,7 @@ function boite() {
 
 function demarrer() {
   activerAudio();
-  nouvellePartie({ ...save.equipe }, { mode: save.mode });
+  nouvellePartie({ ...save.equipe }, { mode: save.mode, nivPieces: { ...save.niveauxPieces }, terrain: save.terrain });
   UI.montrer('atelier', false);
   UI.rechercher(partie.joueurs.map(j => j.nom), save.mode, () => {
     mode = 'partie';
@@ -47,7 +48,9 @@ brancherInterface({
   manche() {
     UI.majHud();
     if (partie.type === 'duel') {
-      UI.bandeau(`⚔️ DUEL contre ${partie.adversaire.nom}`, 'La première toupie qui tombe a perdu');
+      const td = partie.terrainDuel, T = td.terrain ? TERRAIN[td.terrain] : null;
+      const sous = T ? `Terrain : ${T.icone} ${T.nom} (${td.de === partie.moi ? 'le tien' : 'celui de ' + partie.adversaire.nom}${td.egalite ? ', égalité de priorité : tirage au sort' : ''})` : 'Bureau neutre';
+      UI.bandeau(`⚔️ DUEL contre ${partie.adversaire.nom}`, sous, 2600);
       UI.aide('Déplace le lanceur, clique et garde appuyé pour viser, relâche pour lancer');
     } else {
       UI.bandeau(`🪳 Vague ${partie.vague}`, `Écrase ${partie.objectif} cafards en ${partie.lancers} lancers`);

@@ -79,7 +79,48 @@ Les **âmes** donnent les pouvoirs du jeu 1 : Flamme → Traînée de feu, Sangs
 Cyclone → Tourbillon, Aimant → Agressivité, Œil de lynx → Précision + Critique, Ressort → Rebond.
 L'âme Carapace annule le premier gros choc en duel.
 
-### 4.2 Raretés et boîte mystère **[proposition]**
+### 4.2 Équilibrage des pièces (règle d'or, vérifiée par `tests/equilibre.mjs`)
+- **Chaque pièce a autant de bonus que de malus** : la somme de ses niveaux vaut 0. Un niveau de Multi-lancer compte pour 10.
+  Une pièce rare ou légendaire n'est donc **pas plus forte**, elle est **plus spécialisée** ou donne un pouvoir.
+- **Formules symétriques** : −5 niveaux divisent une stat autant que +5 la multiplient. Un malus ne pèse jamais plus lourd que le bonus équivalent.
+- Si les malus des pièces choisies s'additionnent trop (moins de 4 s de rotation), l'atelier affiche une alerte.
+
+### 4.3 Doublons = niveaux de pièce
+- Avoir **N exemplaires** d'une pièce débloque ses niveaux **1 à N** (5 au maximum). On choisit le niveau à l'atelier.
+- Au niveau k, **tous les bonus ET tous les malus** sont multipliés par 1 + 0,5 × (k − 1) : ×1,5 au niveau 2, ×2 au niveau 3…
+  La pièce est plus extrême, pas meilleure. Exemple avec la pointe clou :
+
+  | Niveau | Élan | Balade | Tombe sous | Rotation |
+  |---|---|---|---|---|
+  | Pointe standard | 95 cm/s | 44 cm/s | 25 % | 11,6 s |
+  | Clou niv 1 | 152 cm/s | 98 cm/s | 37 % | 5,7 s |
+  | Clou niv 2 | 181 cm/s | 142 cm/s | 43 % | 4,0 s |
+  | Clou niv 3 | 209 cm/s | 175 cm/s | 49 % | 3,1 s |
+
+### 4.4 Le lanceur : engrenage + ressort
+Deux emplacements de plus à l'atelier, avec des pièces tirées des mêmes boîtes mystère :
+- **Engrenage** → vitesse de rotation (Puissance, en tr/min) ;
+- **Ressort** → élan (vitesse de lancer).
+
+Ils se partagent la place dans le lanceur : **un ressort plus fort donne plus d'élan mais moins de rotation, et inversement.**
+Engrenages : fin (précision ↑, rotation ↓), grand (rotation ↑↑, élan ↓↓), turbo, double (2 toupies par lancer, chacune plus faible).
+Ressorts : souple (rotation ↑, élan ↓), renforcé (élan ↑↑, rotation ↓↓), catapulte.
+
+### 4.5 Terrains de duel
+- **Contre les cafards, le bureau est toujours neutre.**
+- En duel, on peut avoir choisi un **terrain** à l'atelier, s'il est débloqué par le niveau de joueur **[proposition : niveaux 2, 3 et 4]** :
+  - 🤸 **Bords rebondissants** : les bords relancent les toupies ;
+  - 🍯 **Bords collants** : les bords engluent, la toupie perd sa vitesse et de la rotation ;
+  - 🥣 **Cuve** : le plateau est creusé, les toupies glissent vers le centre et se percutent sans arrêt.
+- **Le coût : l'argent de départ.** Sans terrain, on commence la partie avec 8 💰 ; avec un terrain, on commence à 0 💰.
+  L'exemple donné était de 50 $ contre 0 ; les montants sont à équilibrer.
+- **Si les deux duellistes ont un terrain**, c'est la **priorité de terrain** qui décide :
+  - ce sont des points achetés dans la boutique **à partir de la 3e manche**, et seulement si on a choisi un terrain ;
+  - le joueur qui a **le plus de points impose son terrain**, et à égalité on tire au sort ;
+  - **les points sont secrets** : on ne voit pas ceux de l'adversaire. La règle est expliquée à l'atelier et dans la boutique.
+- Au début du duel, un bandeau annonce le terrain et à qui il appartient.
+
+### 4.6 Raretés et boîte mystère **[proposition]**
 - Commune 55 %, rare 30 %, épique 12 %, légendaire 3 %.
 - La boîte ressemble à un **carton de jouet de supermarché** : on la touche, elle s'ouvre et révèle une pièce.
 - **Premier lancement** : la toupie de base (4 pièces standard) et **1 boîte offerte**.
@@ -135,7 +176,7 @@ duels ; tout miser sur la toupie fait manquer d'argent plus tard.
 Au doigt, le lanceur vient se placer sous le doigt quand on touche l'écran.
 
 ## 7. Ce que fait le prototype (dans ce dépôt)
-- ✅ Atelier : 4 emplacements, 25 pièces (5 bases, 6 couronnes, 5 pointes, 9 âmes), **les 18 stats du jeu 1 affichées** avec l'aperçu au survol, toupie 3D qui change selon les pièces
+- ✅ Atelier : toupie (4 emplacements) + lanceur (engrenage, ressort), 34 pièces équilibrées, niveaux de pièce par doublons, terrains de duel avec priorité secrète ;, **les 18 stats du jeu 1 affichées** avec l'aperçu au survol, toupie 3D qui change selon les pièces
 - ✅ Pouvoirs du jeu 1 en jeu : critique, traînée de feu, second souffle, éclairs en chaîne, tourbillon, agressivité, multi-lancer, bords trampolines, combo, appât, trèfle doré
 - ✅ Parties normales et classées, écrous, XP et niveaux, rang, achat de boîtes
 - ✅ Boîte mystère animée, tirage par rareté, collection sauvegardée

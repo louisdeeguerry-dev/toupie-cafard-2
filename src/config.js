@@ -17,7 +17,9 @@ export const PARTIE = {
   // Simulation : ~6 étapes (~24 manches) pour départager 8 joueurs avec 5 vies.
   degatsDuel: etape => etape,
   lancersParVague: 3,
-  argentDepart: 6,
+  // Argent de départ : choisir un terrain de duel coûte tout l'argent de départ (à équilibrer)
+  argentSansTerrain: 8,
+  argentAvecTerrain: 0,
   dureeMaxDuel: 30, // s : au-delà, la toupie qui tourne le plus fort gagne
 };
 

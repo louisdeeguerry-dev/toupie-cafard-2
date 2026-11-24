@@ -3,12 +3,13 @@
 // La toupie choisie avant la partie est VERROUILLÉE jusqu'à la fin : en partie, on n'achète que des niveaux.
 import { PARTIE, VAGUE, ECONOMIE, RAIL_Z, DESK_X, RAIL_MARGIN } from './config.js';
 import { PIECES, SLOTS, DEPART } from './data/pieces.js';
-import { AMELIO, STAT_ACHATS, NOMS_BOTS } from './data/boutique.js';
+import { TERRAINS, terrainDuel } from './data/terrains.js';
+import { AMELIO, STAT_ACHATS, NOMS_BOTS, MANCHE_PRIORITE } from './data/boutique.js';
 import { statsToupie, puissance } from './stats.js';
 import { ajouterCafard, viderCafards, cafards, majCafards } from './bugs.js';
-import { creerToupieJeu, viderToupies, retirerToupie, lancerToupie, majToupies, enJeu, toupies } from './physics.js';
+import { creerToupieJeu, viderToupies, retirerToupie, lancerToupie, majToupies, enJeu, toupies, choisirTerrain } from './physics.js';
 import { lanceur } from './launcher.js';
-import { railAdverse } from './scene.js';
+import { railAdverse, decorTerrain } from './scene.js';
 import { popup, tache, viderTaches } from './fx.js';
 import { son } from './audio.js';
 
@@ -19,19 +20,29 @@ export function brancherInterface(u) { ui = u; }
 const hasard = a => a[Math.floor(Math.random() * a.length)];
 const melanger = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
-function equipeBot() {
-  const e = { ...DEPART };
-  for (const s of SLOTS) if (Math.random() < 0.6) e[s.id] = hasard(PIECES.filter(p => p.slot === s.id)).id;
-  return e;
+function bot(nom) {
+  const equipe = { ...DEPART }, nivPieces = {};
+  for (const s of SLOTS) if (Math.random() < 0.6) {
+    const p = hasard(PIECES.filter(p => p.slot === s.id));
+    equipe[s.id] = p.id;
+    nivPieces[p.id] = 1 + Math.floor(Math.random() * 2);
+  }
+  const terrain = Math.random() < 0.45 ? hasard(TERRAINS.filter(t => t.id !== 'aucun')).id : 'aucun';
+  return { nom, bot: true, vies: PARTIE.vies, equipe, nivPieces, terrain, niveaux: {}, elimine: false, place: 0 };
 }
 
 // ---------------------------------------------------------------- Début de partie
-export function nouvellePartie(equipe, { pseudo = 'Toi', mode = 'normale' } = {}) {
+// Tout ce qui est choisi à l'atelier (pièces, niveaux de pièces, terrain) est gelé jusqu'à la fin de la partie
+export function nouvellePartie(equipe, { pseudo = 'Toi', mode = 'normale', nivPieces = {}, terrain = 'aucun' } = {}) {
   const noms = melanger([...NOMS_BOTS]);
-  const joueurs = [{ nom: pseudo, bot: false, vies: PARTIE.vies, equipe: Object.freeze({ ...equipe }), niveaux: {}, elimine: false, place: 0 }];
-  for (let i = 1; i < PARTIE.joueurs; i++) joueurs.push({ nom: noms[i], bot: true, vies: PARTIE.vies, equipe: equipeBot(), niveaux: {}, elimine: false, place: 0 });
+  const nivEquipe = Object.fromEntries(Object.values(equipe).map(id => [id, nivPieces[id] || 1]));
+  const joueurs = [{ nom: pseudo, bot: false, vies: PARTIE.vies, equipe: Object.freeze({ ...equipe }), nivPieces: Object.freeze(nivEquipe),
+    terrain, niveaux: {}, elimine: false, place: 0 }];
+  for (let i = 1; i < PARTIE.joueurs; i++) joueurs.push(bot(noms[i]));
+  const avecTerrain = terrain && terrain !== 'aucun';
   Object.assign(partie, {
-    active: true, mode, joueurs, moi: joueurs[0], manche: 0, vague: 0, argent: PARTIE.argentDepart,
+    active: true, mode, joueurs, moi: joueurs[0], manche: 0, vague: 0,
+    argent: avecTerrain ? PARTIE.argentAvecTerrain : PARTIE.argentSansTerrain,
     phase: 'attente', type: null, lancers: 0, tues: 0, objectif: 0, primeObjectif: false,
     adversaire: null, mesToupies: [], sesToupies: [], attenteRelance: 0, resultat: null, chrono: 0, gainsManche: 0,
     combo: 0, dernierKill: -9, renfortT: 0, tempsJeu: 0,
@@ -42,7 +53,7 @@ export function nouvellePartie(equipe, { pseudo = 'Toi', mode = 'normale' } = {}
 export const etape = () => Math.floor(partie.manche / PARTIE.cycle.length) + 1;
 export const typeManche = (m = partie.manche) => PARTIE.cycle[m % PARTIE.cycle.length];
 export const vivants = () => partie.joueurs.filter(j => !j.elimine);
-export const mesStats = () => statsToupie(partie.moi.equipe, partie.moi.niveaux);
+export const mesStats = () => statsToupie(partie.moi.equipe, partie.moi.niveaux, partie.moi.nivPieces);
 const niv = id => partie.moi.niveaux[id] || 0;
 
 // ---------------------------------------------------------------- Manches
@@ -64,8 +75,14 @@ export function commencerManche() {
     partie.primeObjectif = false;
     partie.lancers = PARTIE.lancersParVague;
     son('chute', { volume: 0.4 });
+    choisirTerrain(null);
+    decorTerrain(null);
+    partie.terrainDuel = null;
   } else {
     partie.adversaire = melanger(vivants().filter(j => j.bot))[0];
+    partie.terrainDuel = terrainDuel(partie.moi, partie.adversaire);
+    choisirTerrain(partie.terrainDuel.terrain);
+    decorTerrain(partie.terrainDuel.terrain);
     partie.lancers = 1;
     railAdverse.visible = true;
     partie.botLance = false;
@@ -80,6 +97,8 @@ export function commencerManche() {
 const chanceDore = () => (niv('chance') ? 0.04 + 0.03 * niv('chance') : 0);
 
 function nettoyerPlateau() {
+  choisirTerrain(null);
+  decorTerrain(null);
   viderCafards();
   viderToupies();
   viderTaches();
@@ -91,10 +110,10 @@ function nettoyerPlateau() {
 
 // Lance les N toupies d'un joueur (Multi-lancer : en éventail)
 function lancerGroupe(joueur, camp, x, z, dx, dz, puiss) {
-  const n = statsToupie(joueur.equipe, joueur.niveaux).toupies, liste = [];
+  const n = statsToupie(joueur.equipe, joueur.niveaux, joueur.nivPieces).toupies, liste = [];
   const a0 = Math.atan2(dz, dx);
   for (let i = 0; i < n; i++) {
-    const t = creerToupieJeu(joueur.equipe, joueur.niveaux, camp);
+    const t = creerToupieJeu(joueur.equipe, joueur.niveaux, camp, joueur.nivPieces, { duel: partie.type === 'duel' });
     const a = a0 + (i - (n - 1) / 2) * 0.22;
     lancerToupie(t, x + (i - (n - 1) / 2) * 0.03, z, Math.cos(a), Math.sin(a), puiss);
     liste.push(t);
@@ -233,7 +252,7 @@ function terminerManche(bilan) {
     const bots = melanger(vivants().filter(j => j.bot && j !== partie.adversaire));
     for (let i = 0; i + 1 < bots.length; i += 2) {
       const a = bots[i], b = bots[i + 1];
-      const pa = Math.pow(puissance(a.equipe, a.niveaux), 3), pb = Math.pow(puissance(b.equipe, b.niveaux), 3);
+      const pa = Math.pow(puissance(a.equipe, a.niveaux, a.nivPieces), 3), pb = Math.pow(puissance(b.equipe, b.niveaux, b.nivPieces), 3);
       (Math.random() < pa / (pa + pb) ? b : a).vies -= PARTIE.degatsDuel(etape());
     }
   }
@@ -243,6 +262,8 @@ function terminerManche(bilan) {
       const a = hasard(STAT_ACHATS.filter(x => !x.id.match(/multi/)));
       b.niveaux[a.id] = Math.min(a.max, (b.niveaux[a.id] || 0) + 1);
     }
+    // Les bots qui ont un terrain misent parfois en priorité de terrain (en secret)
+    if (b.terrain !== 'aucun' && partie.manche + 1 >= MANCHE_PRIORITE && Math.random() < 0.35) b.niveaux.priorite = (b.niveaux.priorite || 0) + 1;
   }
   // Revenus de fin de manche + intérêts
   const interets = Math.min(Math.floor(partie.argent / ECONOMIE.interetPour), ECONOMIE.interetMax + niv('tirelire'));
@@ -272,8 +293,12 @@ function finPartie(place) {
 }
 
 // ---------------------------------------------------------------- Boutique
+// La priorité de terrain n'est disponible qu'avec un terrain choisi, et à partir de la 3e manche
+export const prioriteDispo = () => partie.moi.terrain !== 'aucun' && partie.manche >= MANCHE_PRIORITE;
+
 export function prixAmelio(id) {
   const a = AMELIO[id], n = niv(id);
+  if (id === 'priorite' && !prioriteDispo()) return null;
   return n >= a.max ? null : a.prix(n);
 }
 

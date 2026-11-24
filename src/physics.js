@@ -10,9 +10,13 @@ import { cafards } from './bugs.js';
 export const toupies = [];
 const DEGATS_BASE = 2.6; // dégâts d'un coup avec des lames ×1
 
-export function creerToupieJeu(equipe, achats, camp) {
-  const s = statsToupie(equipe, achats);
-  const tramp = achats.trampoline || 0;
+// Terrain de duel actif (null = bureau neutre). Contre les cafards, toujours neutre.
+let terrain = null;
+export function choisirTerrain(t) { terrain = t || null; }
+
+export function creerToupieJeu(equipe, achats, camp, nivPieces = {}, { duel = false } = {}) {
+  const s = statsToupie(equipe, achats, nivPieces);
+  const tramp = duel ? 0 : achats.trampoline || 0; // les Bords trampolines du bureau ne servent que contre les cafards
   s.trampoline = tramp ? 1.1 + 0.05 * tramp : 0;
   s.trampolineMax = 1.2 + 0.1 * tramp;
   const mesh = creerToupie(equipe);
@@ -140,6 +144,8 @@ export function majToupies(dt, cb) {
       for (const o of toupies) if (o.camp !== t.camp && enJeu(o)) { const d = Math.hypot(o.x - t.x, o.z - t.z); if (d < bd) { bd = d; best = o; } }
       if (best) { ax += ((best.x - t.x) / bd) * s.attraction * ratio; az += ((best.z - t.z) / bd) * s.attraction * ratio; }
     }
+    // Terrain « cuve » : le plateau est creusé, les toupies glissent vers le centre
+    if (terrain === 'cuve') { ax -= t.x * 1.1; az -= t.z * 1.1; }
     t.vx += ax * dt; t.vz += az * dt;
     const fr = Math.exp(-s.frottement * dt);
     t.vx *= fr; t.vz *= fr;
@@ -148,7 +154,12 @@ export function majToupies(dt, cb) {
     // Rebonds sur les bords (Rebond, et Bords trampolines du bureau)
     const r = s.rayon;
     const mur = () => {
-      if (s.trampoline) {
+      if (terrain === 'rebond') { // bords rebondissants : relancent la toupie (vitesse plafonnée)
+        const v = Math.hypot(t.vx, t.vz), k = Math.min(1.25, (s.vitesse * 1.3) / Math.max(v, 1e-6));
+        t.vx *= k; t.vz *= k;
+      } else if (terrain === 'collant') { // bords collants : la toupie s'englue
+        t.vx *= 0.15; t.vz *= 0.15; t.rotation *= 0.96;
+      } else if (s.trampoline) {
         const v = Math.hypot(t.vx, t.vz), cap = s.vitesse * s.trampolineMax;
         const k = Math.max(s.rebond, Math.min(s.trampoline, cap / Math.max(v, 1e-6)));
         t.vx *= k; t.vz *= k;

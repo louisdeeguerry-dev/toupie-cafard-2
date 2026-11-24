@@ -54,6 +54,18 @@
   .ls .v { text-align: right; font-weight: 600; }
   .ls.vide { opacity: .4; }
   .plus { color: var(--vert) !important; } .moins { color: var(--rouge) !important; }
+  .lib-groupe { grid-column: 1 / -1; color: var(--doux); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; margin-top: 4px; }
+  .niv-badge { font-size: 11px; background: var(--accent); color: #1b0f05; border-radius: 6px; padding: 0 5px; font-weight: 900; }
+  .chips { display: flex; align-items: center; gap: 5px; margin-top: 6px; flex-wrap: wrap; font-size: 12px; }
+  .chip { width: 26px; height: 26px; border-radius: 7px; background: #1a130e; border: 2px solid #3d2e22; display: grid; place-items: center; font-weight: 800; cursor: pointer; }
+  .chip.on { border-color: var(--accent); background: #3a2617; }
+  .carte { cursor: pointer; }
+  .terrains { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .terrain { display: grid; grid-template-columns: 26px 1fr; gap: 6px; align-items: center; text-align: left; background: #2a1f17; border: 2px solid #3d2e22; border-radius: 10px; padding: 6px 8px; }
+  .terrain .ic { font-size: 20px; }
+  .terrain.choisi { border-color: var(--accent); background: #3a2617; }
+  .terrain:disabled { opacity: .45; cursor: default; }
+  .alerte { background: rgba(255,77,77,.15); border: 1px solid var(--rouge); border-radius: 8px; padding: 6px 8px; font-size: 13px; }
   .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .mode { background: #2a1f17; border: 2px solid #3d2e22; border-radius: 10px; padding: 8px; font-weight: 700; }
   .mode.choisi { border-color: var(--accent); background: #3a2617; }
@@ -179,6 +191,9 @@
     <div class="ligne"><h2>Ta toupie</h2><span class="petit" id="bilanCollection"></span></div>
     <div class="slots" id="slots"></div>
     <div class="choix" id="choix"></div>
+    <h2 style="margin-top:6px">🏟️ Terrain de duel</h2>
+    <div class="terrains" id="terrains"></div>
+    <div class="petit" id="terrainInfo"></div>
     <div class="modes" id="modes"></div>
     <div class="actions">
       <button class="btn" id="jouer">JOUER ▶</button>

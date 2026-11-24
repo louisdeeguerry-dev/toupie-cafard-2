@@ -209,3 +209,31 @@ Chaque échange sur le projet est consigné ici : prompt optimisé + ce qui a é
 - `src/progression.js` : parties normales et classées, Écrous 🔩, XP et niveaux (1 boîte par niveau), 8 rangs, achat de boîtes.
 - Toupie verrouillée en partie (gelée au lancement de la partie, aucun changement de pièce possible).
 - Tests : partie complète par le robot sans erreur, 25 pièces construites, tirages conformes, téléphone OK.
+
+---
+
+## 2026-11-24 — Niveaux de pièces, lanceur personnalisable, terrains de duel
+
+**Prompt optimisé**
+> Rôle : game designer (équilibrage) + développeur gameplay.
+> Objectifs, tous réglés **à l'atelier, avant la partie** (puis verrouillés) :
+> 1. **Doublons = niveaux de pièce** : avec 2 pointes clou, on peut jouer la pointe clou niveau 1 ou 2. Le niveau
+>    supérieur amplifie TOUT (plus de vitesse ET encore moins d'équilibre) : plus extrême, pas forcément meilleur.
+> 2. **Lanceur personnalisable** : engrenage (vitesse de rotation) et ressort (élan), interchangeables.
+>    Un ressort plus fort prend plus de place et enlève de la rotation, et inversement.
+> 3. **Terrains de duel** (bureau neutre contre les cafards), si débloqués : bords rebondissants, bords collants,
+>    cuve / arène. Choisir un terrain coûte l'argent de départ (ex. 50 $ sans terrain, 0 avec, à équilibrer).
+>    Si les deux joueurs ont un terrain : **priorité de terrain**, achetable en partie après 3 manches ;
+>    le plus de points impose son terrain ; points **cachés** à l'adversaire, mais règle **expliquée**.
+> Contrainte permanente : **tout doit toujours être équilibré** et permettre de construire un « deck ».
+
+**Réalisé**
+- Catalogue rééquilibré (34 pièces) : chaque pièce a une somme de niveaux nulle (test automatique `tests/equilibre.mjs`).
+- Formules de stats rendues symétriques (un malus ne pèse pas plus que le bonus équivalent) — corrigé après un test
+  qui montrait une pointe clou niv 2 tombant en 1,5 s.
+- Niveaux de pièce 1 à 5 selon le nombre d'exemplaires (×1,5 par niveau sur bonus ET malus), choix à l'atelier.
+- Lanceur : emplacements Engrenage (5 pièces) et Ressort (4 pièces), dont l'engrenage double (2 toupies).
+- Terrains : rebondissant, collant, cuve (physique + décor), débloqués aux niveaux 2/3/4 ; argent de départ 8 💰 sans
+  terrain / 0 💰 avec ; priorité de terrain secrète (boutique, dès la manche 3) ; bots avec terrains et priorités.
+- Alerte à l'atelier si une combinaison rend la toupie trop instable (< 4 s de rotation).
+- Tests navigateur : parties complètes (dont classée avec terrain Cuve et engrenage double), 34 pièces, téléphone : 0 erreur.

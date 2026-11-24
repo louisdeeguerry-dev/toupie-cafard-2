@@ -18,6 +18,8 @@ function neuf() {
     rangPoints: 0, // parties classées
     meilleurRang: 0,
     mode: 'normale',
+    niveauxPieces: {}, // niveau choisi pour chaque pièce (doublons)
+    terrain: 'aucun', // terrain de duel choisi
   };
 }
 
@@ -27,7 +29,9 @@ export function charger() {
     if (s && s.collection && s.equipe) {
       // On retire ce qui n'existe plus dans le catalogue (pièce renommée/supprimée)
       for (const id of Object.keys(s.collection)) if (!PIECE[id]) delete s.collection[id];
-      for (const [slot, id] of Object.entries(s.equipe)) if (!PIECE[id] || !s.collection[id]) s.equipe[slot] = DEPART[slot];
+      for (const id of Object.values(DEPART)) s.collection[id] = s.collection[id] || 1; // nouveaux emplacements (lanceur)
+      s.equipe = { ...DEPART, ...s.equipe };
+      for (const [slot, id] of Object.entries(s.equipe)) if (!PIECE[id] || !s.collection[id] || PIECE[id].slot !== slot) s.equipe[slot] = DEPART[slot];
       return { ...neuf(), ...s };
     }
   } catch { /* sauvegarde illisible ou stockage bloqué */ }
