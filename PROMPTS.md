@@ -41,3 +41,18 @@ Chaque échange sur le projet est consigné ici : prompt optimisé + ce qui a é
 - Création automatique du dépôt impossible : la session cloud n'a pas le droit de créer un
   dépôt GitHub (accès limité aux dépôts déjà rattachés). L'utilisateur doit créer le dépôt vide,
   Claude le rattache ensuite et pousse le projet.
+
+---
+
+## 2026-11-24 — Vérification du formulaire GitHub dans Chrome
+
+**Prompt optimisé**
+> Rôle : assistant avec accès au navigateur Chrome de l'utilisateur.
+> Objectif : contrôler dans Chrome le formulaire de création du dépôt `toupie-cafard-2`
+> (propriétaire, nom, visibilité, dépôt vide) puis cliquer sur « Create repository » si tout est correct.
+> Critère de réussite : dépôt vide créé avec les bons réglages, prêt à recevoir le projet.
+
+**Réalisé**
+- Impossible : aucune extension Claude in Chrome ni ordinateur de l'utilisateur relié à cette session cloud.
+- Vérifié que `louisdeeguerry-dev/toupie-cafard-2` n'existe pas encore.
+- Checklist de vérification fournie à l'utilisateur pour valider lui-même.
