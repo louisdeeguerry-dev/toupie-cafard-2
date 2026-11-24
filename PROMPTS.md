@@ -56,3 +56,19 @@ Chaque échange sur le projet est consigné ici : prompt optimisé + ce qui a é
 - Impossible : aucune extension Claude in Chrome ni ordinateur de l'utilisateur relié à cette session cloud.
 - Vérifié que `louisdeeguerry-dev/toupie-cafard-2` n'existe pas encore.
 - Checklist de vérification fournie à l'utilisateur pour valider lui-même.
+
+---
+
+## 2026-11-24 — Reconnexion et autonomie
+
+**Prompt optimisé**
+> Rôle : assistant autonome de pilotage de projet.
+> Objectif : utiliser la connexion rétablie pour finaliser seul la mise en ligne du projet
+> (vérifier/créer le dépôt `toupie-cafard-2`, y pousser le projet) sans redemander de validation.
+> Critère de réussite : le projet est sauvegardé sur GitHub.
+
+**Réalisé**
+- Contrôles : dépôt `toupie-cafard-2` introuvable (ni `louisdeeguerry-dev`, ni `toupie-cafards`),
+  extension Chrome et ordinateur toujours non reliés à cette session cloud.
+- Sauvegarde de secours : projet poussé sur une branche dédiée `toupie-cafard-2` du dépôt
+  `louisdeeguerry-dev/toupie-cafards` (branche séparée, contenu existant intact).
