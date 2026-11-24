@@ -1,5 +1,5 @@
 // Interface : atelier, boîte mystère, recherche de partie, HUD, bilan + boutique, fin de partie.
-import { SLOTS, PIECES, PIECE, RARETES, tirerPiece, niveauxPiece, multiplicateurNiveau, NIVEAU_PIECE_MAX } from './data/pieces.js';
+import { SLOTS, PIECES, PIECE, RARETES, tirerBoite, niveauxPiece, multiplicateurNiveau, NIVEAU_PIECE_MAX } from './data/pieces.js';
 import { TERRAINS, TERRAIN } from './data/terrains.js';
 import { BUREAU, STAT_ACHATS, PRIORITE, MANCHE_PRIORITE } from './data/boutique.js';
 import { PARTIE } from './config.js';
@@ -79,21 +79,22 @@ export function creerAtelier(save, { onChange, onJouer, onBoite }) {
     const xpMax = xpPourNiveau(save.niveau);
     $('profil').innerHTML = `
       <div class="ligne"><span>⭐ Niveau <b>${save.niveau}</b></span><span>${MONNAIE.icone} <b>${save.ecrous}</b> ${MONNAIE.nom}</span></div>
-      <div class="barre xp"><i style="width:${(save.xp / xpMax) * 100}%"></i></div><div class="petit">${save.xp}/${xpMax} XP — chaque niveau offre une boîte mystère et peut débloquer un terrain</div>
+      <div class="barre xp"><i style="width:${(save.xp / xpMax) * 100}%"></i></div><div class="petit">${save.xp}/${xpMax} XP — chaque niveau offre une boîte mystère</div>
       <div class="ligne"><span>${rang.icone} Rang <b>${rang.nom}</b> · ${save.rangPoints} pts</span><span class="petit">${suivant ? `${suivant.icone} ${suivant.nom} à ${suivant.min}` : 'rang maximum'}</span></div>
       <div class="petit">Parties : ${save.parties} · Victoires : ${save.victoires}${save.meilleure ? ' · Meilleure place : ' + save.meilleure + 'e' : ''}</div>`;
     $('modes').innerHTML = Object.entries(MODES).map(([id, m]) =>
       `<button class="mode ${save.mode === id ? 'choisi' : ''}" data-mode="${id}" title="${esc(m.desc)}">${m.icone} ${m.nom}</button>`).join('');
     $('terrains').innerHTML = TERRAINS.map(t => {
-      const verrou = save.niveau < t.niveauRequis;
+      const verrou = t.rarete && !save.terrains.includes(t.id), r = t.rarete && RARETES[t.rarete];
       return `<button class="terrain ${save.terrain === t.id ? 'choisi' : ''}" data-terrain="${t.id}" ${verrou ? 'disabled' : ''} title="${esc(t.desc)}">
-        <span class="ic">${t.icone}</span><span><b>${t.nom}</b><br><span class="petit">${verrou ? `🔒 niveau ${t.niveauRequis}` : esc(t.desc)}</span></span></button>`;
+        <span class="ic">${t.icone}</span><span><b>${t.nom}</b>${r ? ` <span class="rar" style="color:${r.couleur}">${r.nom}</span>` : ''}<br>
+        <span class="petit">${verrou ? '🔒 à trouver dans les boîtes mystère' : esc(t.desc)}</span></span></button>`;
     }).join('');
     const avec = save.terrain !== 'aucun';
     $('terrainInfo').innerHTML = `Contre les cafards, le bureau est toujours neutre. ${avec
       ? `<b>Avec un terrain, tu commences la partie à ${PARTIE.argentAvecTerrain} 💰</b> (au lieu de ${PARTIE.argentSansTerrain}).`
       : `<b>Sans terrain, tu commences avec ${PARTIE.argentSansTerrain} 💰.</b> Choisir un terrain coûte cet argent de départ.`}
-      Si ton adversaire a aussi un terrain, c'est la <b>priorité de terrain</b> qui décide : des points achetés en partie à partir de la manche ${MANCHE_PRIORITE}, secrets pour l'adversaire. Le plus de points impose son terrain ; à égalité, tirage au sort.`;
+      Si ton adversaire a aussi un terrain, c'est la <b>priorité de terrain</b> qui décide : des points achetés en partie à partir de la manche ${MANCHE_PRIORITE}, secrets pour l'adversaire. Le plus de points impose son terrain ; à égalité, bureau neutre. Les terrains se trouvent dans les boîtes mystère (rares à légendaires, jamais en double).`;
   }
 
   function rendreStats() {
@@ -159,12 +160,29 @@ export function ouvrirBoite(save, { onFini }) {
   carton.onclick = () => {
     carton.onclick = null;
     save.boites--;
-    const p = tirerPiece();
-    const neuve = !save.collection[p.id];
-    save.collection[p.id] = (save.collection[p.id] || 0) + 1;
+    const lot = tirerBoite(save.terrains);
     carton.className = 'carton ouvert';
     son('boite');
     $('boiteAide').textContent = '';
+    if (lot.type === 'terrain') {
+      const t = lot.terrain, r = RARETES[t.rarete];
+      save.terrains.push(t.id);
+      return setTimeout(() => {
+        $('revelation').innerHTML = `<div class="panneau revelation" style="border-color:${r.couleur};box-shadow:0 0 40px ${r.couleur}66">
+          <div class="petit">🏟️ Terrain de duel · NOUVEAU !</div>
+          <div class="rar" style="color:${r.couleur};font-weight:900">${r.nom}</div>
+          <div class="grand">${t.icone} ${esc(t.nom)}</div><div class="desc">${esc(t.desc)}</div>
+          <div class="petit" style="margin-top:6px">Choisir un terrain coûte ton argent de départ en partie.</div>
+          <div class="actions" style="margin-top:14px">
+            <button class="btn second" id="boiteGarder">Garder</button><button class="btn" id="boiteEquiper">Choisir ce terrain</button>
+          </div></div>`;
+        $('boiteGarder').onclick = () => { montrer('boite', false); onFini(t, false); };
+        $('boiteEquiper').onclick = () => { save.terrain = t.id; montrer('boite', false); onFini(t, true); };
+      }, 450);
+    }
+    const p = lot.piece;
+    const neuve = !save.collection[p.id];
+    save.collection[p.id] = (save.collection[p.id] || 0) + 1;
     setTimeout(() => {
       const r = RARETES[p.rarete], sl = SLOTS.find(s => s.id === p.slot);
       $('revelation').innerHTML = `<div class="panneau revelation" style="border-color:${r.couleur};box-shadow:0 0 40px ${r.couleur}66">

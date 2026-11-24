@@ -237,3 +237,23 @@ Chaque échange sur le projet est consigné ici : prompt optimisé + ce qui a é
   terrain / 0 💰 avec ; priorité de terrain secrète (boutique, dès la manche 3) ; bots avec terrains et priorités.
 - Alerte à l'atelier si une combinaison rend la toupie trop instable (< 4 s de rotation).
 - Tests navigateur : parties complètes (dont classée avec terrain Cuve et engrenage double), 34 pièces, téléphone : 0 erreur.
+
+---
+
+## 2026-11-24 — Égalité de priorité et terrains dans les boîtes mystère
+
+**Prompt optimisé**
+> Rôle : game designer + développeur gameplay.
+> Décisions :
+> 1. En duel, si les deux joueurs ont la même priorité de terrain : **bureau neutre** (plus de tirage au sort).
+> 2. Les terrains ne se débloquent plus par le niveau de joueur : ils se trouvent dans les **boîtes mystère**,
+>    comme récompenses **rares à légendaires**, et **sans doublon** (pas de niveaux de terrain).
+> Livrables : règle de priorité modifiée et testée ; tirage des boîtes incluant les terrains non possédés ;
+> atelier (terrains verrouillés « à trouver »), révélation d'un terrain dans la boîte ; documents à jour.
+
+**Réalisé**
+- `terrainDuel` : égalité → bureau neutre ; même terrain des deux côtés → pas de conflit. Bandeau de duel adapté.
+- Terrains : Bords rebondissants (rare), Bords collants (épique), Cuve (légendaire) ; tirés dans les boîtes avec les
+  pièces de même rareté, jamais en double (≈ 2,4 %, 1,2 % et 0,6 % par boîte avant de les avoir).
+- Sauvegarde : liste des terrains possédés ; un terrain non possédé ne peut pas être choisi.
+- Tests : `tests/equilibre.mjs` (égalité neutre, terrains sans doublon), atelier et partie complète dans le navigateur : 0 erreur.

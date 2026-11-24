@@ -16,5 +16,12 @@ ok(terrainDuel(a, b).terrain === 'collant', '4 points battent 3 points');
 ok(terrainDuel({ ...a, niveaux: { priorite: 3 } }, { ...b, niveaux: { priorite: 2 } }).terrain === 'rebond', '3 points battent 2 points');
 ok(terrainDuel(a, c).terrain === 'rebond', 'seul terrain choisi');
 ok(terrainDuel(c, c).terrain === null, 'aucun terrain = bureau neutre');
+ok(terrainDuel({ ...a, niveaux: { priorite: 2 } }, { ...b, niveaux: { priorite: 2 } }).terrain === null, 'égalité de priorité = bureau neutre');
+// Boîtes : les terrains sortent seulement en rare+, jamais en double
+import { tirerBoite } from '../src/data/pieces.js';
+const vus = {};
+for (let i = 0; i < 20000; i++) { const l = tirerBoite([]); if (l.type === 'terrain') vus[l.terrain.id] = (vus[l.terrain.id] || 0) + 1; }
+ok(vus.rebond && vus.collant && vus.cuve && !vus.aucun, 'les 3 terrains sortent des boîtes : ' + JSON.stringify(vus));
+for (let i = 0; i < 5000; i++) { const l = tirerBoite(['rebond', 'collant', 'cuve']); if (l.type === 'terrain') { ok(false, 'terrain en double'); break; } }
 console.log(erreurs ? `${erreurs} erreur(s)` : `OK : ${PIECES.length} pièces équilibrées sur ${NIVEAU_PIECE_MAX} niveaux, priorité de terrain correcte`);
 process.exit(erreurs ? 1 : 0);

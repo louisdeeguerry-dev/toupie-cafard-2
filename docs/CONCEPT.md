@@ -108,15 +108,18 @@ Ressorts : souple (rotation ↑, élan ↓), renforcé (élan ↑↑, rotation �
 
 ### 4.5 Terrains de duel
 - **Contre les cafards, le bureau est toujours neutre.**
-- En duel, on peut avoir choisi un **terrain** à l'atelier, s'il est débloqué par le niveau de joueur **[proposition : niveaux 2, 3 et 4]** :
-  - 🤸 **Bords rebondissants** : les bords relancent les toupies ;
-  - 🍯 **Bords collants** : les bords engluent, la toupie perd sa vitesse et de la rotation ;
-  - 🥣 **Cuve** : le plateau est creusé, les toupies glissent vers le centre et se percutent sans arrêt.
+- En duel, on peut avoir choisi un **terrain** à l'atelier, si on l'a trouvé.
+- **Les terrains se trouvent dans les boîtes mystère**, comme récompenses rares à légendaires, et **jamais en double** :
+  une fois trouvé, le terrain est à toi.
+  - 🤸 **Bords rebondissants** (rare) : les bords relancent les toupies ;
+  - 🍯 **Bords collants** (épique) : les bords engluent, la toupie perd sa vitesse et de la rotation ;
+  - 🥣 **Cuve** (légendaire) : le plateau est creusé, les toupies glissent vers le centre et se percutent sans arrêt.
 - **Le coût : l'argent de départ.** Sans terrain, on commence la partie avec 8 💰 ; avec un terrain, on commence à 0 💰.
   L'exemple donné était de 50 $ contre 0 ; les montants sont à équilibrer.
 - **Si les deux duellistes ont un terrain**, c'est la **priorité de terrain** qui décide :
   - ce sont des points achetés dans la boutique **à partir de la 3e manche**, et seulement si on a choisi un terrain ;
-  - le joueur qui a **le plus de points impose son terrain**, et à égalité on tire au sort ;
+  - le joueur qui a **le plus de points impose son terrain**, et **à égalité, le bureau est neutre** (validé) ;
+  - si les deux ont le même terrain, il n'y a pas de conflit ;
   - **les points sont secrets** : on ne voit pas ceux de l'adversaire. La règle est expliquée à l'atelier et dans la boutique.
 - Au début du duel, un bandeau annonce le terrain et à qui il appartient.
 

@@ -10,7 +10,7 @@ const OUT = process.argv[2], W = +process.argv[3] || 1280, H = +process.argv[4] 
   p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
   p.on('pageerror', e => errs.push('PAGEERROR ' + e.message));
   await p.goto('http://localhost:8123/');
-  await p.evaluate(() => localStorage.clear());
+  await p.evaluate(() => { localStorage.clear(); localStorage.setItem('toupie-cafard-2-v1', JSON.stringify({ collection: { 'base-standard': 1, 'couronne-standard': 1, 'pointe-standard': 1, 'ame-vide': 1, 'pointe-clou': 2, 'engrenage-double': 1 }, equipe: { base: 'base-standard', couronne: 'couronne-standard', pointe: 'pointe-clou', ame: 'ame-vide', engrenage: 'engrenage-double' }, niveauxPieces: { 'pointe-clou': 2 }, niveau: 4, terrain: 'cuve', terrains: ['cuve'], mode: 'classee' })); });
   await p.reload(); await p.waitForTimeout(800);
   await p.screenshot({ path: OUT + '/a-atelier.png' });
   await p.evaluate(() => { __tc2.acceleration = 8; __tc2.sansConfirmation = true; });
@@ -40,7 +40,7 @@ const OUT = process.argv[2], W = +process.argv[3] || 1280, H = +process.argv[4] 
     });
     if (e.bilan) journal.push(`manche ${e.manche} vies ${e.vies} argent ${e.argent} tempsJeu ${e.t}s bots ${e.bots}`);
     if (e.achat && !shopShot) { shopShot = true; await p.screenshot({ path: OUT + '/c-boutique.png' }); }
-    if (e.lance === 'duel' && !duelShot) { duelShot = true; await p.waitForTimeout(500); await p.screenshot({ path: OUT + '/b-duel.png' }); }
+    if (e.lance === 'duel' && !duelShot) { duelShot = true; await p.waitForTimeout(500); await p.screenshot({ path: OUT + '/b-duel.png' }); journal.push('DUEL ' + await p.evaluate(() => JSON.stringify({ terrain: __tc2.partie.terrainDuel.terrain, de: __tc2.partie.terrainDuel.de && __tc2.partie.terrainDuel.de.nom, mes: __tc2.partie.mesToupies.length, argentDepart: null }))); }
     if (e.fin) { journal.push(e.texte); journal.push(`FIN place ${e.place}, manches ${e.manche}, vagues ${e.vague}, ${(Date.now() - t0) / 1000}s réelles (x4)`); await p.waitForTimeout(800); await p.screenshot({ path: OUT + '/d-fin.png' }); break; }
   }
   console.log(journal.join('\n'));

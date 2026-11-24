@@ -1,3 +1,4 @@
+import { TERRAINS } from './terrains.js';
 // Le catalogue des pièces. Toupie = 4 emplacements (base, couronne, pointe, âme) ; lanceur = 2 (engrenage, ressort).
 // Chaque pièce donne des NIVEAUX dans les stats du jeu 1 (voir src/stats.js).
 //
@@ -124,11 +125,16 @@ export const DEPART = {
   engrenage: 'engrenage-standard', ressort: 'ressort-standard',
 };
 
-// Tirage d'une boîte mystère : rareté d'abord, puis une pièce au hasard de cette rareté (hors pièces de départ)
-export function tirerPiece(rand = Math.random) {
+// Tirage d'une boîte mystère : rareté d'abord, puis un objet au hasard de cette rareté.
+// Objets : les pièces (hors pièces de départ, doublons possibles = niveaux) et les terrains de duel pas encore possédés
+// (rares à légendaires, jamais en double). terrainsPossedes : liste d'ids.
+export function tirerBoite(terrainsPossedes = [], rand = Math.random) {
   const total = Object.values(RARETES).reduce((a, r) => a + r.chance, 0);
   let x = rand() * total, rarete = 'commune';
   for (const [id, r] of Object.entries(RARETES)) { if ((x -= r.chance) < 0) { rarete = id; break; } }
-  const pool = PIECES.filter(p => p.rarete === rarete && !Object.values(DEPART).includes(p.id));
+  const pool = [
+    ...PIECES.filter(p => p.rarete === rarete && !Object.values(DEPART).includes(p.id)).map(piece => ({ type: 'piece', piece })),
+    ...TERRAINS.filter(t => t.rarete === rarete && !terrainsPossedes.includes(t.id)).map(terrain => ({ type: 'terrain', terrain })),
+  ];
   return pool[Math.floor(rand() * pool.length)];
 }

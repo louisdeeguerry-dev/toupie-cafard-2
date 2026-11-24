@@ -31,7 +31,7 @@ export const STAT_ACHATS = STATS.map(s => ({
 
 // Priorité de terrain : achetable à partir de la 3e manche, seulement si on a choisi un terrain. Points CACHÉS à l'adversaire.
 export const PRIORITE = { id: 'priorite', groupe: 'terrain', nom: 'Priorité de terrain', icone: '🏟️', max: 10, prix: n => 2 + n * 2,
-  desc: 'En duel, si l\'adversaire a aussi un terrain, celui qui a le plus de points impose le sien (égalité : tirage au sort). Tes points restent secrets.',
+  desc: 'En duel, si l\'adversaire a aussi un terrain, celui qui a le plus de points impose le sien (égalité : bureau neutre). Tes points restent secrets.',
   fmt: n => `${n} point${n > 1 ? 's' : ''} (secret)` };
 export const MANCHE_PRIORITE = 3; // disponible après 3 manches
 

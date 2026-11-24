@@ -49,7 +49,8 @@ brancherInterface({
     UI.majHud();
     if (partie.type === 'duel') {
       const td = partie.terrainDuel, T = td.terrain ? TERRAIN[td.terrain] : null;
-      const sous = T ? `Terrain : ${T.icone} ${T.nom} (${td.de === partie.moi ? 'le tien' : 'celui de ' + partie.adversaire.nom}${td.egalite ? ', égalité de priorité : tirage au sort' : ''})` : 'Bureau neutre';
+      const sous = T ? `Terrain : ${T.icone} ${T.nom} (${td.de === partie.moi ? 'le tien' : 'celui de ' + partie.adversaire.nom})`
+        : td.egalite ? 'Égalité de priorité de terrain : bureau neutre' : 'Bureau neutre';
       UI.bandeau(`⚔️ DUEL contre ${partie.adversaire.nom}`, sous, 2600);
       UI.aide('Déplace le lanceur, clique et garde appuyé pour viser, relâche pour lancer');
     } else {

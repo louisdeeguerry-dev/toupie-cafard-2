@@ -20,6 +20,7 @@ function neuf() {
     mode: 'normale',
     niveauxPieces: {}, // niveau choisi pour chaque pièce (doublons)
     terrain: 'aucun', // terrain de duel choisi
+    terrains: [], // terrains de duel trouvés dans les boîtes mystère
   };
 }
 
@@ -32,7 +33,9 @@ export function charger() {
       for (const id of Object.values(DEPART)) s.collection[id] = s.collection[id] || 1; // nouveaux emplacements (lanceur)
       s.equipe = { ...DEPART, ...s.equipe };
       for (const [slot, id] of Object.entries(s.equipe)) if (!PIECE[id] || !s.collection[id] || PIECE[id].slot !== slot) s.equipe[slot] = DEPART[slot];
-      return { ...neuf(), ...s };
+      const r = { ...neuf(), ...s };
+      if (r.terrain !== 'aucun' && !r.terrains.includes(r.terrain)) r.terrain = 'aucun'; // terrain non possédé
+      return r;
     }
   } catch { /* sauvegarde illisible ou stockage bloqué */ }
   return neuf();
