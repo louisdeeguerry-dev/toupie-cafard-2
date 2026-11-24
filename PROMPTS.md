@@ -23,4 +23,4 @@ Chaque échange sur le projet est consigné ici : prompt optimisé + ce qui a é
 - Création de `CLAUDE.md` (règles), `PROMPTS.md` (ce journal), `RESSOURCES.md` (catalogue).
 - Analyse des dépôts existants (Toupie contre Cafards, Voxel Sword…) pour adapter les ressources
   à la stack Three.js / Capacitor / Electron-Steam.
-- ~110 dépôts GitHub vérifiés (existence contrôlée le 2026-11-24) + sites d'assets.
+- ~85 dépôts GitHub vérifiés (existence contrôlée le 2026-11-24) + sites d'assets.
