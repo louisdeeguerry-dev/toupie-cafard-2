@@ -6,6 +6,7 @@ import { PIECE, niveauxPiece } from './data/pieces.js';
 export const GROUPES = [
   { id: 'toupie', nom: 'Toupie', icone: '🌀' },
   { id: 'lanceur', nom: 'Lanceur', icone: '🚀' },
+  { id: 'bureau', nom: 'Bureau (économie)', icone: '🪑' },
 ];
 
 // special : pouvoir à 0 par défaut (affiché « — » tant qu'on ne l'a pas)
@@ -46,6 +47,21 @@ export const STATS = [
     fmt: s => `zone de ${Math.round(s.parfait * 100)} %` },
   { id: 'multi', groupe: 'lanceur', nom: 'Multi-lancer', icone: '🌀', special: true, desc: 'Lance plusieurs toupies d\'un coup.',
     fmt: s => `${s.toupies} toupie${s.toupies > 1 ? 's' : ''} par lancer` },
+  // Bureau (économie, repris de l'atelier du jeu 1) : améliorables en partie, et donnés ou retirés par certaines pièces
+  { id: 'nid', groupe: 'bureau', nom: 'Nid', icone: '🪺', desc: 'Plus de cafards à chaque vague (donc plus d\'argent… s\'ils meurent).',
+    fmt: s => s.nid ? `${s.nid > 0 ? '+' : ''}${s.nid} cafards par vague` : 'nombre normal de cafards' },
+  { id: 'prime', groupe: 'bureau', nom: 'Prime', icone: '💰', desc: 'Chaque cafard écrasé rapporte plus.',
+    fmt: s => `×${s.prime.toFixed(2)} argent par cafard` },
+  { id: 'chance', groupe: 'bureau', nom: 'Trèfle doré', icone: '🍀', special: true, desc: 'Des cafards dorés qui rapportent 5 fois plus.',
+    fmt: s => s.chanceDore ? `${Math.round(s.chanceDore * 100)} % de cafards dorés` : '—' },
+  { id: 'combo', groupe: 'bureau', nom: 'Combo', icone: '🔗', desc: 'Bonus quand on écrase plusieurs cafards à la suite.',
+    fmt: s => `+${Math.round(s.comboBonus * 100)} % / cafard, ${s.comboFenetre.toFixed(1)} s` },
+  { id: 'appat', groupe: 'bureau', nom: 'Appât', icone: '🧀', special: true, desc: 'Des cafards arrivent en renfort pendant la vague.',
+    fmt: s => s.appat ? `1 renfort toutes les ${s.appat.toFixed(1)} s` : '—' },
+  { id: 'trampoline', groupe: 'bureau', nom: 'Bords trampolines', icone: '🤸', special: true, desc: 'Contre les cafards, les bords relancent la toupie encore plus vite.',
+    fmt: s => s.trampoline ? `rebond ×${s.trampoline.toFixed(2)}` : '—' },
+  { id: 'tirelire', groupe: 'bureau', nom: 'Tirelire', icone: '🐷', desc: 'Plus d\'intérêts sur l\'argent gardé entre les manches.',
+    fmt: s => `${s.interetMax} 💰 d'intérêts max` },
 ];
 export const STAT = Object.fromEntries(STATS.map(s => [s.id, s]));
 
@@ -82,6 +98,16 @@ export function calculer(niv) {
     vitesse: 0.95 * f(0.1, L('elan')),
     parfait: Math.max(0.03, Math.min(0.4, 0.1 + 0.02 * L('precision'))),
     toupies: 1 + P('multi'),
+    // Bureau
+    nid: Math.max(-4, Math.round(2 * L('nid'))),
+    prime: f(0.2, L('prime')),
+    chanceDore: P('chance') ? 0.04 + 0.03 * P('chance') : 0,
+    comboFenetre: Math.max(0.6, 1.2 + 0.2 * L('combo')),
+    comboBonus: Math.max(0, 0.1 + 0.05 * L('combo')),
+    appat: P('appat') ? 6 / (1 + 0.25 * (P('appat') - 1)) : 0,
+    trampoline: P('trampoline') ? 1.1 + 0.05 * P('trampoline') : 0,
+    trampolineMax: 1.2 + 0.1 * P('trampoline'),
+    interetMax: Math.max(0, 3 + L('tirelire')),
   };
 }
 

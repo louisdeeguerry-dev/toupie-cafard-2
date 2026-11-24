@@ -23,12 +23,14 @@ export const PARTIE = {
   dureeMaxDuel: 30, // s : au-delà, la toupie qui tourne le plus fort gagne
 };
 
-// Les vagues de cafards (manche n = numéro global de la manche de cafards, à partir de 1)
+// Les vagues de cafards. n = numéro de la vague de cafards (1, 2, 3…), etape = étape en cours (1 + nombre de duels passés).
+// Les cafards ÉVOLUENT après chaque duel : vie ×1,15 par étape, et de nouvelles espèces (voir src/data/cafards.js).
 export const VAGUE = {
-  nombre: n => 6 + Math.round(n * 1.6),
-  objectif: n => Math.ceil((6 + Math.round(n * 1.6)) * 0.7),
-  vieCafard: n => 2.2 * Math.pow(1.16, n - 1),
-  prime: 1, // 💰 par cafard
+  nombre: n => 10 + Math.floor((n - 1) * 0.7), // 10 cafards au début
+  objectif: nb => Math.ceil(nb * 0.55),
+  vieCafard: (n, etape) => 2.2 * Math.pow(1.06, n - 1) * Math.pow(1.15, etape - 1),
+  prime: 1, // 💰 par cafard normal (les autres espèces rapportent plus)
+  primeEtape: etape => 1 + 0.35 * (etape - 1), // les cafards évolués rapportent plus : investir dans la toupie reste rentable
   bonusObjectif: n => 2 + Math.floor(n / 2), // 💰 si l'objectif est atteint
 };
 

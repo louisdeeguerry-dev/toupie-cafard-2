@@ -73,11 +73,21 @@ Les pièces donnent des niveaux (+ ou −), et la boutique de partie en ajoute.
 | | 💨 Élan | 95 cm/s |
 | | 🎯 Précision | zone PARFAIT de 10 % |
 | | 🌀 Multi-lancer *(pouvoir)* | 1 toupie par lancer |
-| 🪑 Bureau *(boutique de partie)* | Nid, Prime, Trèfle doré, Combo, Appât, Bords trampolines (+ Tirelire) | économie de la partie |
+| 🪑 Bureau (économie) | Nid, Prime, Trèfle doré, Combo, Appât, Bords trampolines, Tirelire | améliorables en partie **et donnés ou retirés par certaines pièces** |
 
 Les **âmes** donnent les pouvoirs du jeu 1 : Flamme → Traînée de feu, Sangsue → Second souffle, Orage → Éclairs,
 Cyclone → Tourbillon, Aimant → Agressivité, Œil de lynx → Précision + Critique, Ressort → Rebond.
 L'âme Carapace annule le premier gros choc en duel.
+
+### 4.1 bis — Toutes les stats sont exploitables
+Chaque stat, économie comprise, est le **bonus d'au moins une pièce**, ce que vérifie un test automatique. On peut donc construire
+des decks très différents : critique, feu, combo, toupie lourde, toupie rapide… et aussi des **toupies d'économie**,
+qui sacrifient des stats de combat pour gagner plus d'argent par cafard :
+- Base tirelire : Prime +5, mais Poids et Inertie en baisse ;
+- Base au trésor : Trèfle, Prime et Combo, mais Lames et Endurance en baisse ;
+- Couronne de pièces d'or, Âme avare, Âme trèfle, Âme de miel (Appât + Nid), Couronne à chaîne et Âme de meute (Combo).
+
+Le catalogue compte **56 pièces** (dont 20 ajoutées pour l'économie et la spécialisation), toutes équilibrées.
 
 ### 4.2 Équilibrage des pièces (règle d'or, vérifiée par `tests/equilibre.mjs`)
 - **Chaque pièce a autant de bonus que de malus** : la somme de ses niveaux vaut 0. Un niveau de Multi-lancer compte pour 10.
@@ -154,6 +164,27 @@ Simulation : un joueur trouve son premier terrain en environ 30 boîtes (médian
 - **5 vies** par joueur.
 - **Cycle** : 3 manches contre les cafards, puis 1 duel contre un joueur, et on recommence.
   Une étape = un cycle de 4 manches.
+
+### 6.0 L'évolution des cafards (anti-« je farme puis j'explose tout le monde »)
+- **Première vague : 10 cafards**, puis environ un de plus toutes les vagues (+ le Nid).
+- **Après chaque duel contre un joueur, les cafards évoluent** : leur vie est multipliée par 1,15 à chaque étape, en plus
+  d'une hausse de 6 % par vague, et **de nouvelles espèces arrivent**. Chaque espèce est contrée par des stats précises :
+
+  | Étape | Nouvelle espèce | Particularité | Contrée par |
+  |---|---|---|---|
+  | 1 | 🪳 Cafard | — | — |
+  | 2 | 🐛 Gros cafard | Vie ×2,5, lourd : repousse les toupies légères | Poids, Lames |
+  | 3 | 🛡️ Cafard blindé | Carapace : chaque coup perd une partie de ses dégâts | Lames, Coup critique |
+  | 3 | 💨 Cafard coureur | Très rapide, fuit la toupie | Diamètre, Agressivité, Tourbillon |
+  | 4 | 🕷️ Araignée | Tisse des toiles qui engluent la toupie | Poids, Élan, Traînée de feu (brûle les toiles) |
+  | 5 | 🥚 Pondeuse | Pond des larves tant qu'elle vit | Éclairs, Feu, Endurance |
+
+- Les cafards évolués **rapportent plus** (+35 % par étape) : investir dans sa toupie reste rentable.
+- La boutique montre la **prochaine vague** (nombre, vie, espèces) et annonce l'évolution avec les stats qui contrent
+  chaque nouvelle espèce. Les choix sont donc stratégiques : il faut préparer sa toupie pour la suite.
+- **Pourquoi ça bloque l'abus** : celui qui ne fait que de l'économie gagne plus au début, mais sa toupie ne tue plus
+  rien une fois les cafards évolués, donc il ne gagne plus rien, et les dégâts des duels montent à chaque étape.
+  Les tests par robot le confirment : la stratégie « tout en économie » finit 7e, la stratégie « puissance » gagne.
 
 ### 6.1 Manches contre les cafards
 - Les cafards tombent du ciel sur le bureau.

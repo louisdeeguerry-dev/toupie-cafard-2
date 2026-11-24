@@ -9,6 +9,9 @@ for (const p of PIECES) for (let k = 1; k <= NIVEAU_PIECE_MAX; k++) {
   // niveau 1 : équilibre exact ; niveaux suivants : seuls les arrondis peuvent créer un petit écart
   if (k === 1 ? somme !== 0 : Math.abs(somme) > Math.max(1, 0.25 * bonus)) { console.log(`✗ ${p.id} niv ${k} : somme ${somme}`); erreurs++; }
 }
+// Toutes les stats doivent être exploitables : chaque stat est un BONUS d'au moins une pièce
+import { STATS } from '../src/stats.js';
+for (const st of STATS) if (!PIECES.some(p => (p.niveaux[st.id] || 0) > 0)) { console.log(`✗ aucune pièce ne donne ${st.nom}`); erreurs++; }
 // Priorité de terrain
 const a = { terrain: 'rebond', niveaux: { priorite: 3 } }, b = { terrain: 'collant', niveaux: { priorite: 4 } }, c = { terrain: 'aucun', niveaux: {} };
 const ok = (cond, msg) => { if (!cond) { console.log('✗ ' + msg); erreurs++; } };

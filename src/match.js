@@ -7,6 +7,7 @@ import { TERRAINS, terrainDuel } from './data/terrains.js';
 import { AMELIO, STAT_ACHATS, NOMS_BOTS, MANCHE_PRIORITE } from './data/boutique.js';
 import { statsToupie, puissance } from './stats.js';
 import { ajouterCafard, viderCafards, cafards, majCafards } from './bugs.js';
+import { especesVague, compositionEtape, nouveauxTypes, TYPES } from './data/cafards.js';
 import { creerToupieJeu, viderToupies, retirerToupie, lancerToupie, majToupies, enJeu, toupies, choisirTerrain } from './physics.js';
 import { lanceur } from './launcher.js';
 import { railAdverse, decorTerrain } from './scene.js';
@@ -68,9 +69,12 @@ export function commencerManche() {
   if (partie.type === 'cafards') {
     partie.vague++;
     const n = partie.vague;
-    const nb = VAGUE.nombre(n) + 2 * niv('nid');
-    for (let i = 0; i < nb; i++) ajouterCafard({ vie: VAGUE.vieCafard(n), dore: Math.random() < chanceDore(), delai: i * 0.06 });
-    partie.objectif = VAGUE.objectif(n);
+    const nb = nombreVague(n);
+    partie.vieBase = VAGUE.vieCafard(n, etape());
+    especesVague(nb, etape()).forEach((type, i) => ajouterCafard({ vieBase: partie.vieBase, type, dore: Math.random() < chanceDore(), delai: i * 0.06 }));
+    partie.objectif = VAGUE.objectif(nb);
+    // Première vague d'une nouvelle étape : les cafards ont évolué
+    partie.evolution = partie.manche % PARTIE.cycle.length === 0 && etape() > 1 ? nouveauxTypes(etape()) : null;
     partie.tues = 0;
     partie.primeObjectif = false;
     partie.lancers = PARTIE.lancersParVague;
@@ -94,7 +98,8 @@ export function commencerManche() {
   ui.manche?.();
 }
 
-const chanceDore = () => (niv('chance') ? 0.04 + 0.03 * niv('chance') : 0);
+const chanceDore = () => mesStats().chanceDore;
+const nombreVague = n => Math.max(4, VAGUE.nombre(n) + mesStats().nid);
 
 function nettoyerPlateau() {
   choisirTerrain(null);
@@ -148,10 +153,10 @@ const rappels = {
   tue(c, t, crit) {
     if (t.camp !== 'joueur' || partie.type !== 'cafards') return;
     // Combo : plusieurs cafards à la suite rapportent de plus en plus
-    const fenetre = 1.2 + 0.2 * niv('combo'), bonusCombo = 0.1 + 0.05 * niv('combo');
+    const st = mesStats(), fenetre = st.comboFenetre, bonusCombo = st.comboBonus;
     partie.combo = partie.tempsJeu - partie.dernierKill < fenetre ? partie.combo + 1 : 1;
     partie.dernierKill = partie.tempsJeu;
-    const brut = VAGUE.prime * (1 + 0.2 * niv('prime')) * (c.dore ? 5 : 1) * (1 + bonusCombo * (partie.combo - 1));
+    const brut = VAGUE.prime * VAGUE.primeEtape(etape()) * (c.t?.prime || 1) * st.prime * (c.dore ? 5 : 1) * (1 + bonusCombo * (partie.combo - 1));
     const gain = Math.max(1, Math.round(brut));
     partie.argent += gain; partie.gainsManche += gain; partie.tues++;
     tache(c.x, c.z, c.r * 1.3, c.dore ? 0x8a6a10 : 0x3a2a12);
@@ -180,7 +185,7 @@ const rappels = {
 export function majPartie(dt, t) {
   if (!partie.active) return;
   partie.tempsJeu += dt;
-  majCafards(dt, t);
+  majCafards(dt, t, partie.mesToupies.filter(enJeu));
   if (partie.phase !== 'jeu') { majToupies(dt, rappels); return; }
   if (partie.type === 'duel' && partie.botLanceDans > 0 && !partie.botLance) {
     partie.botLanceDans -= dt;
@@ -191,11 +196,13 @@ export function majPartie(dt, t) {
 
   if (partie.type === 'cafards') {
     // Appât : des renforts arrivent pendant que la toupie tourne
-    if (niv('appat') && mes.some(enJeu)) {
+    const appat = mesStats().appat;
+    if (appat && mes.some(enJeu)) {
       partie.renfortT += dt;
-      if (partie.renfortT > 6 / (1 + 0.25 * (niv('appat') - 1))) {
+      if (partie.renfortT > appat) {
         partie.renfortT = 0;
-        ajouterCafard({ vie: VAGUE.vieCafard(partie.vague), dore: Math.random() < chanceDore() });
+        const especes = Object.keys(compositionEtape(etape())).filter(t => t !== 'pondeuse');
+        ajouterCafard({ vieBase: partie.vieBase, type: especes[Math.floor(Math.random() * especes.length)], dore: Math.random() < chanceDore() });
       }
     }
     if (!cafards.some(c => !c.mort)) return finVague();
@@ -266,7 +273,7 @@ function terminerManche(bilan) {
     if (b.terrain !== 'aucun' && partie.manche + 1 >= MANCHE_PRIORITE && Math.random() < 0.35) b.niveaux.priorite = (b.niveaux.priorite || 0) + 1;
   }
   // Revenus de fin de manche + intérêts
-  const interets = Math.min(Math.floor(partie.argent / ECONOMIE.interetPour), ECONOMIE.interetMax + niv('tirelire'));
+  const interets = Math.min(Math.floor(partie.argent / ECONOMIE.interetPour), mesStats().interetMax);
   partie.argent += ECONOMIE.revenuManche + interets;
   Object.assign(bilan, { revenu: ECONOMIE.revenuManche, interets, gains: partie.gainsManche });
   // Éliminations (les joueurs éliminés en même temps se partagent la place la plus basse)
@@ -279,6 +286,15 @@ function terminerManche(bilan) {
   if (vivants().length === 1) { partie.moi.place = 1; return finPartie(1); }
   partie.manche++;
   bilan.prochaine = typeManche();
+  // Aperçu de la prochaine vague (et de l'évolution des cafards après un duel)
+  if (bilan.prochaine === 'cafards') {
+    bilan.apercu = {
+      nombre: nombreVague(partie.vague + 1),
+      vie: VAGUE.vieCafard(partie.vague + 1, etape()),
+      especes: Object.keys(compositionEtape(etape())),
+      evolution: partie.manche % PARTIE.cycle.length === 0 && etape() > 1 ? nouveauxTypes(etape()) : null,
+    };
+  }
   ui.bilan?.(bilan);
 }
 
@@ -320,3 +336,4 @@ export function abandonner() {
 
 // Pour les tests automatiques
 export const _interne = { cafards, toupies };
+export { TYPES };

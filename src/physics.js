@@ -5,7 +5,7 @@ import { scene } from './scene.js';
 import { DESK_X, DESK_Z } from './config.js';
 import { statsToupie, passifToupie } from './stats.js';
 import { creerToupie, libererToupie } from './topMesh.js';
-import { cafards } from './bugs.js';
+import { cafards, toiles } from './bugs.js';
 
 export const toupies = [];
 const DEGATS_BASE = 2.6; // dégâts d'un coup avec des lames ×1
@@ -16,9 +16,7 @@ export function choisirTerrain(t) { terrain = t || null; }
 
 export function creerToupieJeu(equipe, achats, camp, nivPieces = {}, { duel = false } = {}) {
   const s = statsToupie(equipe, achats, nivPieces);
-  const tramp = duel ? 0 : achats.trampoline || 0; // les Bords trampolines du bureau ne servent que contre les cafards
-  s.trampoline = tramp ? 1.1 + 0.05 * tramp : 0;
-  s.trampolineMax = 1.2 + 0.1 * tramp;
+  if (duel) s.trampoline = 0; // les Bords trampolines du bureau ne servent que contre les cafards
   const mesh = creerToupie(equipe);
   const k = s.rayon / 0.042; // le diamètre se voit
   mesh.racine.scale.set(k, 1, k);
@@ -100,6 +98,7 @@ function dessinerEclair(a, b) {
 function frapperCafard(t, c, degats, cb, depuisEclair = false) {
   let crit = false;
   if (!depuisEclair && t.s.crit && Math.random() < t.s.crit) { degats *= t.s.critMult; crit = true; }
+  if (c.armure) degats = Math.max(degats * 0.15, degats - c.armure); // cafard blindé : il faut frapper fort
   c.vie -= degats; c.flash = 1;
   if (c.vie <= 0 && !c.mort) {
     c.mort = 0.001;
@@ -198,13 +197,22 @@ export function majToupies(dt, cb) {
         frapperCafard(t, c, DEGATS_BASE * s.lames * elan * (0.9 + Math.random() * 0.2), cb);
       }
       if (d > 0 && d < min) { // on se sépare et on se repousse
-        const nx = dx / d, nz = dz / d, chev = min - d, mc = 0.5;
+        const nx = dx / d, nz = dz / d, chev = min - d, mc = 0.5 * c.masse;
         t.x -= nx * chev * (mc / (m + mc)); t.z -= nz * chev * (mc / (m + mc));
         c.x += nx * chev * (m / (m + mc)); c.z += nz * chev * (m / (m + mc));
         const vn = t.vx * nx + t.vz * nz;
         if (vn > 0) { const k = 1.2 * vn * (1.6 / (m + 1.6)); t.vx -= k * nx; t.vz -= k * nz; }
         c.kx += nx * 0.12 * Math.min(2, m); c.kz += nz * 0.12 * Math.min(2, m);
       }
+    }
+
+    // Toiles d'araignée : engluent la toupie (moins si elle est lourde) ; la Traînée de feu les brûle
+    for (const w of toiles) {
+      if (w.vie <= 0 || Math.hypot(t.x - w.x, t.z - w.z) > w.r + r * 0.5) continue;
+      if (s.feu) { w.vie = 0; continue; }
+      const k = Math.exp((-6 * dt) / Math.max(0.5, m));
+      t.vx *= k; t.vz *= k;
+      t.rotation -= t.rotation * 0.12 * dt;
     }
 
     // Usure de la rotation (Endurance) et fatigue au-delà de 25 s : un lancer ne traîne jamais

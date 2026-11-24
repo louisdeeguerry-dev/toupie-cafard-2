@@ -277,3 +277,29 @@ Chaque échange sur le projet est consigné ici : prompt optimisé + ce qui a é
 - **Garantie** : la 30e boîte d'affilée sans légendaire est légendaire ; compteur sauvegardé et affiché à l'atelier.
 - Tests : équilibrage, égalité des terrains, garantie toujours légendaire avec des lots variés ; 6 boîtes garanties
   ouvertes dans le navigateur (pièces, terrains, doublon) ; 0 erreur. Médiane : 1er terrain en ~30 boîtes, les 3 en ~110.
+
+---
+
+## 2026-11-24 — Grand équilibrage : pièces pour toutes les stats et évolution des cafards
+
+**Prompt optimisé**
+> Rôle : game designer (équilibrage, économie) + développeur gameplay.
+> Objectifs :
+> 1. **Beaucoup plus de pièces**, dont des pièces d'**économie** (moins de stats de combat, mais plus d'argent par
+>    cafard tué). **Toutes les stats exploitables** (coups critiques, etc.), mais **toujours équilibré**.
+> 2. **Équilibrage des cafards** : **10 cafards** au début. Entre les manches, on améliore le bureau (cafards),
+>    le lanceur ou la toupie. **Après chaque combat contre un joueur, les cafards évoluent** et deviennent de plus en plus
+>    durs, pour empêcher la stratégie « farmer l'argent au début, sacrifier ses premières vies, puis tout améliorer ».
+>    Les choix doivent être difficiles et stratégiques.
+> Livrables : catalogue étendu et testé ; économie intégrée aux pièces ; espèces de cafards et évolution par étape ;
+> simulation de stratégies pour vérifier que l'abus ne marche pas.
+
+**Réalisé**
+- Le bureau (Nid, Prime, Trèfle doré, Combo, Appât, Bords trampolines, Tirelire) devient un groupe de stats : les pièces
+  peuvent en donner ou en retirer ; affiché à l'atelier, en partie et dans la boutique.
+- 20 nouvelles pièces (56 au total), dont des pièces d'économie ; test : chaque stat est le bonus d'au moins une pièce.
+- Cafards : 10 au départ ; 6 espèces (gros, blindé, coureur qui fuit, araignée et ses toiles, pondeuse et ses larves),
+  chacune contrée par des stats ; évolution à chaque étape (vie, nouvelles espèces), primes croissantes ;
+  aperçu de la prochaine vague et annonce de l'évolution dans la boutique.
+- Robot de simulation (visée « bon joueur ») comparant 3 stratégies d'achat : « tout économie » s'effondre après
+  l'évolution (7e), « puissance » gagne. Difficulté recalibrée en 3 passes d'après ces mesures.

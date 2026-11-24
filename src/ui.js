@@ -1,10 +1,11 @@
 // Interface : atelier, boîte mystère, recherche de partie, HUD, bilan + boutique, fin de partie.
 import { SLOTS, PIECES, PIECE, RARETES, tirerBoite, niveauxPiece, multiplicateurNiveau, NIVEAU_PIECE_MAX, GARANTIE_LEGENDAIRE } from './data/pieces.js';
 import { TERRAINS, TERRAIN } from './data/terrains.js';
-import { BUREAU, STAT_ACHATS, PRIORITE, MANCHE_PRIORITE } from './data/boutique.js';
+import { STAT_ACHATS, PRIORITE, MANCHE_PRIORITE } from './data/boutique.js';
 import { PARTIE } from './config.js';
 import { STATS, STAT, GROUPES, niveauxToupie, calculer as calcul, tempsRotation } from './stats.js';
 import { partie, etape, prixAmelio, acheter, prioriteDispo } from './match.js';
+import { TYPES } from './data/cafards.js';
 import { MODES, MONNAIE, PRIX_BOITE, rangDe, RANGS, xpPourNiveau, acheterBoite } from './progression.js';
 import { son } from './audio.js';
 
@@ -281,8 +282,7 @@ function rendrePanneauStats() {
   $('panneauStatsContenu').innerHTML = `<div class="ligne"><h2>📊 Ta toupie</h2><button class="pastille" id="fermerStats">✖</button></div>
     <div class="petit">${SLOTS.map(s => `${s.icone} ${esc(PIECE[p.equipe[s.id]].nom)}${p.nivPieces[p.equipe[s.id]] > 1 ? ' niv ' + p.nivPieces[p.equipe[s.id]] : ''}`).join(' · ')} — verrouillée pour la partie</div>
     <div class="petit">🏟️ Terrain de duel : ${TERRAIN[p.terrain].icone} ${TERRAIN[p.terrain].nom}${p.terrain !== 'aucun' ? ` · priorité ${p.niveaux.priorite || 0} pt (secret)` : ''}</div>
-    <div class="stats">${tableauStats(niveauxToupie(p.equipe, p.niveaux, p.nivPieces))}</div>
-    <h3>🪑 Bureau</h3><div class="stats"><div class="groupe">${BUREAU.map(b => `<div class="ls ${p.niveaux[b.id] ? '' : 'vide'}"><span class="ic">${b.icone}</span><span class="n">${b.nom}</span><span class="lv">${p.niveaux[b.id] || 0}</span><span class="v">${esc(b.fmt(p.niveaux[b.id] || 0))}</span></div>`).join('')}</div></div>`;
+    <div class="stats">${tableauStats(niveauxToupie(p.equipe, p.niveaux, p.nivPieces))}</div>`;
   $('fermerStats').onclick = () => montrer('panneauStats', false);
 }
 export function basculerStats() {
@@ -304,6 +304,12 @@ export function afficherBilan(bilan, onPret) {
   const elim = bilan.elimines?.length ? `<div class="petit">💀 Éliminé${bilan.elimines.length > 1 ? 's' : ''} : ${bilan.elimines.map(esc).join(', ')}</div>` : '';
   const gains = `<div class="petit">Gains : ${bilan.gains} 💰 pendant la manche · +${bilan.revenu} 💰 de revenu · +${bilan.interets} 💰 d'intérêts</div>`;
   const prochaine = bilan.prochaine === 'duel' ? '⚔️ Duel' : '🪳 Cafards';
+  const ap = bilan.apercu;
+  const apercu = ap ? `<div class="apercu">
+      <b>Prochaine vague :</b> ${ap.nombre} cafards · vie ${ap.vie.toFixed(1)} · ${ap.especes.map(t => `${TYPES[t].icone} ${TYPES[t].nom}`).join(', ')}
+      ${ap.evolution?.length ? `<div class="evolution">🧬 <b>Les cafards ont évolué !</b> Ils sont plus résistants, et de nouvelles espèces arrivent :
+        ${ap.evolution.map(t => `<div>${TYPES[t].icone} <b>${TYPES[t].nom}</b> — ${esc(TYPES[t].desc)} <span class="petit">Contré par : ${TYPES[t].contre.map(c => STAT[c].icone + ' ' + STAT[c].nom).join(', ')}</span></div>`).join('')}</div>` : ''}
+    </div>` : `<div class="apercu"><b>Après le duel, les cafards évolueront</b> : plus résistants, et de nouvelles espèces.</div>`;
 
   const ligne = (a, actuel, suivant) => {
     const prix = prixAmelio(a.id), n = partie.moi.niveaux[a.id] || 0;
@@ -320,8 +326,9 @@ export function afficherBilan(bilan, onPret) {
       const plus = calcul({ ...niv, [a.id]: (niv[a.id] || 0) + 1 });
       return ligne(a, STAT[a.id].fmt(s), prixAmelio(a.id) == null ? null : STAT[a.id].fmt(plus));
     }).join('');
-    const colonneBureau = BUREAU.map(b => ligne(b, b.fmt(p.niveaux[b.id] || 0), prixAmelio(b.id) == null ? null : b.fmt((p.niveaux[b.id] || 0) + 1))).join('');
+    const colonneBureau = colonneStats('bureau');
     $('bilanContenu').innerHTML = `${titre}${elim}${gains}
+      ${apercu}
       <div class="ligne" style="margin-top:12px"><h2>Boutique</h2><div class="pastille">💰 ${partie.argent}</div></div>
       <div class="petit">Le bureau rapporte plus d'argent plus tard ; la toupie et le lanceur rendent plus fort tout de suite. Les pièces, elles, ne changent pas pendant la partie.</div>
       <div class="branches">

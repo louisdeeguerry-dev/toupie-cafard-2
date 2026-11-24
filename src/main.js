@@ -10,6 +10,7 @@ import * as UI from './ui.js';
 import { VERSION } from './config.js';
 import { recompenser } from './progression.js';
 import { TERRAIN } from './data/terrains.js';
+import { TYPES } from './data/cafards.js';
 
 let save = charger();
 let mode = 'atelier';
@@ -54,7 +55,8 @@ brancherInterface({
       UI.bandeau(`⚔️ DUEL contre ${partie.adversaire.nom}`, sous, 2600);
       UI.aide('Déplace le lanceur, clique et garde appuyé pour viser, relâche pour lancer');
     } else {
-      UI.bandeau(`🪳 Vague ${partie.vague}`, `Écrase ${partie.objectif} cafards en ${partie.lancers} lancers`);
+      if (partie.evolution?.length) UI.bandeau('🧬 Les cafards ont évolué !', 'Nouveaux : ' + partie.evolution.map(t => TYPES[t].icone + ' ' + TYPES[t].nom).join(', '), 2600);
+      else UI.bandeau(`🪳 Vague ${partie.vague}`, `Écrase ${partie.objectif} cafards en ${partie.lancers} lancers`);
       UI.aide('Déplace le lanceur, clique et garde appuyé pour viser, relâche pour lancer');
     }
   },
