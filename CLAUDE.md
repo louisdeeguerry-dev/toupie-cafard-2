@@ -1,4 +1,7 @@
-# Règles du projet (à appliquer à CHAQUE échange)
+# Toupie Cafard 2 — règles du projet (à appliquer à CHAQUE échange)
+
+Projet : **Toupie Cafard 2**, suite du jeu « Toupie contre Cafards »
+(dépôt d'origine : `toupie-cafards/toupie-cafards.github.io`, à consulter pour réutiliser code et assets).
 
 ## Règle 1 — Prompt optimisé avant chaque traitement
 À chaque message de l'utilisateur concernant ce projet :

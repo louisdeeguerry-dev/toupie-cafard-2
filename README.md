@@ -1,6 +1,6 @@
-# Nouveau projet
+# Toupie Cafard 2
 
-Projet de jeu vidéo — nom et concept à définir.
+Suite de « Toupie contre Cafards » — concept à définir.
 
 - `CLAUDE.md` — règles de travail appliquées automatiquement par Claude à chaque session.
 - `PROMPTS.md` — journal des demandes reformulées en prompts optimisés.
