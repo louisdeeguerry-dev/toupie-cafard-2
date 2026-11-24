@@ -18,6 +18,27 @@
 Briques déjà utilisées dans ces projets : `three.module.js`, `GLTFLoader.js`, `BufferGeometryUtils.js`,
 Capacitor 8 (app, haptics, splash-screen, status-bar, assets), Electron + SteamPipe.
 
+### 0.1 Inventaire des assets réutilisables (relevé le 2026-11-24, dernier commit `9775e38`)
+
+Source : `toupie-cafards/toupie-cafards.github.io`. Les fichiers restent à leur place d'origine ;
+on les copiera dans Toupie Cafard 2 au moment où on en aura besoin, avec leur licence.
+
+| Dossier | Contenu | Licence |
+|---|---|---|
+| `sons/` (30 fichiers, 328 Ko) | Bruitages : écrasement (normal/gros), toc, pièces, achat, chute, critique, choix, refus, éclairs, évolution | CC0 — packs Kenney (Impact, Interface, RPG Audio, Digital Audio) |
+| `modeles/` | `main-gauche.glb`, `main-droite.glb` (mains « generic-hand ») | MIT — [immersive-web/webxr-input-profiles](https://github.com/immersive-web/webxr-input-profiles) |
+| `vendor/` | `three.module.js`, `GLTFLoader.js`, `BufferGeometryUtils.js` | MIT (Three.js) |
+| `app-assets/` + `assets/` | Icônes (192 → 1024, maskable), splash, image de partage | créations de l'utilisateur |
+| `presse/` (17 Mo) | Logo 1024, captures carré/paysage/portrait, bande-annonce, vidéo verticale, page presse | créations de l'utilisateur |
+| `tools/steam/` | Génération automatique des capsules Steam et captures via Chrome (CDP) | code de l'utilisateur |
+| `tools/video/` | Tournage automatique de bandes-annonces à partir de plans scriptés (`films.mjs`, `tourner.mjs`) | code de l'utilisateur |
+| `tools/i18n/`, `tools/main/` | Vérification des textes non traduits, banc de test des mains | code de l'utilisateur |
+| `scripts/` | Builds web, Steam, CrazyGames, compteur | code de l'utilisateur |
+| `i18n.js`, `mains.js`, `steam-app/`, `android/`, `ios/` | Traductions, logique des mains, appli Steam Electron, projets mobiles | code de l'utilisateur |
+
+Source : `louisdeeguerry-dev/voxel-sword` — prototype en un seul `index.html`, utilise Three.js 0.160
+et [jwagner/simplex-noise.js](https://github.com/jwagner/simplex-noise.js) (bruit pour génération de terrain, MIT).
+
 ---
 
 ## 1. Développement de jeux vidéo

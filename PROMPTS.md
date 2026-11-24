@@ -87,3 +87,23 @@ Chaque échange sur le projet est consigné ici : prompt optimisé + ce qui a é
 **Réalisé**
 - Dépôt `louisdeeguerry-dev/toupie-cafard-2` (public) rattaché et vide au départ.
 - Historique complet poussé sur `main`.
+
+---
+
+## 2026-11-24 — Contrôle des ressources et de la règle du prompt optimisé
+
+**Prompt optimisé**
+> Rôle : assistant de pilotage de projet, en mode vérification.
+> Objectif : avant d'attaquer le concept du jeu, confirmer avec précision :
+> 1. que tous mes dépôts et assets existants ont bien été récupérés / pris en compte ;
+> 2. que de nouveaux dépôts et assets liés à la création de jeux, à la 3D et à la communication
+>    ont bien été recherchés et ajoutés ;
+> 3. que la règle « reformuler chaque échange en prompt optimisé » est bien active.
+> Livrable : un état des lieux honnête (fait / pas fait) et la correction des manques.
+
+**Réalisé**
+- Constat : les dépôts existants étaient listés, mais leurs assets n'étaient pas inventoriés.
+- Ajout dans `RESSOURCES.md` de l'inventaire détaillé des assets de Toupie contre Cafards et Voxel Sword
+  (sons Kenney CC0, mains glb MIT, icônes, kit presse, outils capsules Steam / vidéo, scripts de build).
+- 2 nouveaux dépôts vérifiés ajoutés : webxr-input-profiles, simplex-noise.js.
+- Limite : dépôt privé `github-dashboard` et étoiles GitHub de l'utilisateur non lisibles depuis la session.
