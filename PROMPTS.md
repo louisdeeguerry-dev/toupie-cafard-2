@@ -412,3 +412,14 @@ Chaque échange sur le projet est consigné ici : prompt optimisé + ce qui a é
   ressort hélicoïdal autour du manche, voyants, poignée en T) ; 5 engrenages et 5 formes de ressort différents.
   En partie : l'engrenage tourne et le ressort se comprime avec la jauge, les voyants s'allument.
 - Bruitages aux clics (onglets, pièces, équipement, terrain) ; jauge de puissance déplacée en haut.
+
+---
+
+## 2026-11-25 — Question : qu'est-ce qui consomme autant de tokens ?
+
+**Prompt optimisé**
+> Rôle : assistant transparent sur son fonctionnement. Objectif : expliquer ce qui consomme le plus de tokens dans
+> cette session et comment réduire la consommation.
+
+**Réalisé** : explication (historique très long relu à chaque étape, captures d'écran, 3 agents testeurs ≈ 500 k tokens,
+notifications de parties) et conseils (nouvelle session par gros chantier, moins de captures et d'agents).
