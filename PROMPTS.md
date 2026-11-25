@@ -434,3 +434,11 @@ notifications de parties) et conseils (nouvelle session par gros chantier, moins
 
 **Réalisé** : bilan chiffré des apports des agents et recommandations (sessions courtes par chantier, fichier d'état
 du projet, règles d'économie dans CLAUDE.md, agents ponctuels et moins chers).
+
+---
+
+## 2026-11-25 — Créer ETAT.md et des règles d'économie de tokens
+
+**Prompt optimisé** : créer un fichier d'état court lu au démarrage à la place des longs documents, et ajouter dans
+CLAUDE.md des règles pour réduire la consommation de tokens.
+**Réalisé** : `ETAT.md` (1 page) ; CLAUDE.md : démarrage = ETAT.md seulement, règle 4 « Économiser les tokens ».

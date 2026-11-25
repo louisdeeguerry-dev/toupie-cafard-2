@@ -10,8 +10,9 @@ Projet : **Toupie Cafard 2**, suite du jeu « Toupie contre Cafards »
 - Si le hook signale un dépôt « non récupéré » (souvent `github-dashboard`, qui est privé) :
   le rattacher immédiatement avec l'outil `add_repo` (accès `read`), le cloner à l'emplacement indiqué
   par l'outil, sans demander à l'utilisateur.
-- Lire `docs/ANALYSE-TOUPIE-1.md` pour connaître le jeu 1 (systèmes, architecture, réutilisable),
-  et la mettre à jour si le jeu 1 a reçu de nouveaux commits depuis la date du relevé.
+- Lire **`ETAT.md`** (1 page : état du jeu, où est quoi, outils, prochaines étapes) et rien d'autre au démarrage.
+  `docs/CONCEPT.md`, `docs/ANALYSE-TOUPIE-1.md` et `PROMPTS.md` ne se lisent que si la demande l'exige, par extraits.
+- À la fin de chaque session (ou d'un gros chantier) : **mettre à jour `ETAT.md`**.
 
 ## Règle 0 bis — Le jeu publié reste à jour
 - Le jeu est publié sur GitHub Pages depuis la branche `gh-pages` : https://louisdeeguerry-dev.github.io/toupie-cafard-2/
@@ -45,6 +46,18 @@ Projet : **Toupie Cafard 2**, suite du jeu « Toupie contre Cafards »
   (voir section « Dépôts existants » de `RESSOURCES.md`). On **ajoute**, on ne retire pas.
 - Les listes de ressources ne font que s'enrichir : ne jamais retirer une entrée,
   la marquer `(obsolète)` si besoin.
+
+## Règle 4 — Économiser les tokens (la conversation est relue à chaque action)
+- **Une session par chantier** : proposer d'ouvrir une nouvelle session quand on change de gros sujet
+  (après avoir mis `ETAT.md` à jour).
+- **Lire peu** : `grep`/extraits ciblés plutôt que des fichiers entiers ; ne pas relire un fichier déjà connu.
+- **Écrire peu** : modifications ciblées (Edit / remplacements) plutôt que réécrire des fichiers entiers.
+- **Captures** : 1 à 2 par vérification, viewport réduit (ex. 1000×650, deviceScaleFactor 1) ; pas de séries de captures.
+- **Tests longs** (simulations de stratégies) : en arrière-plan, **sans suivi partie par partie** ; ne lire que la synthèse finale.
+- **Agents testeurs** : uniquement à la demande de Louis ; 1 agent ciblé, modèle léger (Sonnet/Haiku) si la tâche est
+  surtout de jouer/mesurer, 5 captures max, rapport ≤ 400 mots.
+- **Réponses courtes** : l'essentiel, sans répéter ce qui est déjà dans le dépôt.
+- Le journal `PROMPTS.md` reste obligatoire (règle 1), mais avec des entrées courtes.
 
 ## Contexte technique de l'utilisateur (déduit des projets existants)
 - Jeux web en **Three.js** (modules ES, GLTFLoader, modèles `.glb`), HTML/JS sans framework lourd.

@@ -1,0 +1,63 @@
+# État du projet — Toupie Cafard 2
+
+> À lire au début de chaque session, **à la place** des longs documents. À mettre à jour à la fin de chaque session.
+> Dernière mise à jour : 2026-11-25.
+
+## Le jeu en bref
+- **Jeu de toupies en ligne façon auto-battler** (TFT) avec un côté **gacha / deck-building** (SPAM). Partie à **8 joueurs**
+  (bots pour l'instant), **5 vies**, **plateau rond**.
+- **Étape** = **3 lancers contre les cafards** (le bureau est rempli à 10 + Nid avant chaque lancer, les survivants restent),
+  puis **1 duel**. La boutique est ouverte entre chaque manche. Un duel perdu coûte autant de vies que le numéro de l'étape ;
+  un duel ne rapporte ni ne coûte d'argent.
+- **Duel** : il n'y a pas de vie ; chaque choc fait perdre de la rotation, et **la première toupie arrêtée perd**.
+  L'usure ne démarre qu'une fois les deux toupies lancées.
+- **Cafards** : ils **évoluent après chaque duel** (vie plus haute, nouvelles espèces contrées par des stats précises).
+- **Toupie choisie avant la partie, verrouillée pendant** : 4 pièces (base, couronne, pointe, âme) et 2 pièces de lanceur
+  (engrenage, ressort).
+  - **56 pièces**, chacune avec autant de bonus que de malus (vérifié par un test).
+  - Les doublons débloquent des niveaux de pièce, qui amplifient bonus ET malus.
+- **Stats** : celles du jeu 1 (toupie, lanceur) et le bureau (Nid, Prime, Trèfle, Combo, Tirelire).
+- **Boutique** :
+  - 6 offres au hasard, achetées par paquets de +3 niveaux ;
+  - relance de plus en plus chère (2, 3, 5, 7… 💰) ;
+  - intérêts : +1 💰 par tranche de 5 💰 gardés, plafonné par la Tirelire.
+- **Terrains de duel** :
+  - rebondissant, collant ou cuve ; ce sont des lots légendaires des boîtes, sans doublon ;
+  - en choisir un coûte l'argent de départ ;
+  - si les deux joueurs en ont un, la priorité de terrain (points secrets) départage, et à égalité le bureau est neutre.
+- **Méta** :
+  - boîtes mystère, avec un légendaire garanti toutes les 30 boîtes ;
+  - écrous, XP et niveaux ;
+  - parties normales ou classées, avec 8 rangs.
+- **Atelier** : onglets Toupie / Lanceur / Terrain, vue éclatée 3D avec zoom sur la pièce choisie, nouveau lanceur inspiré du jeu 1.
+
+## Où est quoi
+| Sujet | Fichier |
+|---|---|
+| Réglages d'équilibrage | `src/config.js`, `CHOC` dans `src/physics.js`, `src/data/*.js` |
+| Déroulement d'une partie | `src/match.js` ; bots : `src/bots.js` |
+| Atelier 3D / lanceur | `src/atelier3d.js`, `src/lanceurMesh.js`, `src/topMesh.js` |
+| Interface | `src/ui.js`, `index.html` |
+| Règles détaillées | `docs/CONCEPT.md` (à lire seulement si besoin) |
+| Jeu 1 | `docs/ANALYSE-TOUPIE-1.md` (à lire seulement si besoin) |
+
+## Outils
+- `node tests/equilibre.mjs` : équilibrage des pièces, terrains et boîtes (rapide).
+- `tests/lancer-strategies.sh 5 2` : 5 parties par stratégie jouées par un robot, avec synthèse (environ 45 min, en arrière-plan).
+- Dans la console du jeu : `__tc2.demarrerTest(3)` lance directement un duel, `__tc2.demarrerTest(0)` un lancer contre les cafards,
+  `__tc2.acceleration = 4` accélère le jeu.
+- Publication : `git push origin main` **puis** `git push origin main:gh-pages`. Le jeu est sur https://louisdeeguerry-dev.github.io/toupie-cafard-2/
+
+## Dernières mesures
+- **Duels** : environ 13 contacts et 13 s ; à toupies identiques, 7 victoires sur 12 (équitable).
+- **Cafards** : environ 3,6 écrasés par lancer (robot qui vise bien).
+- **Équilibrage par stratégie** (5 parties chacune, version avant la refonte de l'atelier) : *en cours, à reporter ici*.
+
+## Prochaines étapes possibles
+- Faire jouer Louis à l'atelier refait, puis affiner la vitesse et les zooms.
+- Relire l'équilibrage avec les résultats ci-dessus (sacrifice, économie, mixte, puissance).
+- Questions ouvertes :
+  - le lien avec le jeu 1 ;
+  - le vrai multijoueur, en temps réel ou en asynchrone ;
+  - les montants de la progression ;
+  - les saisons de rang.
