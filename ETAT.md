@@ -29,7 +29,13 @@
   - boîtes mystère, avec un légendaire garanti toutes les 30 boîtes ;
   - écrous, XP et niveaux ;
   - parties normales ou classées, avec 8 rangs.
-- **Atelier** : onglets Toupie / Lanceur / Terrain, vue éclatée 3D avec zoom sur la pièce choisie, nouveau lanceur inspiré du jeu 1.
+- **Hors partie** : **menu principal** (Jouer + mode, Atelier, Boutique de boîtes, Collection).
+- **Atelier** :
+  - onglets Toupie / Lanceur / Terrain ;
+  - quand on clique sur une pièce, **seule cette pièce sort** en se dévissant, avec un petit rebond, et la caméra zoome dessus ;
+  - la liste des pièces remplace les emplacements jusqu'au bouton « Retour » ;
+  - les stats s'affichent en **barres qui se remplissent**, avec la valeur au survol ;
+  - nouveau lanceur 3D inspiré du jeu 1 (engrenage et ressort visibles).
 
 ## Où est quoi
 | Sujet | Fichier |

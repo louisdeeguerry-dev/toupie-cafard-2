@@ -15,6 +15,7 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 export function montrer(id, oui = true) { $(id).classList.toggle('cache', !oui); }
+export { son };
 
 function modsHtml(niveaux) {
   return Object.entries(niveaux).map(([k, v]) => {
@@ -30,19 +31,20 @@ function carteHtml(p, k = 1) {
 }
 
 // Tableau de TOUTES les stats (celles du jeu 1), avec niveau et valeur réelle ; « apres » = aperçu d'un changement
+// Les stats en barres qui se remplissent (0 = vide, à fond = très haut). Survol : la valeur réelle et le niveau.
+// Pouvoirs (stats spéciales) : vides tant qu'on ne les a pas.
+const pctStat = (st, n) => Math.max(0, Math.min(1, st.special ? n / 15 : (n + 10) / 30));
 export function tableauStats(niv, nivApres = null) {
   const v = calcul(niv), w = nivApres ? calcul(nivApres) : null;
   const t = tempsRotation(w || v);
-  const alerte = t < 4 ? `<div class="alerte">⚠️ Toupie très instable : ${t.toFixed(1)} s de rotation seulement. Les malus de tes pièces s'additionnent.</div>` : '';
+  const alerte = t < 4 ? `<div class="alerte">⚠️ Toupie très instable : ${t.toFixed(1)} s de rotation seulement.</div>` : '';
   return alerte + GROUPES.map(g => `<div class="groupe"><h3>${g.icone} ${g.nom}</h3>` + STATS.filter(st => st.groupe === g.id).map(st => {
     const a = niv[st.id] || 0, b = nivApres ? nivApres[st.id] || 0 : a;
-    const val = st.fmt(v), val2 = w ? st.fmt(w) : val;
-    const change = b !== a;
-    const vide = st.special && !a && !b;
-    return `<div class="ls ${vide ? 'vide' : ''}" title="${esc(st.desc)}">
+    const pa = pctStat(st, a) * 100, pb = pctStat(st, b) * 100, lo = Math.min(pa, pb), hi = Math.max(pa, pb);
+    const titre = `${st.nom} : ${st.fmt(w || v)} (niveau ${b > 0 ? '+' : ''}${b})\n${st.desc}`;
+    return `<div class="sb ${st.special && !a && !b ? 'vide' : ''}" title="${esc(titre)}">
       <span class="ic">${st.icone}</span><span class="n">${st.nom}</span>
-      <span class="lv ${change ? (b > a ? 'plus' : 'moins') : ''}">${b > 0 ? '+' : ''}${b}</span>
-      <span class="v ${change ? (b > a ? 'plus' : 'moins') : ''}">${esc(change ? val2 : val)}</span></div>`;
+      <span class="barre-stat"><i style="width:${lo}%"></i>${hi > lo ? `<b class="${pb > pa ? 'plus' : 'moins'}" style="left:${lo}%;width:${hi - lo}%"></b>` : ''}</span></div>`;
   }).join('') + '</div>').join('');
 }
 
@@ -60,6 +62,9 @@ export function creerAtelier(save, { onChange, onJouer, onBoite, onSelection = (
     montrer('zonePieces', onglet !== 'terrain');
     montrer('zoneTerrain', onglet === 'terrain');
     $('consigne').textContent = onglet === 'terrain' ? 'Ton terrain pour les duels' : slotChoisi ? '' : 'Choisis une pièce à changer';
+    // Une pièce ouverte : la liste des pièces remplace les emplacements, jusqu'au bouton Retour
+    montrer('slots', !slotChoisi);
+    montrer('onglets', !slotChoisi);
     $('slots').innerHTML = SLOTS.filter(s => s.groupe === onglet).map(s => {
         const p = PIECE[eq[s.id]], k = nivDe(save, p.id);
         return `<button class="slot ${s.id === slotChoisi ? 'choisi' : ''}" data-slot="${s.id}">
@@ -68,7 +73,8 @@ export function creerAtelier(save, { onChange, onJouer, onBoite, onSelection = (
     const possedees = PIECES.filter(p => p.slot === slotChoisi && save.collection[p.id]);
     const slot = SLOTS.find(s => s.id === slotChoisi);
     const total = PIECES.filter(p => p.slot === slotChoisi).length;
-    $('choix').innerHTML = !slot ? '' : `<div class="petit">${esc(slot.desc)} — ${possedees.length}/${total} trouvées</div>` + possedees.map(p => {
+    $('choix').innerHTML = !slot ? '' : `<button class="retour-menu retour-piece">← Retour</button>
+      <h3>${slot.icone} ${slot.nom}</h3><div class="petit">${esc(slot.desc)} — ${possedees.length}/${total} trouvées</div>` + possedees.map(p => {
       const k = nivDe(save, p.id), max = nivMax(save, p.id);
       const chips = max > 1 ? `<div class="chips">Niveau : ${Array.from({ length: max }, (_, i) => i + 1).map(n =>
         `<span class="chip ${n === k ? 'on' : ''}" data-piece="${p.id}" data-niv="${n}" title="Tout ×${multiplicateurNiveau(n)}">${n}</span>`).join('')}
@@ -140,6 +146,12 @@ export function creerAtelier(save, { onChange, onJouer, onBoite, onSelection = (
     rendre(); onSelection(onglet, slotChoisi);
   });
   $('choix').addEventListener('click', e => {
+    if (e.target.closest('.retour-piece')) { // on referme : la pièce revient, on revoit tous les emplacements
+      slotChoisi = null; apercu = null;
+      son('toc', { volume: 0.45, hauteur: 0.9 });
+      rendre(); onSelection(onglet, null);
+      return;
+    }
     const chip = e.target.closest('.chip');
     if (chip) return equiper(chip.dataset.piece, +chip.dataset.niv);
     const b = e.target.closest('.carte[data-piece]');
@@ -168,6 +180,24 @@ export function creerAtelier(save, { onChange, onJouer, onBoite, onSelection = (
   });
   rendre();
   return { rendre, etat: () => ({ onglet, slot: slotChoisi }) };
+}
+
+// ---------------------------------------------------------------- Collection : tout ce qu'on possède (et ce qui manque)
+export function rendreCollection(save) {
+  const possede = PIECES.filter(p => save.collection[p.id]).length;
+  $('collectionTotal').textContent = `${possede}/${PIECES.length} pièces · ${save.terrains.length}/${TERRAINS.filter(t => t.rarete).length} terrains`;
+  $('collectionContenu').innerHTML = SLOTS.map(sl => `<div class="col-groupe"><h3>${sl.icone} ${sl.nom}</h3><div class="col-grille">` +
+    PIECES.filter(p => p.slot === sl.id).map(p => {
+      const n = save.collection[p.id] || 0, r = RARETES[p.rarete];
+      return `<div class="col-carte ${n ? '' : 'manque'}" title="${esc(p.desc)}" style="border-color:${n ? r.couleur + '88' : ''}">
+        <span class="rar" style="color:${r.couleur}">${r.nom}</span><b>${n ? esc(p.nom) : '???'}</b>
+        ${n ? `<span class="petit">×${n}${n > 1 ? ` · jusqu'au niveau ${Math.min(NIVEAU_PIECE_MAX, n)}` : ''}</span>` : '<span class="petit">à trouver</span>'}</div>`;
+    }).join('') + '</div></div>').join('') +
+    `<div class="col-groupe"><h3>🏟️ Terrains de duel</h3><div class="col-grille">` + TERRAINS.filter(t => t.rarete).map(t => {
+      const ok = save.terrains.includes(t.id);
+      return `<div class="col-carte ${ok ? '' : 'manque'}" title="${esc(t.desc)}"><span class="rar" style="color:${RARETES.legendaire.couleur}">Légendaire</span>
+        <b>${ok ? t.icone + ' ' + esc(t.nom) : '???'}</b><span class="petit">${ok ? 'possédé' : 'à trouver'}</span></div>`;
+    }).join('') + '</div></div>';
 }
 
 // ---------------------------------------------------------------- Boîte mystère

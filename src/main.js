@@ -33,6 +33,24 @@ const atelier = UI.creerAtelier(save, {
 });
 majVitrine();
 
+// ---------------------------------------------------------------- Écrans hors partie : menu, atelier, boutique, collection
+const ECRANS = ['menu', 'atelier', 'boutiqueMeta', 'collection'];
+function allerA(ecran) {
+  for (const e of ECRANS) UI.montrer(e, e === ecran);
+  if (ecran === 'collection') UI.rendreCollection(save);
+  if (ecran !== 'atelier') selectionAtelier('toupie', null); // hors atelier : la toupie tourne, montée
+  else { const et = atelier.etat(); selectionAtelier(et.onglet, et.slot); }
+  atelier.rendre();
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-ecran]');
+  if (!b || mode !== 'atelier') return;
+  activerAudio();
+  UI.son?.('choix', { volume: 0.5 });
+  allerA(b.dataset.ecran);
+});
+allerA('menu');
+
 function boite() {
   UI.ouvrirBoite(save, { onFini() { sauver(save); atelier.rendre(); majVitrine(); } });
 }
@@ -41,7 +59,7 @@ function demarrer() {
   activerAudio();
   nouvellePartie({ ...save.equipe }, { mode: save.mode, nivPieces: { ...save.niveauxPieces }, terrain: save.terrain });
   modeleLanceur(save.equipe);
-  UI.montrer('atelier', false);
+  for (const e of ECRANS) UI.montrer(e, false);
   UI.rechercher(partie.joueurs.map(j => j.nom), save.mode, () => {
     mode = 'partie';
     UI.montrer('hud');
@@ -87,8 +105,7 @@ function retourAtelier() {
   mode = 'atelier';
   UI.montrer('hud', false);
   UI.montrer('panneauStats', false);
-  UI.montrer('atelier');
-  atelier.rendre();
+  allerA('menu');
   majVitrine();
 }
 
@@ -144,7 +161,8 @@ window.__tc2 = { VERSION, partie, save: () => save, lancerDirect, acheter, inter
     nouvellePartie({ ...save.equipe }, { mode: 'normale', nivPieces: { ...save.niveauxPieces }, terrain: save.terrain });
     modeleLanceur(save.equipe);
     partie.manche = manche;
-    UI.montrer('atelier', false); UI.montrer('hud');
+    for (const e of ECRANS) UI.montrer(e, false);
+    UI.montrer('hud');
     mode = 'partie';
     commencerManche();
   },

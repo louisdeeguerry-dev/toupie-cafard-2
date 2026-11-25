@@ -442,3 +442,15 @@ du projet, règles d'économie dans CLAUDE.md, agents ponctuels et moins chers).
 **Prompt optimisé** : créer un fichier d'état court lu au démarrage à la place des longs documents, et ajouter dans
 CLAUDE.md des règles pour réduire la consommation de tokens.
 **Réalisé** : `ETAT.md` (1 page) ; CLAUDE.md : démarrage = ETAT.md seulement, règle 4 « Économiser les tokens ».
+
+---
+
+## 2026-11-25 — Menu principal, vue éclatée corrigée, stats en barres
+
+**Prompt optimisé** : (1) quand on passe d'une pièce à l'autre, la précédente revient et seule la nouvelle s'éclate ;
+éclatement plus mécanique ; (2) stats moins encombrantes, en barres qui se remplissent (valeur au survol) ;
+(3) un menu principal Jouer / Boutique / Atelier / Collection (plus de Jouer dans l'atelier) ; (4) dans l'atelier,
+cliquer sur une pièce ouvre ses choix, et seul « Retour » ramène aux autres emplacements.
+**Réalisé** : sortie d'une seule pièce (mouvement à ressort, elle se dévisse, toupie arrêtée face caméra) ; barres de
+stats compactes ; écrans Menu, Boutique (boîtes), Collection (pièces et terrains, manquants en « ??? ») ; liste des pièces
+avec bouton Retour. Testé (3 captures, 0 erreur).
