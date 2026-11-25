@@ -26,10 +26,10 @@ const STRAT = process.argv[2] || 'mixte';
         const BUREAU = ['nid', 'prime', 'combo', 'tirelire', 'chance'], TOUPIE = ['lames', 'endurance', 'elan', 'critique', 'diametre', 'puissance'];
         const veut = (STRAT === 'eco' || STRAT === 'sacrifice') ? (etape < 3 ? BUREAU : TOUPIE) : STRAT === 'force' ? TOUPIE : (P.manche % 2 ? BUREAU : TOUPIE);
         // achète le moins cher disponible dans la liste voulue
-        const btns = [...document.querySelectorAll('#bilanContenu .amelio:not([disabled])')].filter(x => veut.includes(x.dataset.a));
+        const btns = [...document.querySelectorAll('#bilanContenu .offre:not([disabled])')].filter(x => veut.includes(x.dataset.a));
         btns.sort((a, c) => parseInt(a.querySelector('.px').textContent) - parseInt(c.querySelector('.px').textContent));
         if (btns.length) { btns[0].click(); return { achat: true }; }
-        const res = document.querySelector('#bilanContenu .resultat')?.textContent || '';
+        const res = document.querySelector('#bilanContenu .resume')?.textContent || '';
         document.getElementById('pret').click();
         return { bilan: true, res, manche: P.manche, etape: Math.floor((P.manche - 1) / 4) + 1, vies: P.moi.vies, argent: P.argent };
       }

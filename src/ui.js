@@ -4,8 +4,8 @@ import { TERRAINS, TERRAIN } from './data/terrains.js';
 import { STAT_ACHATS, PRIORITE, MANCHE_PRIORITE } from './data/boutique.js';
 import { PARTIE } from './config.js';
 import { STATS, STAT, GROUPES, niveauxToupie, calculer as calcul, tempsRotation } from './stats.js';
-import { partie, etape, prixAmelio, acheter, prioriteDispo, lancerDansEtape, relancerOffres } from './match.js';
-import { BOUTIQUE } from './config.js';
+import { partie, etape, prixAmelio, acheter, prioriteDispo, lancerDansEtape, relancerOffres, prixRelance, interetsPrevus, niveauxAchat, mesStats as mesStatsUI } from './match.js';
+import { ECONOMIE } from './config.js';
 import { PIECE as PIECES_PAR_ID } from './data/pieces.js';
 import { TYPES } from './data/cafards.js';
 import { MODES, MONNAIE, PRIX_BOITE, rangDe, RANGS, xpPourNiveau, acheterBoite } from './progression.js';
@@ -293,79 +293,68 @@ export function basculerStats() {
   if (ouvert) rendrePanneauStats();
 }
 
-// ---------------------------------------------------------------- Bilan + boutique
+// ---------------------------------------------------------------- Bilan + boutique (épurée)
+// Une ligne de résultat, les 6 offres en grandes cartes, et à côté : argent, intérêts, relance, Prêt.
 export function afficherBilan(bilan, onPret) {
-  let titre;
+  let resultat;
   if (bilan.type === 'cafards') {
-    titre = `<div class="resultat ${bilan.tues ? 'ok' : 'ko'}">🪳 Lancer ${bilan.lancer}/3 : ${bilan.tues} cafard${bilan.tues > 1 ? 's' : ''} écrasé${bilan.tues > 1 ? 's' : ''}</div>
-      <div class="petit">${bilan.restants} survivant${bilan.restants > 1 ? 's' : ''} sur le bureau (ils gardent leurs blessures).</div>`;
+    resultat = `🪳 Lancer ${bilan.lancer}/3 : <b>${bilan.tues}</b> cafard${bilan.tues > 1 ? 's' : ''} écrasé${bilan.tues > 1 ? 's' : ''} · +${bilan.gains} 💰`;
   } else {
-    const det = `${bilan.contacts} contact${bilan.contacts > 1 ? 's' : ''} en ${bilan.duree.toFixed(1)} s`;
-    titre = bilan.gagne ? `<div class="resultat ok">⚔️ Victoire contre ${esc(bilan.adversaire)} !</div><div class="petit">Il perd ${bilan.degats} ❤️${bilan.tempsEcoule ? ' (temps écoulé : tu tournais plus fort)' : ''} · ${det}</div>`
-      : `<div class="resultat ko">Défaite contre ${esc(bilan.adversaire)}</div><div class="petit">Tu perds ${bilan.degats} ❤️${bilan.tempsEcoule ? ' (temps écoulé : il tournait plus fort)' : ''} · ${det}</div>`;
+    resultat = bilan.gagne ? `⚔️ <b class="plus">Victoire</b> contre ${esc(bilan.adversaire)} (−${bilan.degats} ❤️ pour lui)`
+      : `⚔️ <b class="moins">Défaite</b> contre ${esc(bilan.adversaire)} (−${bilan.degats} ❤️)`;
   }
-  const elim = bilan.elimines?.length ? `<div class="petit">💀 Éliminé${bilan.elimines.length > 1 ? 's' : ''} : ${bilan.elimines.map(esc).join(', ')}</div>` : '';
-  const gains = `<div class="petit">Gains : ${bilan.gains} 💰 pendant la manche · +${bilan.revenu} 💰 de revenu · +${bilan.interets} 💰 d'intérêts${bilan.type === 'duel' ? ' (un duel ne rapporte ni ne coûte d\'argent)' : ''}</div>`;
-  const prochaine = bilan.prochaine === 'duel' ? '⚔️ Duel' : '🪳 Cafards';
-  const ap = bilan.apercu;
-  const apercu = ap ? `<div class="apercu">
-      <b>Prochain lancer (${ap.lancer}/3) :</b> le bureau sera rempli à ${ap.capacite} cafards${ap.restants ? ` (${ap.restants} survivants + ${Math.max(0, ap.capacite - ap.restants)} nouveaux)` : ''} · vie des nouveaux ${ap.vie.toFixed(1)} · ${ap.especes.map(t => `${TYPES[t].icone} ${TYPES[t].nom}`).join(', ')}
-      <div class="petit">Plus de Nid = plus de cafards sur le bureau à chaque lancer.</div>
-      ${ap.evolution?.length ? `<div class="evolution">🧬 <b>Les cafards ont évolué !</b> Ils sont plus résistants, et de nouvelles espèces arrivent :
-        ${ap.evolution.map(t => `<div>${TYPES[t].icone} <b>${TYPES[t].nom}</b> — ${esc(TYPES[t].desc)} <span class="petit">Contré par : ${TYPES[t].contre.map(c => STAT[c].icone + ' ' + STAT[c].nom).join(', ')}</span></div>`).join('')}</div>` : ''}
-    </div>` : `<div class="apercu"><b>Après le duel, les cafards évolueront</b> : plus résistants, et de nouvelles espèces.</div>`;
+  if (bilan.elimines?.length) resultat += ` · 💀 ${bilan.elimines.map(esc).join(', ')}`;
+  const ap = bilan.apercu, adv = bilan.adversaireSuivant;
+  const suite = adv ? `Prochain : ⚔️ duel contre <b>${esc(adv.nom)}</b>`
+    : ap ? `Prochain : 🪳 lancer ${ap.lancer}/3 · ${ap.capacite} cafards${ap.evolution?.length ? ` · 🧬 nouveaux : ${ap.evolution.map(t => TYPES[t].icone + ' ' + TYPES[t].nom).join(', ')}` : ''}` : '';
 
-  const adv = bilan.adversaireSuivant;
-  const annonceAdv = adv ? `<div class="apercu">⚔️ <b>Prochain duel contre ${esc(adv.nom)}</b> (❤️ ${adv.vies}) —
-      ${SLOTS.map(sl => `${sl.icone} ${esc(PIECES_PAR_ID[adv.equipe[sl.id]].nom)}${adv.nivPieces[adv.equipe[sl.id]] > 1 ? ' niv ' + adv.nivPieces[adv.equipe[sl.id]] : ''}`).join(' · ')}</div>` : '';
-  const ligne = (a, actuel, suivant) => {
-    const prix = prixAmelio(a.id), n = partie.moi.niveaux[a.id] || 0;
-    const conseil = (partie.conseils || []).includes(a.id);
-    return `<button class="amelio ${conseil ? 'conseil' : ''}" data-a="${a.id}" ${prix == null || prix > partie.argent ? 'disabled' : ''} title="${esc(a.desc)}">
-      <span class="ic">${a.icone}</span><span><b>${a.nom}</b> <span class="niv">+${n}</span>${conseil ? ' <span class="badge-conseil">conseillé</span>' : ''}<br>
-      <span class="petit">${esc(actuel)}${suivant != null ? ` → <span class="plus">${esc(suivant)}</span>` : ''}</span></span>
+  const carte = id => {
+    const a = id === 'priorite' ? PRIORITE : STAT_ACHATS.find(x => x.id === id);
+    const p = partie.moi, n = p.niveaux[id] || 0, prix = prixAmelio(id), k = niveauxAchat(id) || 1;
+    let avant, apres;
+    if (id === 'priorite') { avant = PRIORITE.fmt(n); apres = PRIORITE.fmt(n + 1); }
+    else {
+      const niv = niveauxToupie(p.equipe, p.niveaux, p.nivPieces);
+      avant = STAT[id].fmt(calcul(niv)); apres = STAT[id].fmt(calcul({ ...niv, [id]: (niv[id] || 0) + k }));
+    }
+    const conseil = (partie.conseils || []).includes(id);
+    return `<button class="offre ${conseil ? 'conseil' : ''}" data-a="${id}" ${prix == null || prix > partie.argent ? 'disabled' : ''} title="${esc(a.desc)}">
+      ${conseil ? '<span class="badge-conseil">conseillé</span>' : ''}
+      <span class="ic">${a.icone}</span><b>${esc(a.nom)}</b>${k > 1 ? `<span class="paquet">+${k} niveaux</span>` : ''}
+      <span class="effet">${esc(avant)}<br>→ <span class="plus">${esc(apres)}</span></span>
       <span class="px">${prix == null ? 'MAX' : prix + ' 💰'}</span></button>`;
   };
+
   const rendre = () => {
-    const p = partie.moi;
-    const niv = niveauxToupie(p.equipe, p.niveaux, p.nivPieces);
-    const s = calcul(niv);
-    const offert = a => !partie.offres || partie.offres.includes(a.id);
-    const colonneStats = groupe => STAT_ACHATS.filter(a => a.groupe === groupe && offert(a)).map(a => {
-      const plus = calcul({ ...niv, [a.id]: (niv[a.id] || 0) + 1 });
-      return ligne(a, STAT[a.id].fmt(s), prixAmelio(a.id) == null ? null : STAT[a.id].fmt(plus));
-    }).join('');
-    const colonneBureau = colonneStats('bureau');
-    $('bilanContenu').innerHTML = `${titre}${elim}${gains}
-      ${apercu}
-      ${annonceAdv}
-      <div class="ligne" style="margin-top:12px"><h2>Boutique</h2>
-        <span>${partie.offres ? `<button class="btn second petit-btn" id="relancer" ${partie.argent < BOUTIQUE.relance ? 'disabled' : ''}>🎲 Relancer (${BOUTIQUE.relance} 💰)</button>` : ''}
-        <span class="pastille">💰 ${partie.argent}</span></span></div>
-      <div class="petit">${partie.offres ? `${partie.offres.length} offres tirées au hasard : choisis !` : ''} Le bureau rapporte plus d'argent plus tard ; la toupie et le lanceur rendent plus fort tout de suite. Les pièces ne changent pas pendant la partie.</div>
-      <div class="branches">
-        <div class="branche"><h3>🪑 Bureau<small>économie</small></h3>${colonneBureau}</div>
-        <div class="branche"><h3>🌀 Toupie<small>puissance</small></h3>${colonneStats('toupie')}</div>
-        <div class="branche"><h3>🚀 Lanceur<small>lancer</small></h3>${colonneStats('lanceur')}
-          <h3 style="margin-top:12px">🏟️ Terrain<small>${esc(TERRAIN[p.terrain].icone + ' ' + TERRAIN[p.terrain].nom)}</small></h3>
-          ${p.terrain === 'aucun' ? '<div class="petit">Pas de terrain choisi à l\'atelier : tu as commencé avec plus d\'argent.</div>'
-            : prioriteDispo() ? ligne(PRIORITE, PRIORITE.fmt(p.niveaux.priorite || 0), prixAmelio('priorite') == null ? null : PRIORITE.fmt((p.niveaux.priorite || 0) + 1))
-              + `<div class="petit">${esc(PRIORITE.desc)}</div>`
-            : `<div class="petit">La priorité de terrain s'achète à partir de la manche ${MANCHE_PRIORITE}. ${esc(PRIORITE.desc)}</div>`}
+    const offres = partie.offres || STAT_ACHATS.map(a => a.id);
+    const prixR = prixRelance(), interets = interetsPrevus();
+    $('bilanContenu').innerHTML = `
+      <div class="resume">${resultat}</div>
+      <div class="boutique">
+        <div class="offres">${offres.map(carte).join('')}</div>
+        <div class="cote-boutique">
+          <div class="argent-gros">💰 ${partie.argent}</div>
+          <div class="petit" title="À la fin de chaque manche : +1 💰 par tranche de ${ECONOMIE.interetPour} 💰 gardés, plafonné par la Tirelire">
+            Intérêts : <b>+${interets} 💰</b> à la fin de la manche<br>(+1 par ${ECONOMIE.interetPour} 💰 gardés, max ${mesStatsUI().interetMax})</div>
+          <button class="btn second" id="relancer" ${partie.argent < prixR ? 'disabled' : ''}>🎲 Relancer · ${prixR} 💰</button>
+          <button class="btn" id="pret">Prêt ▶</button>
+          <div class="petit">${suite}</div>
         </div>
-      </div>
-      <div class="ligne pied"><span class="petit">Prochaine manche : <b>${prochaine}</b></span><button class="btn" id="pret">Prêt ▶</button></div>`;
+      </div>`;
     $('pret').onclick = () => { montrer('bilan', false); onPret(); };
-    const rel = $('relancer');
-    if (rel) rel.onclick = e => { e.stopPropagation(); if (relancerOffres()) { rendre(); majHud(); } };
+    $('relancer').onclick = e => { e.stopPropagation(); if (relancerOffres()) { rendre(); majHud(); } };
   };
   $('bilanContenu').onclick = e => {
     const b = e.target.closest('[data-a]');
-    if (b && acheter(b.dataset.a)) { rendre(); majHud(); }
+    if (b && acheter(b.dataset.a)) {
+      // l'offre achetée disparaît (comme une carte achetée)
+      if (partie.offres) partie.offres = partie.offres.filter(x => x !== b.dataset.a);
+      rendre(); majHud();
+    }
   };
   rendre();
   montrer('bilan');
-  $('bilan').firstElementChild.scrollTop = 0; // on commence toujours en haut (résultat de la manche)
+  $('bilan').firstElementChild.scrollTop = 0;
 }
 
 // ---------------------------------------------------------------- Fin

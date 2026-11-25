@@ -1,8 +1,8 @@
 // Physique des toupies : déplacement, rebonds, chocs avec les cafards et entre toupies,
-// et les pouvoirs repris du jeu 1 (critique, feu, second souffle, éclairs, tourbillon, agressivité, trampolines).
+// et les pouvoirs repris du jeu 1 (critique, feu, second souffle, éclairs, tourbillon, agressivité).
 import * as THREE from 'three';
 import { scene } from './scene.js';
-import { DESK_X, DESK_Z } from './config.js';
+import { ARENE_R } from './config.js';
 import { statsToupie, passifToupie } from './stats.js';
 import { creerToupie, libererToupie } from './topMesh.js';
 import { cafards, toiles } from './bugs.js';
@@ -25,7 +25,6 @@ export const CHOC = { ref: 600, base: 0.01, parLames: 0.03, parVitesse: 0.12, at
 
 export function creerToupieJeu(equipe, achats, camp, nivPieces = {}, { duel = false } = {}) {
   const s = statsToupie(equipe, achats, nivPieces);
-  if (duel) s.trampoline = 0; // les Bords trampolines du bureau ne servent que contre les cafards
   const mesh = creerToupie(equipe);
   const k = s.rayon / 0.042; // le diamètre se voit
   mesh.racine.scale.set(k, 1, k);
@@ -169,7 +168,7 @@ export function majToupies(dt, cb) {
     t.vx *= fr; t.vz *= fr;
     t.x += t.vx * dt; t.z += t.vz * dt;
 
-    // Rebonds sur les bords (Rebond, et Bords trampolines du bureau)
+    // Rebonds sur les bords (Rebond ; en duel, le terrain peut changer les bords)
     const r = s.rayon;
     const mur = () => {
       if (terrain === 'rebond') { // bords rebondissants : relancent la toupie (vitesse plafonnée)
@@ -177,17 +176,17 @@ export function majToupies(dt, cb) {
         t.vx *= k; t.vz *= k;
       } else if (terrain === 'collant') { // bords collants : la toupie s'englue
         t.vx *= 0.15; t.vz *= 0.15; t.rotation *= 0.96;
-      } else if (s.trampoline) {
-        const v = Math.hypot(t.vx, t.vz), cap = s.vitesse * s.trampolineMax;
-        const k = Math.max(s.rebond, Math.min(s.trampoline, cap / Math.max(v, 1e-6)));
-        t.vx *= k; t.vz *= k;
       } else { t.vx *= s.rebond; t.vz *= s.rebond; t.rotation *= 0.985; }
       cb.mur?.(t);
     };
-    if (t.x < -DESK_X + r) { t.x = -DESK_X + r; t.vx = Math.abs(t.vx); mur(); }
-    if (t.x > DESK_X - r) { t.x = DESK_X - r; t.vx = -Math.abs(t.vx); mur(); }
-    if (t.z < -DESK_Z + r) { t.z = -DESK_Z + r; t.vz = Math.abs(t.vz); mur(); }
-    if (t.z > DESK_Z - r) { t.z = DESK_Z - r; t.vz = -Math.abs(t.vz); mur(); }
+    // Bord rond : on ramène la toupie dans le cercle et on la réfléchit sur la normale
+    const dc = Math.hypot(t.x, t.z), lim = ARENE_R - r;
+    if (dc > lim) {
+      const nx = t.x / dc, nz = t.z / dc;
+      t.x = nx * lim; t.z = nz * lim;
+      const vn = t.vx * nx + t.vz * nz;
+      if (vn > 0) { t.vx -= 2 * vn * nx; t.vz -= 2 * vn * nz; mur(); }
+    }
 
     // Traînée de feu : une flamme tous les 3 cm parcourus
     if (s.feu) {

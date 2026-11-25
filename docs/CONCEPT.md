@@ -162,6 +162,7 @@ Simulation : un joueur trouve son premier terrain en environ 30 boîtes (médian
 - **Matchmaking** : 8 joueurs. Tant qu'il n'y a pas assez de vrais joueurs (et pendant toute la phase de test),
   le salon est **complété par des bots**.
 - **5 vies** par joueur.
+- **Le plateau est ROND**, contre les cafards comme en duel. Le lanceur glisse sur un arc en bas du plateau ; celui de l'adversaire est en haut.
 - **Une étape = 3 LANCERS contre les cafards, puis 1 duel contre un joueur** (précisé par Louis le 25/11).
   Chaque lancer est une manche, avec la boutique entre chaque manche.
 - **Avant chaque lancer, le bureau est rempli jusqu'à sa capacité** (10 cafards + Nid). Les survivants restent, avec leurs
@@ -249,19 +250,28 @@ Simulation : un joueur trouve son premier terrain en environ 30 boîtes (médian
 - **Chaque toupie lancée en plus est plus faible** : −30 % de rotation par toupie supplémentaire.
   Comme les chocs sont maintenant comptés en tr/min absolus, ce malus joue vraiment.
 
-### 6.2 quater Boutique à offres (retours des testeurs)
-- À chaque manche, **6 améliorations tirées au hasard** (au moins une du bureau et une de la toupie), **relance pour 2 💰**,
-  comme dans un auto-battler : on choisit au lieu de tout cocher.
+### 6.2 quater Boutique à offres (validée par Louis, épurée le 25/11)
+- À chaque manche, **6 améliorations tirées au hasard**, au moins une du bureau et une de la toupie. On choisit au lieu de tout cocher.
+- **Affichage épuré** : 6 grandes cartes (icône, nom, valeur actuelle → après, prix). À côté : l'argent, les intérêts prévus,
+  la relance et « Prêt ». Une seule ligne résume la manche et annonce la suivante.
+- **Un achat = un paquet de +3 niveaux** : un effet bien visible (un achat de Diamètre fait 9,2 → 11,4 cm) et moins de clics.
+  Il coûte 15 % de moins que 3 achats séparés. Le Multi-lancer et la Priorité de terrain s'achètent un par un.
+- **La relance coûte de plus en plus cher** dans une même boutique (2, 3, 5, 7, 10 💰…), puis revient à 2 💰 à la manche suivante.
+- L'offre achetée disparaît de la boutique.
 - Les améliorations qui contrent les espèces du prochain lancer sont marquées **« conseillé »**.
 - Le **prochain adversaire** est annoncé avec ses pièces ; on ne l'affronte jamais deux fois de suite.
 - Réglage : `BOUTIQUE` dans `src/config.js` (`offres: 0` pour tout afficher).
 
 ### 6.3 Économie : capitaliser ou se renforcer
 Entre chaque manche (chaque lancer), la boutique propose trois groupes :
-- **🪑 Bureau (capitalisation)** : Nid, Prime, Trèfle doré, Combo, Appât, Bords trampolines, Tirelire ;
+- **🪑 Bureau (capitalisation)** : Nid, Prime, Trèfle doré, Combo, Tirelire. Les Bords trampolines et l'Appât ont été retirés :
+  les bords sont un choix de terrain, pas une amélioration de partie ;
 - **🌀 Toupie** et **🚀 Lanceur** (puissance) : +1 niveau dans une stat.
 
-Revenu fixe de 2 💰 par manche, plus des **intérêts** : +1 💰 par tranche de 5 💰 gardés, plafonné par la Tirelire
+**Intérêts et Tirelire** : à la fin de chaque manche (chaque lancer et chaque duel), on reçoit +1 💰 par tranche de 5 💰
+qu'on n'a pas dépensés, avec un plafond de 3 💰. La **Tirelire** relève ce plafond. Garder de l'argent rapporte donc,
+mais c'est autant de puissance en moins tout de suite. Les intérêts prévus s'affichent dans la boutique.
+Revenu fixe de 2 💰 par manche, plus ces **intérêts** : +1 💰 par tranche de 5 💰 gardés, plafonné par la Tirelire
 (comme dans les auto-battlers). Prime de base : 1,5 💰 par cafard. **Les centimes sont conservés**, ce qui rend la Prime vraiment utile. **Le dilemme** : tout miser sur l'argent fait une toupie trop faible pour les cafards et les
 duels ; tout miser sur la toupie fait manquer d'argent plus tard.
 

@@ -24,9 +24,9 @@ const OUT = process.argv[2], W = +process.argv[3] || 1280, H = +process.argv[4] 
       if (vis('fin')) return { fin: true, place: P.moi.place, manche: P.manche, vague: P.vague, texte: document.getElementById('finContenu').innerText.slice(0, 400) };
       if (vis('bilan')) {
         // achats : alterne bureau / toupie
-        const btns = [...document.querySelectorAll('#bilanContenu .amelio:not([disabled])')];
+        const btns = [...document.querySelectorAll('#bilanContenu .offre:not([disabled])')];
         if (btns.length) btns[Math.floor(Math.random() * btns.length)].click();
-        if (Math.random() < 0.6 || !document.querySelectorAll('#bilanContenu .amelio:not([disabled])').length) { document.getElementById('pret').click(); return { bilan: true, manche: P.manche, vies: P.moi.vies, argent: P.argent, t: Math.round(P.tempsJeu), bots: P.joueurs.filter(j=>j.bot&&!j.elimine).length }; }
+        if (Math.random() < 0.6 || !document.querySelectorAll('#bilanContenu .offre:not([disabled])').length) { document.getElementById('pret').click(); return { bilan: true, manche: P.manche, vies: P.moi.vies, argent: P.argent, t: Math.round(P.tempsJeu), bots: P.joueurs.filter(j=>j.bot&&!j.elimine).length }; }
         return { achat: true };
       }
       if (P.phase === 'jeu') {

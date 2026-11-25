@@ -2,7 +2,7 @@
 // Tant qu'on reste appuyé, on oriente la direction (et la jauge de puissance oscille). On relâche : la toupie part.
 import * as THREE from 'three';
 import { scene, camera, renderer } from './scene.js';
-import { DESK_X, RAIL_Z, RAIL_MARGIN } from './config.js';
+import { RAIL_XMAX, railZ } from './config.js';
 
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), plan = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 const hit = new THREE.Vector3();
@@ -44,10 +44,12 @@ function versBureau(e) {
   ray.setFromCamera(ndc, camera);
   return ray.ray.intersectPlane(plan, hit) ? hit : null;
 }
-const borneX = x => Math.max(-DESK_X + RAIL_MARGIN, Math.min(DESK_X - RAIL_MARGIN, x));
+const borneX = x => Math.max(-RAIL_XMAX, Math.min(RAIL_XMAX, x));
+// Point de départ de la toupie : un peu à l'intérieur du rail, vers le centre
+const depart = x => { const z = railZ(x), d = Math.hypot(x, z), k = (d - 0.04) / d; return { x: x * k, z: z * k }; };
 
 function viser(h) {
-  let dx = h.x - lanceur.x, dz = h.z - RAIL_Z;
+  let dx = h.x - lanceur.x, dz = h.z - railZ(lanceur.x);
   if (Math.hypot(dx, dz) < 0.03) return; // trop près : on garde la visée
   if (dz > -0.02) { dx = -dx; dz = -dz; } // derrière le lanceur : lance-pierre (on tire vers soi)
   if (dz > -0.02) dz = -0.02;
@@ -76,7 +78,8 @@ function relacher() {
   if (!lanceur.actif) return;
   const g = valeurJauge();
   const parfait = g > 1 - lanceur.zoneParfait;
-  lanceur.onLancer?.({ x: lanceur.x, z: RAIL_Z - 0.04, dx: lanceur.dir.x, dz: lanceur.dir.y, puissance: parfait ? 1.08 : g, parfait });
+  const p = depart(lanceur.x);
+  lanceur.onLancer?.({ x: p.x, z: p.z, dx: lanceur.dir.x, dz: lanceur.dir.y, puissance: parfait ? 1.08 : g, parfait });
 }
 canvas.addEventListener('pointerup', relacher);
 canvas.addEventListener('pointercancel', () => { lanceur.etat = 'libre'; });
@@ -87,7 +90,8 @@ export function valeurJauge() { return 0.5 - 0.5 * Math.cos((lanceur.t / 1.1) * 
 export function lancerDirect(x, dx, dz, puissance) {
   lanceur.x = borneX(x);
   lanceur.dir.set(dx, dz).normalize();
-  lanceur.onLancer?.({ x: lanceur.x, z: RAIL_Z - 0.04, dx: lanceur.dir.x, dz: lanceur.dir.y, puissance, parfait: false });
+  const p = depart(lanceur.x);
+  lanceur.onLancer?.({ x: p.x, z: p.z, dx: lanceur.dir.x, dz: lanceur.dir.y, puissance, parfait: false });
 }
 
 export function majLanceur(dt) {
@@ -96,7 +100,7 @@ export function majLanceur(dt) {
   jauge.classList.toggle('visible', lanceur.actif && lanceur.etat === 'charge');
   if (!lanceur.actif) return;
   if (lanceur.etat === 'charge') lanceur.t += dt;
-  corps.position.set(lanceur.x, 0, RAIL_Z);
+  corps.position.set(lanceur.x, 0, railZ(lanceur.x));
   corps.rotation.y = Math.atan2(-lanceur.dir.x, -lanceur.dir.y);
   visee.position.copy(corps.position);
   visee.rotation.y = corps.rotation.y;

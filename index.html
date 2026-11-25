@@ -74,6 +74,28 @@
   .barre-vie.alerte { animation: clignote .35s infinite alternate; }
   @keyframes clignote { from { opacity: 1; } to { opacity: .35; } }
   #atelier .cote .actions.jouer { position: sticky; bottom: -16px; background: var(--panneau); padding: 8px 0; z-index: 2; }
+  .resume { font-size: 16px; margin-bottom: 10px; }
+  .boutique { display: grid; grid-template-columns: 1fr 210px; gap: 14px; align-items: start; }
+  .offres { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .offre { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; min-height: 150px;
+    background: #241a13; border: 2px solid #3d2e22; border-radius: 14px; padding: 12px 8px; }
+  .offre:not(:disabled):hover { border-color: var(--accent); transform: translateY(-2px); }
+  .offre:disabled { opacity: .45; cursor: default; }
+  .offre.conseil { border-color: #3fcf6e99; }
+  .offre .ic { font-size: 34px; line-height: 1; }
+  .offre b { font-size: 15px; }
+  .offre .effet { font-size: 12px; color: var(--doux); }
+  .offre .paquet { font-size: 11px; font-weight: 800; color: #1b0f05; background: var(--accent); border-radius: 6px; padding: 0 6px; }
+  .offre .px { margin-top: auto; font-weight: 900; color: var(--or); font-size: 16px; }
+  .offre .badge-conseil { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); }
+  .cote-boutique { display: flex; flex-direction: column; gap: 10px; background: #1d1510; border-radius: 14px; padding: 12px; }
+  .argent-gros { font-size: 30px; font-weight: 900; color: var(--or); text-align: center; }
+  @media (max-width: 720px) {
+    .boutique { grid-template-columns: 1fr; } .offres { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .offre { min-height: 104px; padding: 8px 6px; } .offre .ic { font-size: 26px; } .offre .effet { font-size: 11px; }
+    .cote-boutique { position: sticky; bottom: -18px; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; padding: 8px; }
+    .cote-boutique .argent-gros { font-size: 20px; } .cote-boutique .btn { padding: 10px 12px; } .cote-boutique .petit { width: 100%; font-size: 11px; }
+  }
   .alerte { background: rgba(255,77,77,.15); border: 1px solid var(--rouge); border-radius: 8px; padding: 6px 8px; font-size: 13px; }
   .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .mode { background: #2a1f17; border: 2px solid #3d2e22; border-radius: 10px; padding: 8px; font-weight: 700; }

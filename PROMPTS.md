@@ -364,3 +364,28 @@ Chaque échange sur le projet est consigné ici : prompt optimisé + ce qui a é
     inutile, Multi dominant, Prime inutile (arrondi), pièces d'économie pièges, bots incohérents.
   → Tout a été corrigé (voir le commit « Retours des 3 testeurs »). Mesures : duels miroirs 7/12, 12,8 contacts, 13 s,
     3,6 cafards par lancer.
+
+---
+
+## 2026-11-25 — Plateau rond, boutique épurée, relance croissante, paquets d'améliorations
+
+**Prompt optimisé**
+> Rôle : game designer + développeur gameplay/UI.
+> Demandes :
+> 1. **Plateau rond** pour tous les terrains (contre les cafards comme en duel).
+> 2. **Retirer les Bords trampolines** de la boutique (c'est un choix de terrain, pas une amélioration), et **retirer l'Appât**.
+> 3. Le choix aléatoire entre les manches est validé, mais la boutique est trop chargée : **épurer** → juste
+>    **6 améliorations en grandes cartes** avec leurs stats, et à côté l'argent, le prix de la relance, etc.
+> 4. **La relance doit devenir de plus en plus chère** (pas toujours 2 💰).
+> 5. **Expliquer la Tirelire et les intérêts.**
+> 6. (Message suivant) Des **améliorations plus chères mais avec plus d'impact** (le Diamètre ne se voit pas assez),
+>    et **moins de clics** quand on a beaucoup d'argent.
+
+**Réalisé**
+- Plateau rond (bois, rebord, rails en arc), collisions et cafards dans un cercle ; caméra recadrée (PC et téléphone).
+- Stats Bords trampolines et Appât supprimées (pièces concernées réexprimées, toujours équilibrées).
+- Boutique : 6 grandes cartes, panneau latéral (argent, intérêts prévus, relance, Prêt), une ligne de contexte ;
+  barre collante sur téléphone ; l'offre achetée disparaît.
+- Relance : 2, 3, 5, 7, 10 💰… dans une même boutique, remise à 2 à la manche suivante.
+- Achats par paquets de +3 niveaux (−15 %), Diamètre plus visible (9,2 → 11,4 cm en un achat), bots alignés.
+- Explication des intérêts / Tirelire donnée à Louis et affichée dans la boutique.

@@ -5,7 +5,7 @@
 import { PARTIE, CAFARDS, ECONOMIE } from './config.js';
 import { PIECES, SLOTS, RARETES } from './data/pieces.js';
 import { TERRAINS } from './data/terrains.js';
-import { AMELIO, MANCHE_PRIORITE } from './data/boutique.js';
+import { AMELIO, MANCHE_PRIORITE, paquet } from './data/boutique.js';
 import { statsToupie, tempsRotation } from './stats.js';
 import { compositionEtape, TYPES } from './data/cafards.js';
 
@@ -89,10 +89,10 @@ export function finMancheBot(b, manche, etape) {
   for (let essais = 0; essais < 30; essais++) {
     const id = hasard(voulu()), a = AMELIO[id], niv = b.niveaux[id] || 0;
     if (!a || niv >= a.max) continue;
-    const prix = a.prix(niv);
-    if (b.argent - prix < garde) continue;
-    b.argent -= prix;
-    b.niveaux[id] = niv + 1;
+    const pq = paquet(a, niv);
+    if (!pq || b.argent - pq.prix < garde) continue;
+    b.argent -= pq.prix;
+    b.niveaux[id] = niv + pq.niveaux;
   }
   // Priorité de terrain, en secret, à partir de la 3e manche
   if (b.terrain !== 'aucun' && manche >= MANCHE_PRIORITE && b.argent >= 4 && Math.random() < 0.4) {

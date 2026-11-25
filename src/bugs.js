@@ -2,7 +2,7 @@
 // gros, blindés, coureurs qui fuient, araignées qui tissent des toiles, pondeuses qui pondent des larves.
 import * as THREE from 'three';
 import { scene } from './scene.js';
-import { DESK_X, DESK_Z } from './config.js';
+import { ARENE_R } from './config.js';
 import { TYPES } from './data/cafards.js';
 
 export const cafards = [];
@@ -58,6 +58,13 @@ function modele(type, r, dore) {
   return { g, pattes };
 }
 
+// Un point au hasard dans le plateau rond (pas collé au bord ni sur le lanceur)
+function pointAuHasard() {
+  const a = Math.random() * Math.PI * 2, d = Math.sqrt(Math.random()) * (ARENE_R - 0.1);
+  const x = Math.cos(a) * d, z = Math.sin(a) * d;
+  return z > ARENE_R - 0.2 ? { x, z: z - 0.15 } : { x, z };
+}
+
 // vieBase : vie d'un cafard normal pour cette vague (les espèces multiplient)
 export function ajouterCafard({ vieBase, type = 'cafard', dore = false, delai = 0, x, z }) {
   const t = TYPES[type];
@@ -65,8 +72,7 @@ export function ajouterCafard({ vieBase, type = 'cafard', dore = false, delai = 
   const { g, pattes } = modele(type, r, dore);
   const c = {
     type, t,
-    x: x ?? (Math.random() * 2 - 1) * (DESK_X - 0.08),
-    z: z ?? (Math.random() * 2 - 1) * (DESK_Z - 0.16) - 0.04,
+    ...(x != null ? { x, z } : pointAuHasard()),
     r, vie: vieBase * t.vie, vieMax: vieBase * t.vie, dore,
     armure: (t.armure || 0) * vieBase, // dégâts retirés à chaque coup
     masse: t.masse || 1,
@@ -137,9 +143,12 @@ export function majCafards(dt, t, menaces = []) {
     let vx = Math.sin(c.dir) * c.vitesse + c.kx, vz = Math.cos(c.dir) * c.vitesse + c.kz;
     c.kx *= Math.exp(-5 * dt); c.kz *= Math.exp(-5 * dt);
     c.x += vx * dt; c.z += vz * dt;
-    const mx = DESK_X - c.r, mz = DESK_Z - c.r;
-    if (Math.abs(c.x) > mx) { c.x = Math.sign(c.x) * mx; c.dir = -c.dir; c.kx *= -0.5; }
-    if (Math.abs(c.z) > mz) { c.z = Math.sign(c.z) * mz; c.dir = Math.PI - c.dir; c.kz *= -0.5; }
+    const dc = Math.hypot(c.x, c.z), lim = ARENE_R - c.r;
+    if (dc > lim) { // bord rond : il repart vers l'intérieur
+      c.x *= lim / dc; c.z *= lim / dc;
+      c.dir = Math.atan2(-c.x, -c.z) + (Math.random() - 0.5) * 1.2;
+      c.kx *= -0.5; c.kz *= -0.5;
+    }
     c.g.position.set(c.x, 0, c.z);
     c.g.rotation.y = c.dir;
     for (const p of c.pattes) p.rotation.x = Math.sin(t * (c.t.fuite ? 40 : 22) + p.userData.phase) * 0.5;

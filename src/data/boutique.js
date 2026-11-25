@@ -9,14 +9,14 @@ import { STATS } from '../stats.js';
 const REGLES = {
   multi: { max: 2, prix: n => 60 + n * 50 }, // très cher : une toupie de plus, c'est énorme
   nid: { max: 6, prix: n => 4 + n * 3 + n * n }, prime: { max: 6, prix: n => 4 + n * 3 + n * n }, chance: { max: 4, prix: n => 6 + n * 4 + n * n },
-  combo: { max: 5, prix: n => 4 + n * 3 + n * n }, appat: { max: 5, prix: n => 5 + n * 3 + n * n }, trampoline: { max: 4, prix: n => 7 + n * 4 + n * n },
+  combo: { max: 5, prix: n => 4 + n * 3 + n * n },
   tirelire: { max: 3, prix: n => 6 + n * 5 + n * n },
 };
 // Toupie et lanceur : +1 niveau dans une stat (les pouvoirs spéciaux coûtent plus cher)
 export const STAT_ACHATS = STATS.map(s => ({
   id: s.id, stat: true, groupe: s.groupe, nom: s.nom, icone: s.icone, desc: s.desc,
   max: REGLES[s.id]?.max ?? (s.special ? 6 : 8),
-  prix: REGLES[s.id]?.prix || (s.special ? n => 6 + n * 3 + n * n : n => 3 + n * 2 + Math.floor((n * n) / 2)),
+  prix: REGLES[s.id]?.prix || (s.special ? n => 6 + n * 3 + Math.floor((n * n) / 2) : n => 3 + n * 2 + Math.floor((n * n) / 4)),
 }));
 export const BUREAU = STAT_ACHATS.filter(a => a.groupe === 'bureau');
 
@@ -28,6 +28,17 @@ export const MANCHE_PRIORITE = 3; // disponible après 3 manches
 
 export const AMELIORATIONS = [...STAT_ACHATS, PRIORITE];
 export const AMELIO = Object.fromEntries(AMELIORATIONS.map(a => [a.id, a]));
+
+// Un achat = un PAQUET de +3 niveaux (moins de clics, effet bien visible), 15 % moins cher que 3 achats séparés.
+// Le Multi-lancer et la Priorité de terrain s'achètent un par un.
+export const PAQUET = 3;
+export function paquet(a, n) {
+  const k = a.id === 'multi' || a.id === 'priorite' ? 1 : Math.min(PAQUET, a.max - n);
+  if (k <= 0) return null;
+  let prix = 0;
+  for (let i = 0; i < k; i++) prix += a.prix(n + i);
+  return { niveaux: k, prix: k > 1 ? Math.round(prix * 0.85) : prix };
+}
 
 export const NOMS_BOTS = [
   'Cafouillette', 'TourneVite', 'Sir Spinzalot', 'Mamie Toupie', 'Blatte Runner', 'Gyro Gearloose',

@@ -1,6 +1,6 @@
 // La scène 3D : rendu, caméra, bureau de jeu, et la vitrine de l'atelier.
 import * as THREE from 'three';
-import { DESK_X, DESK_Z, RAIL_Z, RAIL_MARGIN } from './config.js';
+import { DESK_X, ARENE_R, RAIL_R, RAIL_ANGLE } from './config.js';
 
 export const conteneur = document.getElementById('jeu');
 export const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
@@ -58,7 +58,7 @@ function textureBois() {
 }
 
 const bois = new THREE.MeshStandardMaterial({ map: textureBois(), roughness: 0.45, metalness: 0.05 });
-const plateau = new THREE.Mesh(new THREE.BoxGeometry(DESK_X * 2, 0.04, DESK_Z * 2), bois);
+const plateau = new THREE.Mesh(new THREE.CylinderGeometry(ARENE_R, ARENE_R, 0.04, 96), bois);
 plateau.position.y = -0.02;
 plateau.receiveShadow = true;
 scene.add(plateau);
@@ -66,12 +66,10 @@ scene.add(plateau);
 // Rebords (la toupie rebondit dessus)
 const rebordMat = new THREE.MeshStandardMaterial({ color: 0x3b2516, roughness: 0.6 });
 const REBORD_NEUTRE = { color: 0x3b2516, emissive: 0x000000, roughness: 0.6 };
-for (const [w, d, x, z] of [
-  [DESK_X * 2 + 0.06, 0.03, 0, -DESK_Z - 0.015], [DESK_X * 2 + 0.06, 0.03, 0, DESK_Z + 0.015],
-  [0.03, DESK_Z * 2, -DESK_X - 0.015, 0], [0.03, DESK_Z * 2, DESK_X + 0.015, 0],
-]) {
-  const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.035, d), rebordMat);
-  m.position.set(x, 0.0175, z);
+{ // rebord rond
+  const m = new THREE.Mesh(new THREE.TorusGeometry(ARENE_R + 0.014, 0.018, 16, 128), rebordMat);
+  m.rotation.x = Math.PI / 2;
+  m.position.y = 0.012;
   m.castShadow = m.receiveShadow = true;
   scene.add(m);
 }
@@ -84,14 +82,19 @@ scene.add(table);
 
 // Rail du lanceur (bas du bureau) et rail adverse (haut, pour les duels)
 const railMat = new THREE.MeshStandardMaterial({ color: 0x8a6a45, roughness: 0.5, metalness: 0.3 });
-function rail(z) {
-  const m = new THREE.Mesh(new THREE.BoxGeometry((DESK_X - RAIL_MARGIN) * 2 + 0.04, 0.004, 0.012), railMat);
-  m.position.set(0, 0.002, z);
+// Rails en arc de cercle (le lanceur glisse dessus)
+function rail(haut) {
+  const pts = [];
+  for (let i = 0; i <= 40; i++) {
+    const a = -RAIL_ANGLE - 0.06 + ((2 * RAIL_ANGLE + 0.12) * i) / 40;
+    pts.push(new THREE.Vector3(Math.sin(a) * RAIL_R, 0.003, (haut ? -1 : 1) * Math.cos(a) * RAIL_R));
+  }
+  const m = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 60, 0.004, 6, false), railMat);
   scene.add(m);
   return m;
 }
-rail(RAIL_Z);
-export const railAdverse = rail(-RAIL_Z);
+rail(false);
+export const railAdverse = rail(true);
 railAdverse.visible = false;
 
 // ---------------------------------------------------------------- Décor des terrains de duel
@@ -100,7 +103,6 @@ for (const r of [0.12, 0.24, 0.36, 0.48]) {
   const anneau = new THREE.Mesh(new THREE.RingGeometry(r - 0.004, r, 64), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.08 + r * 0.25, depthWrite: false }));
   anneau.rotation.x = -Math.PI / 2;
   anneau.position.y = 0.0006;
-  anneau.scale.set(DESK_X / 0.55, DESK_Z / 0.55, 1);
   cuve.add(anneau);
 }
 cuve.visible = false;
@@ -115,8 +117,8 @@ export function decorTerrain(id) {
 
 // ---------------------------------------------------------------- Caméra adaptée à l'écran
 // Caméra : position de base (tout le bureau) ; en duel elle se rapproche des toupies ; secousse sur les gros chocs
-const base = { pos: new THREE.Vector3(), cible: new THREE.Vector3(0, 0, 0.02) };
-const cam = { pos: new THREE.Vector3(), cible: new THREE.Vector3(0, 0, 0.02), secousse: 0 };
+const base = { pos: new THREE.Vector3(), cible: new THREE.Vector3(0, 0, 0.07) };
+const cam = { pos: new THREE.Vector3(), cible: new THREE.Vector3(0, 0, 0.07), secousse: 0 };
 export function secouer(force) { cam.secousse = Math.max(cam.secousse, force); }
 // suivi : null (vue normale) ou { x, z, ecart } (milieu des toupies et distance entre elles)
 export function majCamera(dt, suivi) {
@@ -146,7 +148,7 @@ export function cadrer() {
   // En portrait, on recule assez pour que tout le bureau tienne en largeur
   const demiLargeurVue = Math.atan(Math.tan((camera.fov * Math.PI) / 360) * (w / h));
   const distLargeur = (DESK_X + 0.08) / Math.tan(demiLargeurVue) / 1.06;
-  const dist = portrait ? Math.max(1.9, distLargeur) : 1.45;
+  const dist = portrait ? Math.max(2.0, distLargeur) : 1.68;
   base.pos.set(0, dist * 0.86, dist * 0.62);
   if (!cam.pos.lengthSq()) cam.pos.copy(base.pos);
   camera.position.copy(cam.pos);

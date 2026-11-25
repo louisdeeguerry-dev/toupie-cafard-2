@@ -2,11 +2,16 @@
 
 export const VERSION = '0.1.0-proto';
 
-// Le bureau (mêmes dimensions que le jeu 1) — en mètres
-export const DESK_X = 0.68; // demi-largeur
-export const DESK_Z = 0.55; // demi-profondeur
-export const RAIL_Z = DESK_Z - 0.07; // rail du lanceur du joueur (bord bas)
-export const RAIL_MARGIN = 0.1; // le lanceur ne va pas jusque dans les coins
+// Le plateau est ROND (contre les cafards comme en duel) — en mètres
+export const ARENE_R = 0.6; // rayon du plateau
+export const RAIL_R = ARENE_R - 0.07; // le lanceur glisse sur un arc, près du bord
+export const RAIL_ANGLE = (50 * Math.PI) / 180; // l'arc va de −50° à +50° autour du bas (et du haut pour l'adversaire)
+export const RAIL_XMAX = RAIL_R * Math.sin(RAIL_ANGLE);
+// Position du rail pour une abscisse x (bas = côté joueur, z positif ; haut = côté adversaire)
+export const railZ = (x, haut = false) => (haut ? -1 : 1) * Math.sqrt(Math.max(0, RAIL_R * RAIL_R - x * x));
+// Anciennes dimensions (cadrage de la caméra)
+export const DESK_X = ARENE_R;
+export const DESK_Z = ARENE_R;
 
 // La partie
 export const PARTIE = {
@@ -33,7 +38,8 @@ export const CAFARDS = {
 };
 
 // Boutique : nombre d'offres tirées au hasard à chaque manche (0 = tout afficher) et prix pour relancer
-export const BOUTIQUE = { offres: 6, relance: 2 };
+// La relance coûte de plus en plus cher dans une même boutique (2, 3, 5, 7, 10…), puis redevient à 2 à la manche suivante.
+export const BOUTIQUE = { offres: 6, relance: n => Math.round(2 * Math.pow(1.5, n)) };
 
 // Économie entre les manches
 export const ECONOMIE = {

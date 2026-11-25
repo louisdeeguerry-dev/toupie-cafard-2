@@ -1,9 +1,9 @@
 // Le déroulement d'une partie : salon de 8 joueurs (toi + bots), étapes de 3 LANCERS contre les cafards + 1 duel,
 // économie entre les manches, vies, éliminations, classement final.
 // La toupie choisie avant la partie est VERROUILLÉE jusqu'à la fin : en partie, on n'achète que des niveaux.
-import { PARTIE, CAFARDS, ECONOMIE, BOUTIQUE, RAIL_Z, DESK_X, RAIL_MARGIN } from './config.js';
+import { PARTIE, CAFARDS, ECONOMIE, BOUTIQUE, RAIL_XMAX, railZ } from './config.js';
 import { terrainDuel } from './data/terrains.js';
-import { AMELIO, STAT_ACHATS, NOMS_BOTS, MANCHE_PRIORITE } from './data/boutique.js';
+import { AMELIO, STAT_ACHATS, NOMS_BOTS, MANCHE_PRIORITE, paquet } from './data/boutique.js';
 import { statsToupie } from './stats.js';
 import { ajouterCafard, viderCafards, cafards, majCafards } from './bugs.js';
 import { especesVague, compositionEtape, nouveauxTypes, TYPES } from './data/cafards.js';
@@ -127,8 +127,8 @@ export function lancer({ x, z, dx, dz, puissance: puiss, parfait }) {
 
 function lancerBot() {
   const adv = partie.adversaire, cible = partie.mesToupies.find(enJeu);
-  const x = Math.max(-DESK_X + RAIL_MARGIN, Math.min(DESK_X - RAIL_MARGIN, (Math.random() * 2 - 1) * 0.4));
-  const z = -RAIL_Z + 0.04;
+  const x = (Math.random() * 2 - 1) * RAIL_XMAX * 0.8;
+  const z = railZ(x, true) * 0.92; // sur l'arc du haut, un peu vers l'intérieur
   const { tx, tz, puiss } = lancerDuelBot(adv, cible);
   partie.sesToupies = lancerGroupe(adv, 'adverse', x, z, tx - x, tz - z, puiss);
   partie.botLance = true;
@@ -190,16 +190,6 @@ export function majPartie(dt, t) {
   const mes = partie.mesToupies, lancees = mes.length > 0, toutesTombees = lancees && !mes.some(enJeu);
 
   if (partie.type === 'cafards') {
-    // Appât : des renforts arrivent pendant que la toupie tourne
-    const appat = mesStats().appat;
-    if (appat && mes.some(enJeu)) {
-      partie.renfortT += dt;
-      if (partie.renfortT > appat) {
-        partie.renfortT = 0;
-        const especes = Object.keys(compositionEtape(etape())).filter(t => t !== 'pondeuse');
-        ajouterCafard({ vieBase: partie.vieBase, type: especes[Math.floor(Math.random() * especes.length)], dore: Math.random() < chanceDore() });
-      }
-    }
     // Le lancer est fini quand toutes mes toupies sont tombées (ou qu'il n'y a plus de cafards)
     if (lancees && (toutesTombees || !cafards.some(c => !c.mort))) {
       partie.attenteRelance += dt;
@@ -291,6 +281,7 @@ function terminerManche(bilan) {
   }
   // Conseils : les stats qui contrent les espèces du prochain lancer
   partie.conseils = bilan.apercu ? [...new Set(bilan.apercu.especes.flatMap(t => TYPES[t].contre || []))] : [];
+  partie.relances = 0;
   tirerOffres();
   ui.bilan?.(bilan);
 }
@@ -317,8 +308,8 @@ function finPartie(place) {
 // Au moins une offre du bureau et une de la toupie ; une offre « conseillée » contre les prochains cafards si possible.
 export function tirerOffres() {
   if (!BOUTIQUE.offres) { partie.offres = null; return; }
-  const dispo = STAT_ACHATS.filter(a => (partie.moi.niveaux[a.id] || 0) < a.max);
-  const poids = a => (a.id === 'multi' ? 0.3 : STAT_ACHATS.find(x => x.id === a.id)?.stat && a.prix(0) >= 6 ? 0.6 : 1);
+  const dispo = [...STAT_ACHATS, ...(prioriteDispo() ? [AMELIO.priorite] : [])].filter(a => (partie.moi.niveaux[a.id] || 0) < a.max);
+  const poids = a => (a.id === 'multi' ? 0.3 : a.id === 'priorite' ? 1.5 : a.prix(0) >= 6 ? 0.6 : 1);
   const tirer = liste => {
     const tot = liste.reduce((x, a) => x + poids(a), 0);
     let r = Math.random() * tot;
@@ -335,28 +326,33 @@ export function tirerOffres() {
   partie.offres = offres;
 }
 
+export const prixRelance = () => BOUTIQUE.relance(partie.relances || 0);
 export function relancerOffres() {
-  if (partie.argent < BOUTIQUE.relance) { son('refus'); return false; }
-  partie.argent -= BOUTIQUE.relance;
+  const prix = prixRelance();
+  if (partie.argent < prix) { son('refus'); return false; }
+  partie.argent -= prix;
+  partie.relances = (partie.relances || 0) + 1;
   tirerOffres();
   son('choix');
   return true;
 }
 
 // La priorité de terrain n'est disponible qu'avec un terrain choisi, et à partir de la 3e manche
+export const interetsPrevus = () => Math.min(Math.floor(partie.argent / ECONOMIE.interetPour), mesStats().interetMax);
 export const prioriteDispo = () => partie.moi.terrain !== 'aucun' && partie.manche >= MANCHE_PRIORITE;
 
 export function prixAmelio(id) {
   const a = AMELIO[id], n = niv(id);
   if (id === 'priorite' && !prioriteDispo()) return null;
-  return n >= a.max ? null : a.prix(n);
+  return n >= a.max ? null : paquet(a, n).prix;
 }
+export const niveauxAchat = id => (paquet(AMELIO[id], niv(id))?.niveaux || 0);
 
 export function acheter(id) {
   const prix = prixAmelio(id);
   if (prix == null || partie.argent < prix) { son('refus'); return false; }
   partie.argent -= prix;
-  partie.moi.niveaux[id] = niv(id) + 1;
+  partie.moi.niveaux[id] = niv(id) + niveauxAchat(id);
   son('achat');
   return true;
 }
