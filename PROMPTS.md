@@ -306,3 +306,22 @@ Chaque échange sur le projet est consigné ici : prompt optimisé + ce qui a é
 - 2e passe d'équilibrage (mesurée) : la stratégie économie accumulait 500 💰 et gagnait → multiplicateurs d'argent
   réduits (Prime, Trèfle, Combo, primes d'évolution), prix en n², bots qui achètent 1 + étape/2 niveaux de combat par manche.
   Résultat : « sacrifice » (économie + duels perdus exprès) 7e, mixte 4e, puissance 3e. Outil : `tests/strategies.js`.
+
+---
+
+## 2026-11-25 — Confirmer l'équilibrage sur plusieurs parties, publier le jeu et envoyer le lien par mail
+
+**Prompt optimisé**
+> Rôle : testeur d'équilibrage + responsable de publication.
+> Objectifs :
+> 1. Jouer **plusieurs parties par stratégie** d'achat (sacrifice, économie, mixte, puissance) pour confirmer
+>    l'équilibrage, et me **donner les résultats** une fois fini.
+> 2. **Publier le jeu en public** (comme Toupie contre Cafards) pour que je puisse y jouer au travail.
+> 3. M'**envoyer le lien par e-mail**, à moi-même (louisdeeguerry@gmail.com).
+
+**Réalisé**
+- `tests/strategies.js` produit un résultat structuré ; `tests/lancer-strategies.sh N P` joue N parties par
+  stratégie en parallèle ; `tests/synthese-strategies.mjs` fait le tableau de synthèse. 20 parties lancées (5 × 4).
+- Jeu publié sur GitHub Pages via la branche `gh-pages` (l'API des réglages Pages est bloquée depuis la session) :
+  https://louisdeeguerry-dev.github.io/toupie-cafard-2/ — déploiement GitHub réussi.
+- E-mail envoyé avec le lien et un mode d'emploi ; règle ajoutée dans `CLAUDE.md` pour garder `gh-pages` à jour.

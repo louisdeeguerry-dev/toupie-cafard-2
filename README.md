@@ -5,7 +5,7 @@ On alterne 3 vagues de cafards et 1 duel, avec 5 vies. On fabrique sa toupie pi�
 (base, couronne, pointe, âme) grâce aux boîtes mystère.
 
 ## Jouer au prototype
-- En ligne : https://louisdeeguerry-dev.github.io/toupie-cafard-2/ (si GitHub Pages est activé)
+- En ligne : https://louisdeeguerry-dev.github.io/toupie-cafard-2/ (publié depuis la branche `gh-pages`)
 - En local, depuis ce dossier :
   ```
   python3 -m http.server 8000
@@ -33,4 +33,6 @@ Pas d'installation ni d'étape de build : modules JavaScript natifs + Three.js d
 | `CLAUDE.md`, `PROMPTS.md`, `RESSOURCES.md` | Règles de travail, journal des prompts, catalogue de ressources |
 
 ## Tests
+- `node tests/equilibre.mjs` : règle d'équilibrage des pièces, terrains, boîtes mystère.
+- `tests/lancer-strategies.sh 5 3` : 5 parties par stratégie d'achat jouées par un robot, puis synthèse.
 Dans la console du navigateur : `__tc2.acceleration = 4` accélère le jeu, `__tc2.reset()` efface la progression.

@@ -13,6 +13,11 @@ Projet : **Toupie Cafard 2**, suite du jeu « Toupie contre Cafards »
 - Lire `docs/ANALYSE-TOUPIE-1.md` pour connaître le jeu 1 (systèmes, architecture, réutilisable),
   et la mettre à jour si le jeu 1 a reçu de nouveaux commits depuis la date du relevé.
 
+## Règle 0 bis — Le jeu publié reste à jour
+- Le jeu est publié sur GitHub Pages depuis la branche `gh-pages` : https://louisdeeguerry-dev.github.io/toupie-cafard-2/
+- Après chaque `git push origin main` qui touche le jeu, pousser aussi `git push origin main:gh-pages`
+  (sinon la version en ligne reste l'ancienne).
+
 ## Règle 1 — Prompt optimisé avant chaque traitement
 À chaque message de l'utilisateur concernant ce projet :
 1. **Reformuler** d'abord la demande sous forme de *prompt optimisé*, affiché en tête de réponse
