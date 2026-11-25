@@ -325,3 +325,6 @@ Chaque échange sur le projet est consigné ici : prompt optimisé + ce qui a é
 - Jeu publié sur GitHub Pages via la branche `gh-pages` (l'API des réglages Pages est bloquée depuis la session) :
   https://louisdeeguerry-dev.github.io/toupie-cafard-2/ — déploiement GitHub réussi.
 - E-mail envoyé avec le lien et un mode d'emploi ; règle ajoutée dans `CLAUDE.md` pour garder `gh-pages` à jour.
+- Résultats des 20 parties (5 par stratégie) : sacrifice 3,4 de place moyenne (top 4 : 3/5), économie 3,4 (4/5),
+  mixte 2,8 (4/5), puissance 2,8 (5/5). L'abus ne gagne plus mais n'est que modérément puni ; vagues quasi impossibles
+  dès l'étape 3 pour tous ; bots trop faibles en duel. Résultats envoyés par e-mail, corrections proposées.

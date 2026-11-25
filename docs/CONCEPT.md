@@ -186,16 +186,21 @@ Simulation : un joueur trouve son premier terrain en environ 30 boîtes (médian
   rien une fois les cafards évolués, donc il ne gagne plus rien, et les dégâts des duels montent à chaque étape.
   Les multiplicateurs d'argent sont modérés, les prix montent de plus en plus vite (impossible de tout acheter
   d'un coup) et les bots se renforcent à chaque manche.
-- **Mesures** (`tests/strategies.js`, robot qui vise comme un bon joueur, 8 joueurs) :
+- **Mesures** (25/11, `tests/lancer-strategies.sh 5 3` : 5 parties par stratégie, robot qui vise comme un bon joueur, 8 joueurs) :
 
-  | Stratégie | Résultat |
-  |---|---|
-  | « Sacrifice » : que de l'économie, duels perdus exprès aux étapes 1 et 2, puis tout dans la toupie | **7e**, éliminé à l'étape 3 |
-  | Mixte (alterne bureau et toupie) | 4e |
-  | Puissance (toupie et lanceur seulement) | 3e |
+  | Stratégie | Places | Place moy. | Top 4 | Vagues réussies (étapes 1 / 2 / 3 / 4+) | Duels gagnés |
+  |---|---|---|---|---|---|
+  | Sacrifice (économie + duels perdus exprès aux étapes 1-2) | 2, 2, 3, 5, 5 | 3,4 | 3/5 | 100 / 7 / 0 / 0 % | 14/21 |
+  | Économie d'abord | 1, 2, 3, 4, 7 | 3,4 | 4/5 | 67 / 7 / 7 / 0 % | 12/19 |
+  | Mixte | 1, 2, 3, 3, 5 | 2,8 | 4/5 | 93 / 27 / 7 / 0 % | 20/22 |
+  | Puissance | 2, 3, 3, 3, 3 | 2,8 | 5/5 | 100 / 73 / 7 / 3 % | 19/22 |
 
-  Une première version, avec des multiplicateurs trop forts, laissait la stratégie économie accumuler 500 💰 et tout gagner.
-  Elle a été corrigée.
+  **Lecture** :
+  - L'abus « farmer puis tout acheter » **ne gagne plus**, mais il n'est que **modérément puni** (3,4 contre 2,8 de place moyenne).
+  - Toutes les stratégies **réussissent presque aucune vague à partir de l'étape 3** : la fin de partie est trop dure.
+  - Le robot gagne près de 90 % de ses duels contre les bots : **les bots sont trop faibles en duel**,
+    donc le classement dépend surtout des duels simulés entre bots.
+  - 5 parties par stratégie, cela reste peu : les écarts de moins d'une place sont dans le bruit.
 
 ### 6.1 Manches contre les cafards
 - Les cafards tombent du ciel sur le bureau.
