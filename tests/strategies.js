@@ -1,6 +1,8 @@
 // Compare des stratégies d'achat (eco, sacrifice, mixte, force) avec un robot qui vise comme un bon joueur.
 // Lancer d'abord : python3 -m http.server 8123   puis : node tests/strategies.js <eco|sacrifice|mixte|force>
-// Comparaison de stratégies d'achat : eco (bureau d'abord, toupie à partir de l'étape 3), force (toupie seulement), mixte
+// (ou tests/lancer-strategies.sh pour plusieurs parties par stratégie, avec synthèse).
+// eco : bureau d'abord, toupie à partir de l'étape 3 ; sacrifice : pareil + perd exprès les duels des étapes 1-2 ;
+// force : toupie et lanceur seulement ; mixte : alterne. Dernière ligne affichée : RESULT {json}.
 const { chromium } = require('playwright');
 const STRAT = process.argv[2] || 'mixte';
 (async () => {
@@ -12,7 +14,8 @@ const STRAT = process.argv[2] || 'mixte';
   await p.evaluate(() => { __tc2.acceleration = 8; __tc2.sansConfirmation = true; });
   await p.click('#jouer');
   const t0 = Date.now(), vagues = [];
-  while (Date.now() - t0 < 540000) {
+  const R = { strat: STRAT, place: null, manches: 0, vagues: 0, vaguesOk: 0, okParEtape: {}, totParEtape: {}, duelsGagnes: 0, duelsPerdus: 0, argentMax: 0 };
+  while (Date.now() - t0 < 1500000) {
     await p.waitForTimeout(200);
     const e = await p.evaluate(STRAT => {
       const P = __tc2.partie, { cafards } = __tc2.interne;
@@ -53,8 +56,19 @@ const STRAT = process.argv[2] || 'mixte';
     }, STRAT);
     if (e.bilan && /Vague/.test(e.res) && false) vagues.push(`É${e.etape} ${e.res.replace(/Vague (réussie|ratée) : /, (m, x) => x === 'réussie' ? '✓ ' : '✗ ')} 💰${e.argent} ❤️${e.vies}`);
     if (e.bilan) vagues.push(`É${e.etape} ${/Vague/.test(e.res) ? e.res.replace(/Vague (réussie|ratée) : /, (m, x) => x === 'réussie' ? '✓ ' : '✗ ').replace('🎯 ', '') : (/Victoire/.test(e.res) ? 'duel ✓' : 'duel ✗')} 💰${e.argent} ❤️${e.vies}`);
-    if (e.fin) { vagues.push(`FIN ${STRAT} : place ${e.place}, manches ${e.manche}`); break; }
+    if (e.bilan) {
+      R.argentMax = Math.max(R.argentMax, e.argent);
+      if (/Vague/.test(e.res)) {
+        const ok = /réussie/.test(e.res);
+        R.vagues++; if (ok) R.vaguesOk++;
+        R.totParEtape[e.etape] = (R.totParEtape[e.etape] || 0) + 1;
+        if (ok) R.okParEtape[e.etape] = (R.okParEtape[e.etape] || 0) + 1;
+      } else if (/Victoire/.test(e.res)) R.duelsGagnes++; else R.duelsPerdus++;
+    }
+    if (e.fin) { vagues.push(`FIN ${STRAT} : place ${e.place}, manches ${e.manche}`); R.place = e.place; R.manches = e.manche; break; }
   }
   console.log(vagues.join('\n')); console.log('ERREURS', JSON.stringify(errs));
+  R.erreurs = errs.length;
+  console.log('RESULT ' + JSON.stringify(R));
   await b.close();
 })();
