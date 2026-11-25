@@ -4,7 +4,7 @@ import { TERRAINS, TERRAIN } from './data/terrains.js';
 import { STAT_ACHATS, PRIORITE, MANCHE_PRIORITE } from './data/boutique.js';
 import { PARTIE } from './config.js';
 import { STATS, STAT, GROUPES, niveauxToupie, calculer as calcul, tempsRotation } from './stats.js';
-import { partie, etape, prixAmelio, acheter, prioriteDispo } from './match.js';
+import { partie, etape, prixAmelio, acheter, prioriteDispo, lancerDansEtape } from './match.js';
 import { TYPES } from './data/cafards.js';
 import { MODES, MONNAIE, PRIX_BOITE, rangDe, RANGS, xpPourNiveau, acheterBoite } from './progression.js';
 import { son } from './audio.js';
@@ -262,9 +262,9 @@ export function majHud() {
     `<div class="${j === moi ? 'moi' : ''} ${j === partie.adversaire ? 'adv' : ''} ${j.elimine ? 'out' : ''}"><span>${esc(j.nom)}</span><span>${j.elimine ? j.place + 'e' : '❤️' + j.vies}</span></div>`
   ).join('');
   if (partie.type === 'cafards') {
-    $('objectif').textContent = `🎯 ${Math.min(partie.tues, partie.objectif)}/${partie.objectif} cafards`;
-    $('objectif').style.color = partie.tues >= partie.objectif ? 'var(--vert)' : '';
-    $('lancers').textContent = '🌀'.repeat(partie.lancers) + '·'.repeat(Math.max(0, PARTIE.lancersParVague - partie.lancers));
+    $('objectif').textContent = `🪳 Lancer ${lancerDansEtape()}/3 · ${partie.tues} écrasé${partie.tues > 1 ? 's' : ''}`;
+    $('objectif').style.color = '';
+    $('lancers').textContent = `💰 +${partie.gainsManche}`;
     $('lancers').classList.remove('cache');
   } else {
     $('objectif').textContent = `⚔️ Duel contre ${partie.adversaire ? partie.adversaire.nom : '?'}`;
@@ -295,18 +295,20 @@ export function basculerStats() {
 export function afficherBilan(bilan, onPret) {
   let titre;
   if (bilan.type === 'cafards') {
-    titre = bilan.reussi ? `<div class="resultat ok">🎯 Vague réussie : ${bilan.tues}/${bilan.objectif}</div>`
-      : `<div class="resultat ko">Vague ratée : ${bilan.tues}/${bilan.objectif}</div><div class="petit">Pas de prime d'objectif cette fois.</div>`;
+    titre = `<div class="resultat ${bilan.tues ? 'ok' : 'ko'}">🪳 Lancer ${bilan.lancer}/3 : ${bilan.tues} cafard${bilan.tues > 1 ? 's' : ''} écrasé${bilan.tues > 1 ? 's' : ''}</div>
+      <div class="petit">${bilan.restants} survivant${bilan.restants > 1 ? 's' : ''} sur le bureau (ils gardent leurs blessures).</div>`;
   } else {
-    titre = bilan.gagne ? `<div class="resultat ok">⚔️ Victoire contre ${esc(bilan.adversaire)} !</div><div class="petit">Il perd ${bilan.degats} ❤️${bilan.tempsEcoule ? ' (temps écoulé : tu tournais plus fort)' : ''}</div>`
-      : `<div class="resultat ko">Défaite contre ${esc(bilan.adversaire)}</div><div class="petit">Tu perds ${bilan.degats} ❤️${bilan.tempsEcoule ? ' (temps écoulé : il tournait plus fort)' : ''}</div>`;
+    const det = `${bilan.contacts} contact${bilan.contacts > 1 ? 's' : ''} en ${bilan.duree.toFixed(1)} s`;
+    titre = bilan.gagne ? `<div class="resultat ok">⚔️ Victoire contre ${esc(bilan.adversaire)} !</div><div class="petit">Il perd ${bilan.degats} ❤️${bilan.tempsEcoule ? ' (temps écoulé : tu tournais plus fort)' : ''} · ${det}</div>`
+      : `<div class="resultat ko">Défaite contre ${esc(bilan.adversaire)}</div><div class="petit">Tu perds ${bilan.degats} ❤️${bilan.tempsEcoule ? ' (temps écoulé : il tournait plus fort)' : ''} · ${det}</div>`;
   }
   const elim = bilan.elimines?.length ? `<div class="petit">💀 Éliminé${bilan.elimines.length > 1 ? 's' : ''} : ${bilan.elimines.map(esc).join(', ')}</div>` : '';
-  const gains = `<div class="petit">Gains : ${bilan.gains} 💰 pendant la manche · +${bilan.revenu} 💰 de revenu · +${bilan.interets} 💰 d'intérêts</div>`;
+  const gains = `<div class="petit">Gains : ${bilan.gains} 💰 pendant la manche · +${bilan.revenu} 💰 de revenu · +${bilan.interets} 💰 d'intérêts${bilan.type === 'duel' ? ' (un duel ne rapporte ni ne coûte d\'argent)' : ''}</div>`;
   const prochaine = bilan.prochaine === 'duel' ? '⚔️ Duel' : '🪳 Cafards';
   const ap = bilan.apercu;
   const apercu = ap ? `<div class="apercu">
-      <b>Prochaine vague :</b> ${ap.nombre} cafards · vie ${ap.vie.toFixed(1)} · ${ap.especes.map(t => `${TYPES[t].icone} ${TYPES[t].nom}`).join(', ')}
+      <b>Prochain lancer (${ap.lancer}/3) :</b> le bureau sera rempli à ${ap.capacite} cafards${ap.restants ? ` (${ap.restants} survivants + ${Math.max(0, ap.capacite - ap.restants)} nouveaux)` : ''} · vie des nouveaux ${ap.vie.toFixed(1)} · ${ap.especes.map(t => `${TYPES[t].icone} ${TYPES[t].nom}`).join(', ')}
+      <div class="petit">Plus de Nid = plus de cafards sur le bureau à chaque lancer.</div>
       ${ap.evolution?.length ? `<div class="evolution">🧬 <b>Les cafards ont évolué !</b> Ils sont plus résistants, et de nouvelles espèces arrivent :
         ${ap.evolution.map(t => `<div>${TYPES[t].icone} <b>${TYPES[t].nom}</b> — ${esc(TYPES[t].desc)} <span class="petit">Contré par : ${TYPES[t].contre.map(c => STAT[c].icone + ' ' + STAT[c].nom).join(', ')}</span></div>`).join('')}</div>` : ''}
     </div>` : `<div class="apercu"><b>Après le duel, les cafards évolueront</b> : plus résistants, et de nouvelles espèces.</div>`;

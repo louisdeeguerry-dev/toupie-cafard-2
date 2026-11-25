@@ -3,8 +3,9 @@ import { renderer, scene, camera, vitrine, vitrineCam, supportVitrine } from './
 import { creerToupie, libererToupie } from './topMesh.js';
 import { charger, sauver, reinitialiser } from './save.js';
 import { lanceur, majLanceur, lancerDirect } from './launcher.js';
+import { lancerDansEtape, capacite } from './match.js';
 import { partie, nouvellePartie, commencerManche, majPartie, brancherInterface, lancer, abandonner, acheter, _interne } from './match.js';
-import { majFx } from './fx.js';
+import { majFx, majBarres } from './fx.js';
 import { activerAudio } from './audio.js';
 import * as UI from './ui.js';
 import { VERSION } from './config.js';
@@ -56,7 +57,7 @@ brancherInterface({
       UI.aide('Déplace le lanceur, clique et garde appuyé pour viser, relâche pour lancer');
     } else {
       if (partie.evolution?.length) UI.bandeau('🧬 Les cafards ont évolué !', 'Nouveaux : ' + partie.evolution.map(t => TYPES[t].icone + ' ' + TYPES[t].nom).join(', '), 2600);
-      else UI.bandeau(`🪳 Vague ${partie.vague}`, `Écrase ${partie.objectif} cafards en ${partie.lancers} lancers`);
+      else UI.bandeau(`🪳 Lancer ${lancerDansEtape()}/3`, `${partie.renfort ? `+${partie.renfort} cafards : ` : ''}${capacite()} cafards sur le bureau`);
       UI.aide('Déplace le lanceur, clique et garde appuyé pour viser, relâche pour lancer');
     }
   },
@@ -107,6 +108,7 @@ function boucle(maintenant) {
     for (let i = 0; i < n; i++) majPartie(dt / n, t);
     majLanceur(dt);
     majFx(dt);
+    majBarres(_interne.cafards, _interne.toupies);
     renderer.render(scene, camera);
   }
   requestAnimationFrame(boucle);
@@ -115,4 +117,12 @@ requestAnimationFrame(boucle);
 
 // Accès pour les tests automatiques (Playwright) et le débogage dans la console
 window.__tc2 = { VERSION, partie, save: () => save, lancerDirect, acheter, interne: _interne,
+  // Démarre directement une manche donnée (ex. 3 = premier duel) sans passer par l'atelier
+  demarrerTest(manche = 3) {
+    nouvellePartie({ ...save.equipe }, { mode: 'normale', nivPieces: { ...save.niveauxPieces }, terrain: save.terrain });
+    partie.manche = manche;
+    UI.montrer('atelier', false); UI.montrer('hud');
+    mode = 'partie';
+    commencerManche();
+  },
   reset() { save = reinitialiser(); location.reload(); } };

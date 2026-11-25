@@ -7,7 +7,7 @@ import { STATS } from '../stats.js';
 // (voir src/stats.js) : certaines pièces en donnent ou en retirent aussi.
 // Les prix montent de plus en plus vite (n² ) : impossible de tout acheter d'un coup en fin de partie.
 const REGLES = {
-  multi: { max: 2, prix: n => 14 + n * 14 },
+  multi: { max: 2, prix: n => 35 + n * 35 }, // très cher : une toupie de plus, c'est énorme
   nid: { max: 6, prix: n => 4 + n * 3 + n * n }, prime: { max: 6, prix: n => 4 + n * 3 + n * n }, chance: { max: 4, prix: n => 6 + n * 4 + n * n },
   combo: { max: 5, prix: n => 4 + n * 3 + n * n }, appat: { max: 5, prix: n => 5 + n * 3 + n * n }, trampoline: { max: 4, prix: n => 7 + n * 4 + n * n },
   tirelire: { max: 3, prix: n => 6 + n * 5 + n * n },

@@ -3,7 +3,7 @@ import { TERRAINS } from './terrains.js';
 // Chaque pièce donne des NIVEAUX dans les stats du jeu 1 (voir src/stats.js).
 //
 // RÈGLE D'ÉQUILIBRAGE : chaque pièce a autant de bonus que de malus (somme pondérée des niveaux = 0, vérifiée par
-// tests/equilibre.mjs ; un niveau de Multi-lancer vaut 10, car une toupie de plus double presque tout).
+// tests/equilibre.mjs ; un niveau de Multi-lancer vaut 14, car une toupie de plus double presque tout).
 // Une pièce rare n'est donc pas « meilleure » : elle est plus spécialisée. Les doublons débloquent des NIVEAUX de pièce
 // qui amplifient TOUT (bonus ET malus) : une pièce niveau 2 est plus extrême, pas plus forte.
 //
@@ -28,7 +28,7 @@ export const RARETES = {
 // Niveaux de pièce : avec N exemplaires, on peut jouer la pièce jusqu'au niveau N (max 5).
 // Niveau k : tous les bonus ET tous les malus ×(1 + 0,5 × (k − 1)) → ×1,5 au niveau 2, ×2 au niveau 3…
 export const NIVEAU_PIECE_MAX = 5;
-export const POIDS_EQUILIBRAGE = { multi: 10 };
+export const POIDS_EQUILIBRAGE = { multi: 14 };
 export const multiplicateurNiveau = k => 1 + 0.5 * (Math.max(1, k) - 1);
 export function niveauxPiece(p, k = 1) {
   const m = multiplicateurNiveau(k), r = {};
@@ -108,7 +108,7 @@ export const PIECES = [
   { id: 'engrenage-turbo', slot: 'engrenage', nom: 'Engrenage turbo', rarete: 'epique', forme: 'turbo', couleur: 0xe74c3c,
     niveaux: { puissance: 8, elan: -5, precision: -3 }, desc: 'Rotation énorme, mais lancer mou et jauge capricieuse.' },
   { id: 'engrenage-double', slot: 'engrenage', nom: 'Engrenage double', rarete: 'legendaire', forme: 'double', couleur: 0xffc531,
-    niveaux: { multi: 1, puissance: -6, elan: -4 }, desc: 'Lance deux toupies d\'un coup, mais chacune tourne et part moins fort.' },
+    niveaux: { multi: 1, puissance: -8, elan: -6 }, desc: 'Lance deux toupies d\'un coup, mais chacune tourne et part moins fort.' },
 
   // ---------- LANCEUR : RESSORTS (élan) ----------
   { id: 'ressort-standard', slot: 'ressort', nom: 'Ressort standard', rarete: 'commune', forme: 'standard', couleur: 0x9aa3ad,

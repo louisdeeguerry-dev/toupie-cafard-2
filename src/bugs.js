@@ -125,7 +125,7 @@ export function majCafards(dt, t, menaces = []) {
     // Coureur : fuit la toupie la plus proche
     if (c.t.fuite) for (const m of menaces) {
       const d = Math.hypot(c.x - m.x, c.z - m.z);
-      if (d < 0.16) { c.dir = Math.atan2(c.x - m.x, c.z - m.z) + (Math.random() - 0.5) * 0.6; break; }
+      if (d < 0.12) { c.dir = Math.atan2(c.x - m.x, c.z - m.z) + (Math.random() - 0.5) * 0.6; break; }
     }
     // Araignée : tisse une toile de temps en temps
     if (c.t.toile && (c.toileT -= dt) <= 0) { c.toileT = 3.5 + Math.random() * 2; tisser(c); }

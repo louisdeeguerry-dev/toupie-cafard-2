@@ -1,14 +1,14 @@
-// Le déroulement d'une partie : salon de 8 joueurs (toi + bots), cycles de 3 vagues de cafards + 1 duel,
+// Le déroulement d'une partie : salon de 8 joueurs (toi + bots), étapes de 3 LANCERS contre les cafards + 1 duel,
 // économie entre les manches, vies, éliminations, classement final.
 // La toupie choisie avant la partie est VERROUILLÉE jusqu'à la fin : en partie, on n'achète que des niveaux.
-import { PARTIE, VAGUE, ECONOMIE, RAIL_Z, DESK_X, RAIL_MARGIN } from './config.js';
-import { PIECES, SLOTS, DEPART } from './data/pieces.js';
-import { TERRAINS, terrainDuel } from './data/terrains.js';
-import { AMELIO, STAT_ACHATS, NOMS_BOTS, MANCHE_PRIORITE } from './data/boutique.js';
-import { statsToupie, puissance } from './stats.js';
+import { PARTIE, CAFARDS, ECONOMIE, RAIL_Z, DESK_X, RAIL_MARGIN } from './config.js';
+import { terrainDuel } from './data/terrains.js';
+import { AMELIO, NOMS_BOTS, MANCHE_PRIORITE } from './data/boutique.js';
+import { statsToupie } from './stats.js';
 import { ajouterCafard, viderCafards, cafards, majCafards } from './bugs.js';
 import { especesVague, compositionEtape, nouveauxTypes, TYPES } from './data/cafards.js';
-import { creerToupieJeu, viderToupies, retirerToupie, lancerToupie, majToupies, enJeu, toupies, choisirTerrain } from './physics.js';
+import { creerToupieJeu, viderToupies, retirerToupie, lancerToupie, majToupies, enJeu, toupies, choisirTerrain, modeDuel } from './physics.js';
+import { creerBot, jouerLancerBot, finMancheBot, lancerDuelBot, duelSimule } from './bots.js';
 import { lanceur } from './launcher.js';
 import { railAdverse, decorTerrain } from './scene.js';
 import { popup, tache, viderTaches } from './fx.js';
@@ -18,19 +18,7 @@ export const partie = { active: false };
 let ui = {}; // rappels vers l'interface (posés par main.js)
 export function brancherInterface(u) { ui = u; }
 
-const hasard = a => a[Math.floor(Math.random() * a.length)];
 const melanger = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-
-function bot(nom) {
-  const equipe = { ...DEPART }, nivPieces = {};
-  for (const s of SLOTS) if (Math.random() < 0.6) {
-    const p = hasard(PIECES.filter(p => p.slot === s.id));
-    equipe[s.id] = p.id;
-    nivPieces[p.id] = 1 + Math.floor(Math.random() * 2);
-  }
-  const terrain = Math.random() < 0.45 ? hasard(TERRAINS.filter(t => t.id !== 'aucun')).id : 'aucun';
-  return { nom, bot: true, vies: PARTIE.vies, equipe, nivPieces, terrain, niveaux: {}, elimine: false, place: 0 };
-}
 
 // ---------------------------------------------------------------- Début de partie
 // Tout ce qui est choisi à l'atelier (pièces, niveaux de pièces, terrain) est gelé jusqu'à la fin de la partie
@@ -39,88 +27,76 @@ export function nouvellePartie(equipe, { pseudo = 'Toi', mode = 'normale', nivPi
   const nivEquipe = Object.fromEntries(Object.values(equipe).map(id => [id, nivPieces[id] || 1]));
   const joueurs = [{ nom: pseudo, bot: false, vies: PARTIE.vies, equipe: Object.freeze({ ...equipe }), nivPieces: Object.freeze(nivEquipe),
     terrain, niveaux: {}, elimine: false, place: 0 }];
-  for (let i = 1; i < PARTIE.joueurs; i++) joueurs.push(bot(noms[i]));
+  for (let i = 1; i < PARTIE.joueurs; i++) joueurs.push(creerBot(noms[i]));
   const avecTerrain = terrain && terrain !== 'aucun';
   Object.assign(partie, {
-    active: true, mode, joueurs, moi: joueurs[0], manche: 0, vague: 0,
+    active: true, mode, joueurs, moi: joueurs[0], manche: 0, lancerCafards: 0,
     argent: avecTerrain ? PARTIE.argentAvecTerrain : PARTIE.argentSansTerrain,
-    phase: 'attente', type: null, lancers: 0, tues: 0, objectif: 0, primeObjectif: false,
+    phase: 'attente', type: null, lancers: 0, tues: 0,
     adversaire: null, mesToupies: [], sesToupies: [], attenteRelance: 0, resultat: null, chrono: 0, gainsManche: 0,
-    combo: 0, dernierKill: -9, renfortT: 0, tempsJeu: 0,
+    combo: 0, dernierKill: -9, renfortT: 0, tempsJeu: 0, contacts: 0,
   });
   return partie;
 }
 
 export const etape = () => Math.floor(partie.manche / PARTIE.cycle.length) + 1;
 export const typeManche = (m = partie.manche) => PARTIE.cycle[m % PARTIE.cycle.length];
+// Numéro du lancer dans l'étape (1 à 3) pour une manche de cafards
+export const lancerDansEtape = (m = partie.manche) => (m % PARTIE.cycle.length) + 1;
 export const vivants = () => partie.joueurs.filter(j => !j.elimine);
 export const mesStats = () => statsToupie(partie.moi.equipe, partie.moi.niveaux, partie.moi.nivPieces);
 const niv = id => partie.moi.niveaux[id] || 0;
+export const capacite = () => Math.max(4, CAFARDS.capacite + mesStats().nid);
+const chanceDore = () => mesStats().chanceDore;
 
 // ---------------------------------------------------------------- Manches
 export function commencerManche() {
-  nettoyerPlateau();
   partie.type = typeManche();
-  partie.gainsManche = 0;
-  partie.resultat = null;
-  partie.chrono = 0;
-  partie.combo = 0;
-  partie.renfortT = 0;
+  Object.assign(partie, { gainsManche: 0, resultat: null, chrono: 0, combo: 0, renfortT: 0, tues: 0, contacts: 0, attenteRelance: 0 });
+  // Le plateau : on retire les toupies ; les cafards survivants restent d'un lancer à l'autre dans une même étape
+  const nouvelleEtape = partie.manche % PARTIE.cycle.length === 0;
+  viderToupies(); partie.mesToupies = []; partie.sesToupies = [];
   if (partie.type === 'cafards') {
-    partie.vague++;
-    const n = partie.vague;
-    const nb = nombreVague(n);
-    partie.vieBase = VAGUE.vieCafard(n, etape());
-    especesVague(nb, etape()).forEach((type, i) => ajouterCafard({ vieBase: partie.vieBase, type, dore: Math.random() < chanceDore(), delai: i * 0.06 }));
-    partie.objectif = VAGUE.objectif(nb);
-    // Première vague d'une nouvelle étape : les cafards ont évolué
-    partie.evolution = partie.manche % PARTIE.cycle.length === 0 && etape() > 1 ? nouveauxTypes(etape()) : null;
-    partie.tues = 0;
-    partie.primeObjectif = false;
-    partie.lancers = PARTIE.lancersParVague;
-    son('chute', { volume: 0.4 });
-    choisirTerrain(null);
-    decorTerrain(null);
-    partie.terrainDuel = null;
+    if (nouvelleEtape) { viderCafards(); viderTaches(); }
+    choisirTerrain(null); decorTerrain(null); modeDuel(false);
+    railAdverse.visible = false;
+    partie.adversaire = null; partie.terrainDuel = null;
+    partie.lancerCafards++;
+    partie.vieBase = CAFARDS.vieCafard(partie.lancerCafards, etape());
+    // Le bureau est rempli jusqu'à sa capacité (10 + Nid)
+    const presents = cafards.filter(c => !c.mort).length;
+    const manque = Math.max(0, capacite() - presents);
+    especesVague(manque, etape()).forEach((type, i) => ajouterCafard({ vieBase: partie.vieBase, type, dore: Math.random() < chanceDore(), delai: i * 0.05 }));
+    partie.renfort = manque;
+    partie.evolution = nouvelleEtape && etape() > 1 ? nouveauxTypes(etape()) : null;
+    if (manque) son('chute', { volume: 0.4 });
   } else {
+    viderCafards(); viderTaches();
     partie.adversaire = melanger(vivants().filter(j => j.bot))[0];
     partie.terrainDuel = terrainDuel(partie.moi, partie.adversaire);
     choisirTerrain(partie.terrainDuel.terrain);
     decorTerrain(partie.terrainDuel.terrain);
-    partie.lancers = 1;
+    modeDuel(true);
     railAdverse.visible = true;
     partie.botLance = false;
     partie.botLanceDans = 0;
   }
+  partie.lancers = 1; // un seul lancer par manche
   partie.phase = 'jeu';
   lanceur.actif = true;
   lanceur.zoneParfait = mesStats().parfait;
   ui.manche?.();
 }
 
-const chanceDore = () => mesStats().chanceDore;
-const nombreVague = n => Math.max(4, VAGUE.nombre(n) + mesStats().nid);
-
-function nettoyerPlateau() {
-  choisirTerrain(null);
-  decorTerrain(null);
-  viderCafards();
-  viderToupies();
-  viderTaches();
-  railAdverse.visible = false;
-  partie.mesToupies = [];
-  partie.sesToupies = [];
-  partie.adversaire = null;
-}
-
-// Lance les N toupies d'un joueur (Multi-lancer : en éventail)
+// Lance les N toupies d'un joueur (Multi-lancer : en éventail, chacune plus faible)
 function lancerGroupe(joueur, camp, x, z, dx, dz, puiss) {
   const n = statsToupie(joueur.equipe, joueur.niveaux, joueur.nivPieces).toupies, liste = [];
-  const a0 = Math.atan2(dz, dx);
+  const a0 = Math.atan2(dz, dx), affaibli = Math.pow(0.8, n - 1);
   for (let i = 0; i < n; i++) {
     const t = creerToupieJeu(joueur.equipe, joueur.niveaux, camp, joueur.nivPieces, { duel: partie.type === 'duel' });
     const a = a0 + (i - (n - 1) / 2) * 0.22;
     lancerToupie(t, x + (i - (n - 1) / 2) * 0.03, z, Math.cos(a), Math.sin(a), puiss);
+    t.rotationMax *= affaibli; t.rotation = t.rotationMax;
     liste.push(t);
   }
   return liste;
@@ -130,7 +106,6 @@ function lancerGroupe(joueur, camp, x, z, dx, dz, puiss) {
 export function lancer({ x, z, dx, dz, puissance: puiss, parfait }) {
   if (partie.phase !== 'jeu' || partie.lancers <= 0 || partie.mesToupies.some(enJeu)) return;
   partie.lancers--;
-  for (const t of partie.mesToupies) retirerToupie(t);
   partie.mesToupies = lancerGroupe(partie.moi, 'joueur', x, z, dx, dz, Math.min(1.08, puiss));
   lanceur.actif = false;
   son('toc', { hauteur: 0.8 });
@@ -140,11 +115,11 @@ export function lancer({ x, z, dx, dz, puissance: puiss, parfait }) {
 }
 
 function lancerBot() {
-  const cible = partie.mesToupies.find(enJeu);
+  const adv = partie.adversaire, cible = partie.mesToupies.find(enJeu);
   const x = Math.max(-DESK_X + RAIL_MARGIN, Math.min(DESK_X - RAIL_MARGIN, (Math.random() * 2 - 1) * 0.4));
   const z = -RAIL_Z + 0.04;
-  const tx = (cible ? cible.x : 0) + (Math.random() - 0.5) * 0.25, tz = (cible ? cible.z : 0.1) + (Math.random() - 0.5) * 0.2;
-  partie.sesToupies = lancerGroupe(partie.adversaire, 'adverse', x, z, tx - x, tz - z, 0.55 + Math.random() * 0.45);
+  const { tx, tz, puiss } = lancerDuelBot(adv, cible);
+  partie.sesToupies = lancerGroupe(adv, 'adverse', x, z, tx - x, tz - z, puiss);
   partie.botLance = true;
   son('toc', { hauteur: 0.7 });
 }
@@ -156,25 +131,19 @@ const rappels = {
     const st = mesStats(), fenetre = st.comboFenetre, bonusCombo = st.comboBonus;
     partie.combo = partie.tempsJeu - partie.dernierKill < fenetre ? partie.combo + 1 : 1;
     partie.dernierKill = partie.tempsJeu;
-    const brut = VAGUE.prime * VAGUE.primeEtape(etape()) * (c.t?.prime || 1) * st.prime * (c.dore ? 4 : 1) * (1 + bonusCombo * (partie.combo - 1));
+    const brut = CAFARDS.prime * CAFARDS.primeEtape(etape()) * (c.t?.prime || 1) * st.prime * (c.dore ? 4 : 1) * (1 + bonusCombo * (partie.combo - 1));
     const gain = Math.max(1, Math.round(brut));
     partie.argent += gain; partie.gainsManche += gain; partie.tues++;
     tache(c.x, c.z, c.r * 1.3, c.dore ? 0x8a6a10 : 0x3a2a12);
     popup((crit ? '💥 ' : '') + '+' + gain + ' 💰' + (partie.combo > 2 ? ` · combo ×${partie.combo}` : ''), c.x, c.z, c.dore ? 'dore' : crit ? 'crit' : 'argent');
     son(c.dore ? 'piece' : 'ecrase', { volume: 0.7, hauteur: 1 + Math.min(0.5, partie.combo * 0.04) });
-    if (!partie.primeObjectif && partie.tues >= partie.objectif) {
-      partie.primeObjectif = true;
-      const b = VAGUE.bonusObjectif(partie.vague);
-      partie.argent += b; partie.gainsManche += b;
-      popup('🎯 Objectif ! +' + b + ' 💰', 0, 0, 'objectif');
-      son('critique');
-    }
     ui.hud?.();
   },
   touche(c, t, degats, crit) { if (crit) popup('💥 CRITIQUE', c.x, c.z, 'crit'); son('toc', { volume: 0.35, hauteur: 1.3 }); },
   eclair() { son('critique', { volume: 0.35, hauteur: 1.6 }); },
   choc(a, b, perte, bloque, crit) {
-    son(bloque ? 'refus' : 'gros', { volume: Math.min(1, 0.3 + perte / 400) });
+    if (b.camp === 'adverse' || bloque) partie.contacts++;
+    son(bloque ? 'refus' : 'gros', { volume: Math.min(1, 0.3 + perte / 150) });
     popup(bloque ? '🛡️ Bloqué' : `${crit ? '💥 ' : ''}−${Math.round(perte)} tr/min`, b.x, b.z, b.camp === 'joueur' ? 'degat-moi' : 'degat');
   },
   mur() { son('toc', { volume: 0.25, hauteur: 0.6 }); },
@@ -205,23 +174,17 @@ export function majPartie(dt, t) {
         ajouterCafard({ vieBase: partie.vieBase, type: especes[Math.floor(Math.random() * especes.length)], dore: Math.random() < chanceDore() });
       }
     }
-    if (!cafards.some(c => !c.mort)) return finVague();
-    if (toutesTombees) {
+    // Le lancer est fini quand toutes mes toupies sont tombées (ou qu'il n'y a plus de cafards)
+    if (lancees && (toutesTombees || !cafards.some(c => !c.mort))) {
       partie.attenteRelance += dt;
-      if (partie.attenteRelance > 0.7) {
-        partie.attenteRelance = 0;
-        if (partie.lancers <= 0) return finVague();
-        for (const t of mes) retirerToupie(t);
-        partie.mesToupies = [];
-        lanceur.actif = true;
-      }
+      if (partie.attenteRelance > 0.8) finLancer();
     }
   } else {
     const ses = partie.sesToupies, saTombe = ses.length > 0 && !ses.some(enJeu);
     if (lancees && ses.length) partie.chrono += dt;
     const force = l => l.reduce((a, x) => a + (enJeu(x) ? x.rotation / x.rotationMax : 0), 0);
     if ((toutesTombees || saTombe) && !partie.resultat) {
-      // Le premier camp dont toutes les toupies sont tombées a perdu
+      // Le premier camp dont toutes les toupies se sont arrêtées a perdu
       const gagne = toutesTombees && saTombe ? Math.random() < 0.5 : saTombe;
       partie.resultat = { gagne };
       partie.finDans = 1.2;
@@ -237,10 +200,10 @@ export function majPartie(dt, t) {
 }
 
 // ---------------------------------------------------------------- Fins de manche
-function finVague() {
+function finLancer() {
   partie.phase = 'bilan';
   lanceur.actif = false;
-  terminerManche({ type: 'cafards', tues: partie.tues, objectif: partie.objectif, reussi: partie.tues >= partie.objectif });
+  terminerManche({ type: 'cafards', tues: partie.tues, restants: cafards.filter(c => !c.mort).length, lancer: lancerDansEtape() });
 }
 
 function finDuel() {
@@ -248,31 +211,24 @@ function finDuel() {
   lanceur.actif = false;
   const adv = partie.adversaire, deg = PARTIE.degatsDuel(etape());
   const gagne = partie.resultat.gagne;
-  if (gagne) { adv.vies -= deg; partie.argent += ECONOMIE.victoireDuel; partie.gainsManche += ECONOMIE.victoireDuel; son('critique'); }
-  else { partie.moi.vies -= deg; son('refus'); }
-  terminerManche({ type: 'duel', gagne, adversaire: adv.nom, degats: deg, tempsEcoule: !!partie.resultat.tempsEcoule });
+  if (gagne) { adv.vies -= deg; son('critique'); } else { partie.moi.vies -= deg; son('refus'); }
+  terminerManche({ type: 'duel', gagne, adversaire: adv.nom, degats: deg, tempsEcoule: !!partie.resultat.tempsEcoule,
+    contacts: partie.contacts, duree: partie.chrono });
 }
 
 function terminerManche(bilan) {
-  // Duels entre bots (simulés), pendant ce temps
-  if (bilan.type === 'duel') {
-    const bots = melanger(vivants().filter(j => j.bot && j !== partie.adversaire));
-    for (let i = 0; i + 1 < bots.length; i += 2) {
-      const a = bots[i], b = bots[i + 1];
-      const pa = Math.pow(puissance(a.equipe, a.niveaux, a.nivPieces), 3), pb = Math.pow(puissance(b.equipe, b.niveaux, b.nivPieces), 3);
-      (Math.random() < pa / (pa + pb) ? b : a).vies -= PARTIE.degatsDuel(etape());
+  const e = etape();
+  // Pendant ce temps, les bots jouent aussi : leur lancer contre les cafards, ou leurs duels entre eux (simulés)
+  const bots = vivants().filter(j => j.bot);
+  if (bilan.type === 'cafards') for (const b of bots) jouerLancerBot(b, partie.lancerCafards, e);
+  else {
+    const autres = melanger(bots.filter(b => b !== partie.adversaire));
+    for (let i = 0; i + 1 < autres.length; i += 2) {
+      const a = autres[i], b = autres[i + 1];
+      (duelSimule(a, b) === a ? b : a).vies -= PARTIE.degatsDuel(e);
     }
   }
-  // Les bots s'améliorent comme un joueur moyen : de plus en plus de niveaux de combat à chaque étape
-  const combat = STAT_ACHATS.filter(x => x.groupe !== 'bureau' && x.id !== 'multi');
-  for (const b of vivants().filter(j => j.bot)) {
-    for (let k = 0; k < 1 + Math.floor(etape() / 2); k++) {
-      const a = hasard(combat);
-      b.niveaux[a.id] = Math.min(a.max, (b.niveaux[a.id] || 0) + 1);
-    }
-    // Les bots qui ont un terrain misent parfois en priorité de terrain (en secret)
-    if (b.terrain !== 'aucun' && partie.manche + 1 >= MANCHE_PRIORITE && Math.random() < 0.35) b.niveaux.priorite = (b.niveaux.priorite || 0) + 1;
-  }
+  for (const b of bots) finMancheBot(b, partie.manche + 1, e);
   // Revenus de fin de manche + intérêts
   const interets = Math.min(Math.floor(partie.argent / ECONOMIE.interetPour), mesStats().interetMax);
   partie.argent += ECONOMIE.revenuManche + interets;
@@ -287,13 +243,16 @@ function terminerManche(bilan) {
   if (vivants().length === 1) { partie.moi.place = 1; return finPartie(1); }
   partie.manche++;
   bilan.prochaine = typeManche();
-  // Aperçu de la prochaine vague (et de l'évolution des cafards après un duel)
+  // Aperçu du prochain lancer (et de l'évolution des cafards après un duel)
   if (bilan.prochaine === 'cafards') {
+    const nouvelle = partie.manche % PARTIE.cycle.length === 0;
     bilan.apercu = {
-      nombre: nombreVague(partie.vague + 1),
-      vie: VAGUE.vieCafard(partie.vague + 1, etape()),
+      lancer: lancerDansEtape(),
+      capacite: capacite(),
+      restants: nouvelle ? 0 : cafards.filter(c => !c.mort).length,
+      vie: CAFARDS.vieCafard(partie.lancerCafards + 1, etape()),
       especes: Object.keys(compositionEtape(etape())),
-      evolution: partie.manche % PARTIE.cycle.length === 0 && etape() > 1 ? nouveauxTypes(etape()) : null,
+      evolution: nouvelle && etape() > 1 ? nouveauxTypes(etape()) : null,
     };
   }
   ui.bilan?.(bilan);
@@ -329,7 +288,10 @@ export function acheter(id) {
 }
 
 export function abandonner() {
-  nettoyerPlateau();
+  viderCafards(); viderToupies(); viderTaches();
+  choisirTerrain(null); decorTerrain(null); modeDuel(false);
+  railAdverse.visible = false;
+  partie.mesToupies = []; partie.sesToupies = []; partie.adversaire = null;
   partie.active = false;
   partie.phase = 'fin';
   lanceur.actif = false;

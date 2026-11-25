@@ -47,3 +47,44 @@ export function majFx(dt) {
     if (s.t > 10) { s.m.material.dispose(); s.m.removeFromParent(); taches.splice(i, 1); }
   }
 }
+
+// ---------------------------------------------------------------- Barres de vie (cafards) et de rotation (toupies)
+const calqueBarres = document.getElementById('barres');
+const reserve = [];
+let utilisees = 0;
+function barre() {
+  let b = reserve[utilisees];
+  if (!b) {
+    b = document.createElement('div');
+    b.className = 'barre-vie';
+    b.innerHTML = '<i></i><span></span>';
+    calqueBarres.appendChild(b);
+    reserve.push(b);
+  }
+  utilisees++;
+  b.style.display = '';
+  return b;
+}
+function placer(b, x, y, z, frac, classe, texte = '') {
+  const rect = renderer.domElement.getBoundingClientRect();
+  v.set(x, y, z).project(camera);
+  b.className = 'barre-vie ' + classe;
+  b.style.transform = `translate(${(v.x * 0.5 + 0.5) * rect.width}px, ${(-v.y * 0.5 + 0.5) * rect.height}px) translate(-50%, -100%)`;
+  b.firstChild.style.width = Math.max(0, Math.min(100, frac * 100)).toFixed(0) + '%';
+  b.lastChild.textContent = texte;
+}
+// cafards : barre seulement s'ils sont blessés ; toupies : barre de rotation (la toupie s'arrête quand elle tombe sous son seuil)
+export function majBarres(cafards, toupies) {
+  utilisees = 0;
+  for (const c of cafards) {
+    if (c.mort || c.chute > 0 || c.vie >= c.vieMax) continue;
+    placer(barre(), c.x, c.r * 1.6 + 0.01, c.z, c.vie / c.vieMax, 'cafard');
+  }
+  for (const t of toupies) {
+    if (!t.lancee || t.tombe) continue;
+    // 100 % = rotation de départ, 0 % = seuil de chute
+    const frac = (t.rotation / t.rotationMax - t.s.seuilChute) / (1 - t.s.seuilChute);
+    placer(barre(), t.x, 0.075, t.z, frac, t.camp === 'joueur' ? 'toupie moi' : 'toupie adv', `${Math.round(t.rotation)} tr/min`);
+  }
+  for (let i = utilisees; i < reserve.length; i++) reserve[i].style.display = 'none';
+}

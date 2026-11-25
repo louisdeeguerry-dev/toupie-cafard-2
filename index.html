@@ -139,6 +139,12 @@
   #jauge .zone { position: absolute; top: 0; bottom: 0; left: 90%; right: 0; background: rgba(63,207,110,.35); border-left: 2px solid var(--vert); }
   #jauge.parfait { border-color: var(--vert); box-shadow: 0 0 16px rgba(63,207,110,.7); }
 
+  #barres { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+  .barre-vie { position: absolute; left: 0; top: 0; width: 34px; height: 5px; background: rgba(0,0,0,.6); border-radius: 3px; overflow: visible; }
+  .barre-vie i { position: absolute; inset: 0 auto 0 0; border-radius: 3px; background: #ff5a4f; }
+  .barre-vie span { position: absolute; left: 50%; bottom: 7px; transform: translateX(-50%); font-size: 10px; font-weight: 800; white-space: nowrap; text-shadow: 0 1px 3px #000; }
+  .barre-vie.toupie { width: 56px; height: 7px; }
+  .barre-vie.moi i { background: linear-gradient(90deg, #3fcf6e, #8ff0ae); } .barre-vie.adv i { background: linear-gradient(90deg, #ff4d4d, #ff9a7a); }
   #popups { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
   .pop { position: absolute; left: 0; top: 0; font-weight: 900; font-size: 15px; text-shadow: 0 2px 4px #000; white-space: nowrap; }
   .pop.argent { color: var(--or); } .pop.dore { color: #fff3a0; font-size: 20px; }
@@ -179,6 +185,7 @@
 </head>
 <body>
 <div id="jeu"></div>
+<div id="barres"></div>
 <div id="popups"></div>
 
 <!-- Atelier : on fabrique sa toupie avant la partie -->

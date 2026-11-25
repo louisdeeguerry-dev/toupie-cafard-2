@@ -54,15 +54,16 @@ const STRAT = process.argv[2] || 'mixte';
       }
       return {};
     }, STRAT);
-    if (e.bilan && /Vague/.test(e.res) && false) vagues.push(`É${e.etape} ${e.res.replace(/Vague (réussie|ratée) : /, (m, x) => x === 'réussie' ? '✓ ' : '✗ ')} 💰${e.argent} ❤️${e.vies}`);
-    if (e.bilan) vagues.push(`É${e.etape} ${/Vague/.test(e.res) ? e.res.replace(/Vague (réussie|ratée) : /, (m, x) => x === 'réussie' ? '✓ ' : '✗ ').replace('🎯 ', '') : (/Victoire/.test(e.res) ? 'duel ✓' : 'duel ✗')} 💰${e.argent} ❤️${e.vies}`);
+    if (false) vagues.push(`É${e.etape} ${e.res.replace(/Vague (réussie|ratée) : /, (m, x) => x === 'réussie' ? '✓ ' : '✗ ')} 💰${e.argent} ❤️${e.vies}`);
+    if (e.bilan) vagues.push(`É${e.etape} ${/Lancer/.test(e.res) ? e.res.slice(0, 40) : (/Victoire/.test(e.res) ? 'duel ✓' : 'duel ✗')} 💰${e.argent} ❤️${e.vies}`);
     if (e.bilan) {
       R.argentMax = Math.max(R.argentMax, e.argent);
-      if (/Vague/.test(e.res)) {
-        const ok = /réussie/.test(e.res);
-        R.vagues++; if (ok) R.vaguesOk++;
+      if (/Lancer/.test(e.res)) {
+        // okParEtape = cafards écrasés cumulés, totParEtape = nombre de lancers (→ moyenne par lancer)
+        const tues = +(e.res.match(/: (\d+) cafard/) || [0, 0])[1];
+        R.vagues++; R.vaguesOk += tues;
         R.totParEtape[e.etape] = (R.totParEtape[e.etape] || 0) + 1;
-        if (ok) R.okParEtape[e.etape] = (R.okParEtape[e.etape] || 0) + 1;
+        R.okParEtape[e.etape] = (R.okParEtape[e.etape] || 0) + tues;
       } else if (/Victoire/.test(e.res)) R.duelsGagnes++; else R.duelsPerdus++;
     }
     if (e.fin) { vagues.push(`FIN ${STRAT} : place ${e.place}, manches ${e.manche}`); R.place = e.place; R.manches = e.manche; break; }
