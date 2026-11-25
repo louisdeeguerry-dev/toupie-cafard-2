@@ -162,31 +162,35 @@ Simulation : un joueur trouve son premier terrain en environ 30 boîtes (médian
 - **Matchmaking** : 8 joueurs. Tant qu'il n'y a pas assez de vrais joueurs (et pendant toute la phase de test),
   le salon est **complété par des bots**.
 - **5 vies** par joueur.
-- **Cycle** : 3 manches contre les cafards, puis 1 duel contre un joueur, et on recommence.
-  Une étape = un cycle de 4 manches.
+- **Une étape = 3 LANCERS contre les cafards, puis 1 duel contre un joueur** (précisé par Louis le 25/11).
+  Chaque lancer est une manche, avec la boutique entre chaque manche.
+- **Avant chaque lancer, le bureau est rempli jusqu'à sa capacité** (10 cafards + Nid). Les survivants restent, avec leurs
+  blessures, et on complète avec de nouveaux cafards. C'est tout l'intérêt du Nid : plus de cafards sur le bureau à chaque lancer.
 
 ### 6.0 L'évolution des cafards (anti-« je farme puis j'explose tout le monde »)
-- **Première vague : 10 cafards**, puis environ un de plus toutes les vagues (+ le Nid).
-- **Après chaque duel contre un joueur, les cafards évoluent** : leur vie est multipliée par 1,15 à chaque étape, en plus
-  d'une hausse de 6 % par vague, et **de nouvelles espèces arrivent**. Chaque espèce est contrée par des stats précises :
+- **10 cafards sur le bureau** à chaque lancer (+ le Nid).
+- **Après chaque duel contre un joueur, les cafards évoluent** (version adoucie du 25/11) :
+  - le bureau est vidé et rempli de cafards évolués ;
+  - leur vie est multipliée par 1,12 à chaque étape, avec une hausse de 3 % par lancer ;
+  - **de nouvelles espèces arrivent**. Chaque espèce est contrée par des stats précises :
 
   | Étape | Nouvelle espèce | Particularité | Contrée par |
   |---|---|---|---|
   | 1 | 🪳 Cafard | — | — |
-  | 2 | 🐛 Gros cafard | Vie ×2,5, lourd : repousse les toupies légères | Poids, Lames |
+  | 2 | 🐛 Gros cafard | Vie ×2,2, lourd : repousse les toupies légères | Poids, Lames |
   | 3 | 🛡️ Cafard blindé | Carapace : chaque coup perd une partie de ses dégâts | Lames, Coup critique |
   | 3 | 💨 Cafard coureur | Très rapide, fuit la toupie | Diamètre, Agressivité, Tourbillon |
   | 4 | 🕷️ Araignée | Tisse des toiles qui engluent la toupie | Poids, Élan, Traînée de feu (brûle les toiles) |
   | 5 | 🥚 Pondeuse | Pond des larves tant qu'elle vit | Éclairs, Feu, Endurance |
 
-- Les cafards évolués **rapportent plus** (+35 % par étape) : investir dans sa toupie reste rentable.
+- Les cafards évolués **rapportent plus** (+20 % par étape) : investir dans sa toupie reste rentable.
 - La boutique montre la **prochaine vague** (nombre, vie, espèces) et annonce l'évolution avec les stats qui contrent
   chaque nouvelle espèce. Les choix sont donc stratégiques : il faut préparer sa toupie pour la suite.
 - **Pourquoi ça bloque l'abus** : celui qui ne fait que de l'économie gagne plus au début, mais sa toupie ne tue plus
   rien une fois les cafards évolués, donc il ne gagne plus rien, et les dégâts des duels montent à chaque étape.
   Les multiplicateurs d'argent sont modérés, les prix montent de plus en plus vite (impossible de tout acheter
   d'un coup) et les bots se renforcent à chaque manche.
-- **Mesures** (25/11, `tests/lancer-strategies.sh 5 3` : 5 parties par stratégie, robot qui vise comme un bon joueur, 8 joueurs) :
+- **Mesures de l'ancienne version** (avant le passage à 3 lancers par étape ; 25/11, `tests/lancer-strategies.sh 5 3` : 5 parties par stratégie, robot qui vise comme un bon joueur, 8 joueurs) :
 
   | Stratégie | Places | Place moy. | Top 4 | Vagues réussies (étapes 1 / 2 / 3 / 4+) | Duels gagnés |
   |---|---|---|---|---|---|
@@ -202,24 +206,41 @@ Simulation : un joueur trouve son premier terrain en environ 30 boîtes (médian
     donc le classement dépend surtout des duels simulés entre bots.
   - 5 parties par stratégie, cela reste peu : les écarts de moins d'une place sont dans le bruit.
 
-### 6.1 Manches contre les cafards
-- Les cafards tombent du ciel sur le bureau.
-- On a **3 lancers** pour en écraser un nombre donné (objectif).
-- Chaque cafard rapporte de l'argent (💰), et atteindre l'objectif donne une prime.
-- **[proposition]** Rater l'objectif ne coûte **pas de vie**, seulement la prime : les vies se perdent en duel.
+### 6.1 Manches contre les cafards (un lancer)
+- **Un seul lancer par manche.** Le lancer se termine quand la toupie s'arrête, ou quand il n'y a plus de cafards.
+- Chaque cafard écrasé rapporte de l'argent (💰). Le combo, les cafards dorés et l'espèce multiplient le gain.
+- **Il n'y a plus d'objectif** : on gagne de l'argent pour chaque cafard écrasé, et les vies ne se perdent qu'en duel.
+- Les cafards blessés affichent une **barre de vie**. Comme ils survivent d'un lancer à l'autre, on peut les achever au lancer suivant.
 
 ### 6.2 Duels
-- Ma toupie part du bas du bureau, celle de l'adversaire du haut. **La première qui tombe a perdu.**
-- **[proposition]** Le perdant perd autant de vies que le numéro de l'étape : 1 à l'étape 1, 2 à l'étape 2, etc.
-  Les parties se resserrent ainsi vite. Simulation : environ 6 étapes (24 manches) pour départager 8 joueurs.
+- Ma toupie part du bas du bureau, celle de l'adversaire du haut.
+- **Les toupies n'ont pas de vie** : chaque choc fait perdre de la rotation (tr/min), et **la première qui s'arrête a perdu**.
+  Plus l'attaquant a de Lames, de vitesse et de poids, plus il ralentit l'autre ; l'Inertie de la cible réduit la perte.
+  Une **barre de rotation** s'affiche au-dessus de chaque toupie.
+- **Réglé pour plusieurs contacts** : les toupies s'attirent légèrement, le rebond est amorti, la perte par choc est
+  faible et l'usure naturelle est ralentie. Mesuré sur 10 duels : **9 contacts et 11 s en moyenne**, contre 1,5 contact avant.
+  Les réglages sont rassemblés dans l'objet `CHOC` de `src/physics.js`.
+- Le perdant perd autant de vies que le numéro de l'étape. **Un duel ne rapporte et ne coûte pas d'argent.**
 - Au bout de 30 s, la toupie qui tourne le plus fort gagne.
-- Pendant ce temps, les autres joueurs s'affrontent entre eux. Pour les bots, le résultat est simulé selon la puissance de leur toupie.
+- Les autres joueurs s'affrontent entre eux pendant ce temps. Entre bots, le duel est simulé selon leur toupie, leur habileté et le hasard.
+
+### 6.2 bis Les bots (simulent de vrais joueurs)
+- Chaque bot a une **toupie de pièces tirées au hasard**, avec les mêmes chances de rareté que les boîtes et parfois des niveaux de pièce 2 ou 3.
+  Il a aussi parfois un terrain.
+- Chaque bot a une **habileté** (de 0,2 à 0,95, la plupart moyens) et un **style d'achat** : économe, bagarreur, équilibré ou spécialiste.
+- Pendant tes lancers, **ils jouent les leurs**. Leur argent dépend de leur toupie, de leur habileté et de la résistance des cafards,
+  et ils **achètent vraiment** dans la boutique, aux mêmes prix que toi.
+- En duel contre toi, leur visée et leur puissance dépendent de leur habileté. Les meilleurs touchent parfois PARFAIT.
+
+### 6.2 ter Multi-lancer
+- C'est une bonne idée, mais il était trop fort. **Il est maintenant très cher** : 35 💰 puis 70 💰 dans la boutique.
+  L'engrenage double a de gros malus (Puissance −8, Élan −6).
+- **Chaque toupie lancée en plus est plus faible** : −20 % de rotation par toupie supplémentaire.
 
 ### 6.3 Économie : capitaliser ou se renforcer
-Entre chaque manche, une boutique propose deux branches :
-- **🪑 Bureau (capitalisation)** : Nid de cafards (+2 cafards par vague), Cafards dodus (+25 % de 💰 par cafard),
-  Tirelire (intérêts plus hauts), Cafard doré (cafards à ×5).
-- **🌀 Toupie (puissance)** : +1 dans une des 5 stats.
+Entre chaque manche (chaque lancer), la boutique propose trois groupes :
+- **🪑 Bureau (capitalisation)** : Nid, Prime, Trèfle doré, Combo, Appât, Bords trampolines, Tirelire ;
+- **🌀 Toupie** et **🚀 Lanceur** (puissance) : +1 niveau dans une stat.
 
 Revenu fixe de 2 💰 par manche, plus des **intérêts** : +1 💰 par tranche de 10 💰 gardés, plafonné (comme dans
 les auto-battlers). **Le dilemme** : tout miser sur l'argent fait une toupie trop faible pour les cafards et les

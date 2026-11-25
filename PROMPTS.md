@@ -328,3 +328,31 @@ Chaque échange sur le projet est consigné ici : prompt optimisé + ce qui a é
 - Résultats des 20 parties (5 par stratégie) : sacrifice 3,4 de place moyenne (top 4 : 3/5), économie 3,4 (4/5),
   mixte 2,8 (4/5), puissance 2,8 (5/5). L'abus ne gagne plus mais n'est que modérément puni ; vagues quasi impossibles
   dès l'étape 3 pour tous ; bots trop faibles en duel. Résultats envoyés par e-mail, corrections proposées.
+
+---
+
+## 2026-11-25 — Retours de Louis après avoir joué : bots, duels, 3 lancers, multi, cafards, agents testeurs
+
+**Prompt optimisé**
+> Rôle : game designer + développeur gameplay + responsable des tests.
+> Retours de Louis après avoir essayé le jeu :
+> 1. **Bots** trop simples : ils doivent simuler une vraie partie (toupies et pièces aléatoires, jeu un peu aléatoire,
+>    forts ou faibles).
+> 2. **Duels** : pas de « vie » pour les toupies ; elles s'entrechoquent, chaque choc ralentit l'autre (plus de dégâts =
+>    plus de ralentissement) ; la première arrêtée perd. Calculer des coefficients pour **plusieurs contacts par duel**
+>    et des combats satisfaisants.
+> 3. Créer des **agents testeurs critiques** qui jouent et disent à quel point c'est satisfaisant.
+> 4. **Multi-toupie** : bonne idée, mais **beaucoup plus cher** (trop fort).
+> 5. **Évolution des cafards plus douce** (trop forts) ; éventuellement des **barres de vie**.
+> 6. Correction de règle : une étape = **3 LANCERS** (pas 3 manches de 3 lancers) puis un duel ; **à chaque lancer, le
+>    bureau revient au maximum du Nid** (d'où l'intérêt du Nid).
+> 7. Un duel perdu **ne coûte pas** d'argent, et un duel gagné **n'en rapporte pas**.
+
+**Réalisé**
+- Étapes de 3 lancers ; bureau rempli jusqu'à 10 + Nid avant chaque lancer (survivants gardés) ; plus d'objectif.
+- Duels : réglages `CHOC` (attraction, rebond amorti, perte par choc, usure ralentie) → 9 contacts / 11 s en moyenne
+  (1,5 contact avant) ; barres de rotation des toupies et barres de vie des cafards.
+- Bots (`src/bots.js`) : pièces au hasard avec niveaux, habileté, 4 styles d'achat, économie simulée et vrais achats.
+- Multi-lancer : 35 puis 70 💰, engrenage double plus pénalisant, −20 % de rotation par toupie en plus.
+- Cafards adoucis (vie par étape ×1,12, par lancer +3 %, armure et vies d'espèces réduites).
+- Duel sans argent ; 3 agents testeurs critiques lancés (joueur occasionnel, joueur compétitif, game feel).
