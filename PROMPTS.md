@@ -423,3 +423,14 @@ Chaque échange sur le projet est consigné ici : prompt optimisé + ce qui a é
 
 **Réalisé** : explication (historique très long relu à chaque étape, captures d'écran, 3 agents testeurs ≈ 500 k tokens,
 notifications de parties) et conseils (nouvelle session par gros chantier, moins de captures et d'agents).
+
+---
+
+## 2026-11-25 — Bilan des agents testeurs et réduction de la consommation
+
+**Prompt optimisé**
+> Rôle : assistant transparent. Objectifs : 1) dire concrètement ce que les 3 agents testeurs ont apporté, pour décider
+> si on les garde ; 2) proposer des moyens de réduire la consommation liée à la longueur de la conversation.
+
+**Réalisé** : bilan chiffré des apports des agents et recommandations (sessions courtes par chantier, fichier d'état
+du projet, règles d'économie dans CLAUDE.md, agents ponctuels et moins chers).
