@@ -356,3 +356,11 @@ Chaque échange sur le projet est consigné ici : prompt optimisé + ce qui a é
 - Multi-lancer : 35 puis 70 💰, engrenage double plus pénalisant, −20 % de rotation par toupie en plus.
 - Cafards adoucis (vie par étape ×1,12, par lancer +3 %, armure et vies d'espèces réduites).
 - Duel sans argent ; 3 agents testeurs critiques lancés (joueur occasionnel, joueur compétitif, game feel).
+- **Retours des 3 agents testeurs** :
+  - **Game feel** : duels 4/10, cafards 4/10. Les chocs ne décidaient que 2 duels sur 12 (78 % de la chute venait de
+    l'usure), aucun impact visible, toupies minuscules.
+  - **Joueur occasionnel** : bilan ouvert défilé, boutique trop chargée, téléphone mal cadré, duel indépendant du joueur.
+  - **Joueur compétitif** : **l'ordre de lancer décidait le duel** (3 victoires sur 40 à toupies égales), Puissance
+    inutile, Multi dominant, Prime inutile (arrondi), pièces d'économie pièges, bots incohérents.
+  → Tout a été corrigé (voir le commit « Retours des 3 testeurs »). Mesures : duels miroirs 7/12, 12,8 contacts, 13 s,
+    3,6 cafards par lancer.

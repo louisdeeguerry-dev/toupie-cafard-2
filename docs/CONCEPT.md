@@ -217,9 +217,20 @@ Simulation : un joueur trouve son premier terrain en environ 30 boîtes (médian
 - **Les toupies n'ont pas de vie** : chaque choc fait perdre de la rotation (tr/min), et **la première qui s'arrête a perdu**.
   Plus l'attaquant a de Lames, de vitesse et de poids, plus il ralentit l'autre ; l'Inertie de la cible réduit la perte.
   Une **barre de rotation** s'affiche au-dessus de chaque toupie.
-- **Réglé pour plusieurs contacts** : les toupies s'attirent légèrement, le rebond est amorti, la perte par choc est
-  faible et l'usure naturelle est ralentie. Mesuré sur 10 duels : **9 contacts et 11 s en moyenne**, contre 1,5 contact avant.
-  Les réglages sont rassemblés dans l'objet `CHOC` de `src/physics.js`.
+- **Réglé pour des chocs nombreux ET décisifs** :
+  - les toupies s'attirent légèrement et le rebond est amorti ;
+  - la perte par choc se compte en tr/min absolus et dépend de la charge de l'attaquant : la Puissance compte, et celui qui fonce fait plus mal ;
+  - l'usure naturelle est fortement réduite en duel ;
+  - **l'usure ne démarre que quand les deux toupies sont lancées**. Avant, l'ordre de lancer décidait du duel :
+    le testeur compétitif n'en gagnait que 3 sur 40 à toupies égales.
+  - Mesures : **12,8 contacts et 13 s en moyenne** ; à toupies identiques, **7 victoires sur 12**, donc équitable.
+    Les réglages sont dans l'objet `CHOC` de `src/physics.js`.
+- **Sensations** (retours du testeur game feel) :
+  - impacts visibles : étincelles, arrêt sur image et secousse proportionnels au choc, perte affichée en % ;
+  - caméra rapprochée pendant le duel ;
+  - barres d'énergie en % qui clignotent sous 25 % ;
+  - ronronnement de la toupie qui faiblit avec sa rotation ;
+  - coup final au ralenti, puis bandeau **VICTOIRE / K.O.** avant le bilan.
 - Le perdant perd autant de vies que le numéro de l'étape. **Un duel ne rapporte et ne coûte pas d'argent.**
 - Au bout de 30 s, la toupie qui tourne le plus fort gagne.
 - Les autres joueurs s'affrontent entre eux pendant ce temps. Entre bots, le duel est simulé selon leur toupie, leur habileté et le hasard.
@@ -233,17 +244,25 @@ Simulation : un joueur trouve son premier terrain en environ 30 boîtes (médian
 - En duel contre toi, leur visée et leur puissance dépendent de leur habileté. Les meilleurs touchent parfois PARFAIT.
 
 ### 6.2 ter Multi-lancer
-- C'est une bonne idée, mais il était trop fort. **Il est maintenant très cher** : 35 💰 puis 70 💰 dans la boutique.
+- C'est une bonne idée, mais il était trop fort. **Il est maintenant très cher** : 60 💰 puis 110 💰 dans la boutique.
   L'engrenage double a de gros malus (Puissance −8, Élan −6).
-- **Chaque toupie lancée en plus est plus faible** : −20 % de rotation par toupie supplémentaire.
+- **Chaque toupie lancée en plus est plus faible** : −30 % de rotation par toupie supplémentaire.
+  Comme les chocs sont maintenant comptés en tr/min absolus, ce malus joue vraiment.
+
+### 6.2 quater Boutique à offres (retours des testeurs)
+- À chaque manche, **6 améliorations tirées au hasard** (au moins une du bureau et une de la toupie), **relance pour 2 💰**,
+  comme dans un auto-battler : on choisit au lieu de tout cocher.
+- Les améliorations qui contrent les espèces du prochain lancer sont marquées **« conseillé »**.
+- Le **prochain adversaire** est annoncé avec ses pièces ; on ne l'affronte jamais deux fois de suite.
+- Réglage : `BOUTIQUE` dans `src/config.js` (`offres: 0` pour tout afficher).
 
 ### 6.3 Économie : capitaliser ou se renforcer
 Entre chaque manche (chaque lancer), la boutique propose trois groupes :
 - **🪑 Bureau (capitalisation)** : Nid, Prime, Trèfle doré, Combo, Appât, Bords trampolines, Tirelire ;
 - **🌀 Toupie** et **🚀 Lanceur** (puissance) : +1 niveau dans une stat.
 
-Revenu fixe de 2 💰 par manche, plus des **intérêts** : +1 💰 par tranche de 10 💰 gardés, plafonné (comme dans
-les auto-battlers). **Le dilemme** : tout miser sur l'argent fait une toupie trop faible pour les cafards et les
+Revenu fixe de 2 💰 par manche, plus des **intérêts** : +1 💰 par tranche de 5 💰 gardés, plafonné par la Tirelire
+(comme dans les auto-battlers). Prime de base : 1,5 💰 par cafard. **Les centimes sont conservés**, ce qui rend la Prime vraiment utile. **Le dilemme** : tout miser sur l'argent fait une toupie trop faible pour les cafards et les
 duels ; tout miser sur la toupie fait manquer d'argent plus tard.
 
 ### 6.4 Le lanceur
