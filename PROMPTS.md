@@ -389,3 +389,26 @@ Chaque échange sur le projet est consigné ici : prompt optimisé + ce qui a é
 - Relance : 2, 3, 5, 7, 10 💰… dans une même boutique, remise à 2 à la manche suivante.
 - Achats par paquets de +3 niveaux (−15 %), Diamètre plus visible (9,2 → 11,4 cm en un achat), bots alignés.
 - Explication des intérêts / Tirelire donnée à Louis et affichée dans la boutique.
+
+---
+
+## 2026-11-25 — Refonte de l'atelier : onglets, vue éclatée, zooms, nouveau lanceur
+
+**Prompt optimisé**
+> Rôle : développeur 3D / interface (Three.js) + sound design léger.
+> Objectifs pour l'atelier (hors partie) :
+> 1. **Séquencer** l'atelier en **Toupie / Lanceur / Terrain de duel** (le terrain peut servir de fond).
+> 2. Quand on clique sur une pièce (ex. Pointe), la **toupie s'éclate en 3D** et la caméra **zoome sur cette pièce**,
+>    tout en laissant voir toute la vue éclatée ; quand on change de pièce, on **voit le changement** ; quand on passe
+>    à la Couronne, la pointe se remet et c'est la couronne qui sort. Gros zooms, très visuel, **petits bruitages** aux clics.
+> 3. **Refaire le lanceur** (trop moche), en s'inspirant de celui de Toupie contre Cafards ; même logique d'éclaté :
+>    changer l'**engrenage** ou le **ressort** se voit immédiatement.
+
+**Réalisé**
+- Atelier en 3 onglets (🌀 Toupie, 🚀 Lanceur, 🏟️ Terrain) ; une mini-arène ronde en fond prend la couleur du terrain choisi.
+- `src/atelier3d.js` : vue éclatée animée (toutes les pièces s'écartent, la pièce choisie sort et grossit), caméra qui
+  zoome sur la pièce en gardant l'éclaté visible ; la pièce changée « saute » ; re-cliquer referme la vue.
+- `src/lanceurMesh.js` : nouveau lanceur inspiré du jeu 1 (plot gradué, boîtier à spirale, couronne crantée = engrenage,
+  ressort hélicoïdal autour du manche, voyants, poignée en T) ; 5 engrenages et 5 formes de ressort différents.
+  En partie : l'engrenage tourne et le ressort se comprime avec la jauge, les voyants s'allument.
+- Bruitages aux clics (onglets, pièces, équipement, terrain) ; jauge de puissance déplacée en haut.

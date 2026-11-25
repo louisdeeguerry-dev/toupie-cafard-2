@@ -54,6 +54,10 @@
   .ls .v { text-align: right; font-weight: 600; }
   .ls.vide { opacity: .4; }
   .plus { color: var(--vert) !important; } .moins { color: var(--rouge) !important; }
+  .onglets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; background: #1a130e; border-radius: 12px; padding: 4px; }
+  .onglets button { background: transparent; border-radius: 9px; padding: 9px 4px; font-weight: 800; color: var(--doux); }
+  .onglets button.on { background: linear-gradient(#ff9d3d, #e46a06); color: #1b0f05; }
+  .slot { transition: transform .15s; } .slot:active { transform: scale(.96); }
   .lib-groupe { grid-column: 1 / -1; color: var(--doux); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; margin-top: 4px; }
   .niv-badge { font-size: 11px; background: var(--accent); color: #1b0f05; border-radius: 6px; padding: 0 5px; font-weight: 900; }
   .chips { display: flex; align-items: center; gap: 5px; margin-top: 6px; flex-wrap: wrap; font-size: 12px; }
@@ -161,7 +165,7 @@
   #aide { position: absolute; left: 50%; top: 64px; transform: translateX(-50%); color: var(--doux); font-size: 13px; text-shadow: 0 2px 6px #000; white-space: nowrap; }
   #quitter { pointer-events: auto; }
 
-  #jauge { position: fixed; left: 50%; bottom: 96px; width: min(320px, 70vw); height: 16px; transform: translateX(-50%); background: #1a130e; border: 2px solid var(--bord);
+  #jauge { position: fixed; left: 50%; top: 92px; width: min(320px, 70vw); height: 16px; transform: translateX(-50%); background: #1a130e; border: 2px solid var(--bord);
     border-radius: 9px; overflow: hidden; opacity: 0; transition: opacity .15s; pointer-events: none; }
   #jauge.visible { opacity: 1; }
   #jauge .remplie { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #ff9d3d, #ffd36b); }
@@ -226,12 +230,18 @@
     <div class="stats" id="statsGauche"></div>
   </div>
   <div class="cote panneau">
-    <div class="ligne"><h2>Ta toupie</h2><span class="petit" id="bilanCollection"></span></div>
-    <div class="slots" id="slots"></div>
-    <div class="choix" id="choix"></div>
-    <h2 style="margin-top:6px">🏟️ Terrain de duel</h2>
-    <div class="terrains" id="terrains"></div>
-    <div class="petit" id="terrainInfo"></div>
+    <div class="onglets" id="onglets">
+      <button data-onglet="toupie">🌀 Toupie</button><button data-onglet="lanceur">🚀 Lanceur</button><button data-onglet="terrain">🏟️ Terrain</button>
+    </div>
+    <div class="ligne"><span class="petit" id="consigne"></span><span class="petit" id="bilanCollection"></span></div>
+    <div id="zonePieces">
+      <div class="slots" id="slots"></div>
+      <div class="choix" id="choix"></div>
+    </div>
+    <div id="zoneTerrain" class="cache">
+      <div class="terrains" id="terrains"></div>
+      <div class="petit" id="terrainInfo"></div>
+    </div>
     <div class="modes" id="modes"></div>
     <div class="actions jouer">
       <button class="btn" id="jouer">JOUER ▶</button>

@@ -50,21 +50,25 @@ export function tableauStats(niv, nivApres = null) {
 const nivMax = (save, id) => Math.min(NIVEAU_PIECE_MAX, save.collection[id] || 0);
 const nivDe = (save, id) => Math.min(nivMax(save, id), save.niveauxPieces[id] || 1) || 1;
 
-export function creerAtelier(save, { onChange, onJouer, onBoite }) {
-  let slotChoisi = 'pointe', apercu = null; // apercu : { id, niv }
+// onSelection(onglet, slot) : prévient la vue 3D (vue éclatée, zoom) ; onEquipe(slot) : une pièce vient de changer
+export function creerAtelier(save, { onChange, onJouer, onBoite, onSelection = () => {}, onEquipe = () => {} }) {
+  let onglet = 'toupie', slotChoisi = null, apercu = null; // apercu : { id, niv }
 
   function rendre() {
     const eq = save.equipe;
-    $('slots').innerHTML = GROUPES.filter(g => SLOTS.some(s => s.groupe === g.id)).map(g => `<div class="lib-groupe">${g.icone} ${g.nom}</div>` +
-      SLOTS.filter(s => s.groupe === g.id).map(s => {
+    document.querySelectorAll('#onglets [data-onglet]').forEach(b => b.classList.toggle('on', b.dataset.onglet === onglet));
+    montrer('zonePieces', onglet !== 'terrain');
+    montrer('zoneTerrain', onglet === 'terrain');
+    $('consigne').textContent = onglet === 'terrain' ? 'Ton terrain pour les duels' : slotChoisi ? '' : 'Choisis une pièce à changer';
+    $('slots').innerHTML = SLOTS.filter(s => s.groupe === onglet).map(s => {
         const p = PIECE[eq[s.id]], k = nivDe(save, p.id);
         return `<button class="slot ${s.id === slotChoisi ? 'choisi' : ''}" data-slot="${s.id}">
           <div class="lib">${s.icone} ${s.nom}</div><div class="nom" style="color:${RARETES[p.rarete].couleur}">${esc(p.nom)}${k > 1 ? ` <span class="niv-badge">niv ${k}</span>` : ''}</div></button>`;
-      }).join('')).join('');
+      }).join('');
     const possedees = PIECES.filter(p => p.slot === slotChoisi && save.collection[p.id]);
     const slot = SLOTS.find(s => s.id === slotChoisi);
     const total = PIECES.filter(p => p.slot === slotChoisi).length;
-    $('choix').innerHTML = `<div class="petit">${esc(slot.desc)} — ${possedees.length}/${total} trouvées</div>` + possedees.map(p => {
+    $('choix').innerHTML = !slot ? '' : `<div class="petit">${esc(slot.desc)} — ${possedees.length}/${total} trouvées</div>` + possedees.map(p => {
       const k = nivDe(save, p.id), max = nivMax(save, p.id);
       const chips = max > 1 ? `<div class="chips">Niveau : ${Array.from({ length: max }, (_, i) => i + 1).map(n =>
         `<span class="chip ${n === k ? 'on' : ''}" data-piece="${p.id}" data-niv="${n}" title="Tout ×${multiplicateurNiveau(n)}">${n}</span>`).join('')}
@@ -112,16 +116,28 @@ export function creerAtelier(save, { onChange, onJouer, onBoite }) {
   }
 
   function equiper(id, k) {
-    save.equipe[PIECE[id].slot] = id;
+    const slot = PIECE[id].slot;
+    save.equipe[slot] = id;
     if (k) save.niveauxPieces[id] = k;
-    apercu = null; son('achat', { volume: 0.5 });
-    rendre(); onChange();
+    apercu = null;
+    son('achat', { volume: 0.55 }); son('toc', { volume: 0.5, hauteur: 1.6 });
+    rendre(); onChange(); onEquipe(slot);
   }
 
+  $('onglets').addEventListener('click', e => {
+    const b = e.target.closest('[data-onglet]');
+    if (!b || b.dataset.onglet === onglet) return;
+    onglet = b.dataset.onglet; slotChoisi = null; apercu = null;
+    son('choix', { volume: 0.5 }); son('toc', { volume: 0.3, hauteur: 0.8 });
+    rendre(); onSelection(onglet, null);
+  });
   $('slots').addEventListener('click', e => {
     const b = e.target.closest('[data-slot]');
     if (!b) return;
-    slotChoisi = b.dataset.slot; apercu = null; son('choix', { volume: 0.5 }); rendre();
+    // Cliquer sur la pièce déjà ouverte la referme (retour à la vue d'ensemble)
+    slotChoisi = slotChoisi === b.dataset.slot ? null : b.dataset.slot; apercu = null;
+    son('choix', { volume: 0.5 }); son('toc', { volume: 0.45, hauteur: slotChoisi ? 1.25 : 0.9 });
+    rendre(); onSelection(onglet, slotChoisi);
   });
   $('choix').addEventListener('click', e => {
     const chip = e.target.closest('.chip');
@@ -143,7 +159,7 @@ export function creerAtelier(save, { onChange, onJouer, onBoite }) {
   $('terrains').addEventListener('click', e => {
     const b = e.target.closest('[data-terrain]');
     if (!b || b.disabled) return;
-    save.terrain = b.dataset.terrain; son('choix', { volume: 0.5 }); rendre(); onChange();
+    save.terrain = b.dataset.terrain; son('choix', { volume: 0.5 }); son('toc', { volume: 0.4, hauteur: 0.7 }); rendre(); onChange(); onEquipe('terrain');
   });
   $('jouer').addEventListener('click', onJouer);
   $('ouvrirBoite').addEventListener('click', onBoite);
@@ -151,7 +167,7 @@ export function creerAtelier(save, { onChange, onJouer, onBoite }) {
     if (acheterBoite(save)) { son('piece'); rendre(); onChange(); } else son('refus');
   });
   rendre();
-  return { rendre };
+  return { rendre, etat: () => ({ onglet, slot: slotChoisi }) };
 }
 
 // ---------------------------------------------------------------- Boîte mystère

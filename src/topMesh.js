@@ -237,9 +237,10 @@ export function creerToupie(equipe) {
   // Un repère coloré pour qu'on voie la toupie tourner
   const repere = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.0025, 0.022), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x666666 }));
   repere.position.set(0.012, bs.top + 0.001, 0);
-  rotor.add(repere);
+  bs.g.add(repere); // le repère suit la base (vue éclatée de l'atelier)
   racine.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-  return { racine, inclinaison, rotor };
+  // parts : chaque pièce est un groupe à part (vue éclatée de l'atelier)
+  return { racine, inclinaison, rotor, parts: { pointe: pt.g, base: bs.g, couronne: cr.g, ame: am.g } };
 }
 
 export function libererToupie(t) {

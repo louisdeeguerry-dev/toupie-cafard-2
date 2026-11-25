@@ -1,8 +1,8 @@
 // Point d'entrée : relie l'atelier, la partie et la boucle de rendu.
-import { renderer, scene, camera, vitrine, vitrineCam, supportVitrine } from './scene.js';
-import { creerToupie, libererToupie } from './topMesh.js';
+import { renderer, scene, camera, vitrine, vitrineCam } from './scene.js';
+import { majModeles, selection as selectionAtelier, majAtelier, terrainVitrine } from './atelier3d.js';
 import { charger, sauver, reinitialiser } from './save.js';
-import { lanceur, majLanceur, lancerDirect } from './launcher.js';
+import { lanceur, majLanceur, lancerDirect, modeleLanceur } from './launcher.js';
 import { lancerDansEtape, capacite } from './match.js';
 import { partie, nouvellePartie, commencerManche, majPartie, brancherInterface, lancer, abandonner, acheter, _interne } from './match.js';
 import { majFx, majBarres, majEtincelles, facteurTemps } from './fx.js';
@@ -19,17 +19,15 @@ const AIDE = window.matchMedia?.('(pointer: coarse)').matches
   ? 'Touche le bas du bureau pour placer le lanceur, garde le doigt pour viser, lève-le pour lancer'
   : 'Déplace le lanceur, clique et garde appuyé pour viser, relâche pour lancer';
 let mode = 'atelier';
-let modele = null;
-
-function majVitrine() {
-  if (modele) libererToupie(modele);
-  modele = creerToupie(save.equipe);
-  modele.racine.scale.setScalar(1.25);
-  supportVitrine.add(modele.racine);
+function majVitrine(slotChange = null) {
+  majModeles(save.equipe, slotChange);
+  terrainVitrine(save.terrain);
 }
 
 const atelier = UI.creerAtelier(save, {
-  onChange() { sauver(save); majVitrine(); },
+  onChange() { sauver(save); },
+  onEquipe(slot) { majVitrine(slot); },
+  onSelection(onglet, slot) { selectionAtelier(onglet, slot); },
   onJouer: demarrer,
   onBoite: boite,
 });
@@ -42,6 +40,7 @@ function boite() {
 function demarrer() {
   activerAudio();
   nouvellePartie({ ...save.equipe }, { mode: save.mode, nivPieces: { ...save.niveauxPieces }, terrain: save.terrain });
+  modeleLanceur(save.equipe);
   UI.montrer('atelier', false);
   UI.rechercher(partie.joueurs.map(j => j.nom), save.mode, () => {
     mode = 'partie';
@@ -110,7 +109,7 @@ function boucle(maintenant) {
   avant = maintenant;
   t += dt;
   if (mode === 'atelier') {
-    if (modele) { modele.rotor.rotation.y += dt * 1.2; modele.racine.position.y = 0.004 + Math.sin(t * 1.5) * 0.003; }
+    majAtelier(dt, t);
     renderer.render(vitrine, vitrineCam);
   } else {
     // Sous-pas : physique stable même si une image prend du retard
@@ -143,6 +142,7 @@ window.__tc2 = { VERSION, partie, save: () => save, lancerDirect, acheter, inter
   // Démarre directement une manche donnée (ex. 3 = premier duel) sans passer par l'atelier
   demarrerTest(manche = 3) {
     nouvellePartie({ ...save.equipe }, { mode: 'normale', nivPieces: { ...save.niveauxPieces }, terrain: save.terrain });
+    modeleLanceur(save.equipe);
     partie.manche = manche;
     UI.montrer('atelier', false); UI.montrer('hud');
     mode = 'partie';

@@ -3,6 +3,7 @@
 import * as THREE from 'three';
 import { scene, camera, renderer } from './scene.js';
 import { RAIL_XMAX, railZ } from './config.js';
+import { creerLanceur, libererLanceur, animerLanceur } from './lanceurMesh.js';
 
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), plan = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 const hit = new THREE.Vector3();
@@ -18,18 +19,17 @@ export const lanceur = {
   zoneParfait: 0.1, // largeur de la zone PARFAIT (stat Précision)
 };
 
-// ---------------------------------------------------------------- Modèle 3D
+// ---------------------------------------------------------------- Modèle 3D (src/lanceurMesh.js : engrenage et ressort du joueur)
 const corps = new THREE.Group();
-const boitier = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.03, 0.04), new THREE.MeshStandardMaterial({ color: 0xd35400, roughness: 0.4, metalness: 0.3 }));
-boitier.position.y = 0.017;
-const bec = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.016, 0.03, 16), new THREE.MeshStandardMaterial({ color: 0x2c3e50, metalness: 0.6, roughness: 0.3 }));
-bec.rotation.x = Math.PI / 2;
-bec.position.set(0, 0.017, -0.03);
-const voyant = new THREE.Mesh(new THREE.SphereGeometry(0.006, 12, 8), new THREE.MeshStandardMaterial({ color: 0x2ecc71, emissive: 0x2ecc71, emissiveIntensity: 1 }));
-voyant.position.set(0.022, 0.034, 0.008);
-corps.add(boitier, bec, voyant);
-corps.traverse(o => { if (o.isMesh) o.castShadow = true; });
 scene.add(corps);
+let modele = null;
+export function modeleLanceur(equipe) {
+  if (modele) libererLanceur(modele);
+  modele = creerLanceur(equipe);
+  modele.racine.scale.setScalar(1.15);
+  corps.add(modele.racine);
+}
+modeleLanceur({});
 
 // Ligne de visée (pointillés au sol)
 const pts = [];
@@ -107,6 +107,7 @@ export function majLanceur(dt) {
   const g = lanceur.etat === 'charge' ? valeurJauge() : 0.35;
   visee.scale.z = 0.4 + g * 0.9;
   visee.material.opacity = lanceur.etat === 'charge' ? 0.95 : 0.4;
+  if (modele) animerLanceur(modele, dt, lanceur.etat === 'charge' ? valeurJauge() : 0, lanceur.etat === 'charge');
   jaugeRemplie.style.width = (valeurJauge() * 100).toFixed(1) + '%';
   jauge.classList.toggle('parfait', valeurJauge() > 1 - lanceur.zoneParfait);
   zoneEl.style.left = ((1 - lanceur.zoneParfait) * 100).toFixed(1) + '%';
