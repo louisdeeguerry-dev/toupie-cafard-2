@@ -11,7 +11,7 @@ export function popup(texte, x, z, classe = '') {
   el.className = 'pop ' + classe;
   el.textContent = texte;
   calque.appendChild(el);
-  textes.push({ el, x, z, t: 0 });
+  textes.push({ el, x: x + (Math.random() - 0.5) * 0.04, z: z + (Math.random() - 0.5) * 0.03, t: 0 });
 }
 
 const tacheGeo = new THREE.CircleGeometry(1, 16);
@@ -84,7 +84,43 @@ export function majBarres(cafards, toupies) {
     if (!t.lancee || t.tombe) continue;
     // 100 % = rotation de départ, 0 % = seuil de chute
     const frac = (t.rotation / t.rotationMax - t.s.seuilChute) / (1 - t.s.seuilChute);
-    placer(barre(), t.x, 0.075, t.z, frac, t.camp === 'joueur' ? 'toupie moi' : 'toupie adv', `${Math.round(t.rotation)} tr/min`);
+    placer(barre(), t.x, 0.075, t.z, frac, (t.camp === 'joueur' ? 'toupie moi' : 'toupie adv') + (frac < 0.25 ? ' alerte' : ''), `${Math.max(0, Math.round(frac * 100))} %`);
   }
   for (let i = utilisees; i < reserve.length; i++) reserve[i].style.display = 'none';
+}
+
+// ---------------------------------------------------------------- Étincelles (chocs entre toupies, cafards écrasés)
+const etincelleGeo = new THREE.SphereGeometry(1, 6, 4);
+const etincelles = [];
+export function etincelles_(x, z, n = 10, couleur = 0xffd27a, force = 1) {
+  for (let i = 0; i < n; i++) {
+    const m = new THREE.Mesh(etincelleGeo, new THREE.MeshBasicMaterial({ color: couleur, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+    m.scale.setScalar(0.0025 + Math.random() * 0.002);
+    m.position.set(x, 0.02, z);
+    scene.add(m);
+    const a = Math.random() * Math.PI * 2, v = (0.3 + Math.random() * 0.6) * force;
+    etincelles.push({ m, vx: Math.cos(a) * v, vy: 0.2 + Math.random() * 0.5 * force, vz: Math.sin(a) * v, t: 0, vie: 0.25 + Math.random() * 0.25 });
+  }
+}
+export { etincelles_ as etincelles };
+export function majEtincelles(dt) {
+  for (let i = etincelles.length - 1; i >= 0; i--) {
+    const e = etincelles[i];
+    e.t += dt; e.vy -= 2.5 * dt;
+    e.m.position.x += e.vx * dt; e.m.position.y = Math.max(0.002, e.m.position.y + e.vy * dt); e.m.position.z += e.vz * dt;
+    e.m.material.opacity = 1 - e.t / e.vie;
+    if (e.t > e.vie) { e.m.material.dispose(); e.m.removeFromParent(); etincelles.splice(i, 1); }
+  }
+}
+
+// ---------------------------------------------------------------- Arrêt sur image et ralenti
+// geler(ms) : le jeu se fige un instant (sensation d'impact). ralentir(facteur, s) : ralenti (coup final).
+export const temps = { gel: 0, ralenti: 1, ralentiT: 0 };
+export function geler(ms) { temps.gel = Math.max(temps.gel, ms / 1000); }
+export function ralentir(facteur, duree) { temps.ralenti = facteur; temps.ralentiT = duree; }
+// Renvoie le facteur à appliquer au temps de jeu pour cette image (dtReel en secondes)
+export function facteurTemps(dtReel) {
+  if (temps.gel > 0) { temps.gel -= dtReel; return 0; }
+  if (temps.ralentiT > 0) { temps.ralentiT -= dtReel; return temps.ralenti; }
+  return 1;
 }

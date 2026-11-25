@@ -50,3 +50,19 @@ export function son(nom, { volume = 1, hauteur = 1 } = {}) {
   src.connect(g); g.connect(gain);
   src.start();
 }
+
+// Ronronnement de ta toupie : sa hauteur suit la rotation (on « entend » la toupie faiblir)
+let osc = null, oscGain = null, filtre = null;
+export function ronron(ratio) {
+  if (!ctx) return;
+  if (!osc) {
+    osc = ctx.createOscillator(); osc.type = 'sawtooth';
+    filtre = ctx.createBiquadFilter(); filtre.type = 'lowpass'; filtre.frequency.value = 500;
+    oscGain = ctx.createGain(); oscGain.gain.value = 0;
+    osc.connect(filtre); filtre.connect(oscGain); oscGain.connect(gain);
+    osc.start();
+  }
+  const t = ctx.currentTime;
+  osc.frequency.setTargetAtTime(70 + 170 * Math.max(0, ratio), t, 0.05);
+  oscGain.gain.setTargetAtTime(ratio > 0 ? 0.035 + 0.03 * ratio : 0, t, 0.08);
+}

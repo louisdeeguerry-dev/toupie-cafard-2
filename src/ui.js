@@ -4,7 +4,9 @@ import { TERRAINS, TERRAIN } from './data/terrains.js';
 import { STAT_ACHATS, PRIORITE, MANCHE_PRIORITE } from './data/boutique.js';
 import { PARTIE } from './config.js';
 import { STATS, STAT, GROUPES, niveauxToupie, calculer as calcul, tempsRotation } from './stats.js';
-import { partie, etape, prixAmelio, acheter, prioriteDispo, lancerDansEtape } from './match.js';
+import { partie, etape, prixAmelio, acheter, prioriteDispo, lancerDansEtape, relancerOffres } from './match.js';
+import { BOUTIQUE } from './config.js';
+import { PIECE as PIECES_PAR_ID } from './data/pieces.js';
 import { TYPES } from './data/cafards.js';
 import { MODES, MONNAIE, PRIX_BOITE, rangDe, RANGS, xpPourNiveau, acheterBoite } from './progression.js';
 import { son } from './audio.js';
@@ -53,7 +55,7 @@ export function creerAtelier(save, { onChange, onJouer, onBoite }) {
 
   function rendre() {
     const eq = save.equipe;
-    $('slots').innerHTML = GROUPES.map(g => `<div class="lib-groupe">${g.icone} ${g.id === 'toupie' ? 'Toupie' : 'Lanceur'}</div>` +
+    $('slots').innerHTML = GROUPES.filter(g => SLOTS.some(s => s.groupe === g.id)).map(g => `<div class="lib-groupe">${g.icone} ${g.nom}</div>` +
       SLOTS.filter(s => s.groupe === g.id).map(s => {
         const p = PIECE[eq[s.id]], k = nivDe(save, p.id);
         return `<button class="slot ${s.id === slotChoisi ? 'choisi' : ''}" data-slot="${s.id}">
@@ -253,9 +255,9 @@ export function majHud() {
   const moi = partie.moi, etroit = window.innerWidth < 720;
   $('vies').textContent = etroit ? `❤️ ${Math.max(0, moi.vies)}` : '❤️'.repeat(Math.max(0, moi.vies)) + '🖤'.repeat(Math.max(0, PARTIE.vies - moi.vies));
   $('argent').textContent = `💰 ${partie.argent}`;
-  const n = PARTIE.cycle.length, debut = (etape() - 1) * n;
-  $('manches').innerHTML = `<span class="petit">${etroit ? 'É' : 'Étape '}${etape()}</span>` + PARTIE.cycle.map((t, i) => {
-    const m = debut + i, cls = m < partie.manche ? 'fait' : m === partie.manche ? 'cours' : '';
+  const n = PARTIE.cycle.length, mm = partie.mancheAffichee ?? partie.manche, et = Math.floor(mm / n) + 1, debut = (et - 1) * n;
+  $('manches').innerHTML = `<span class="petit">${etroit ? 'É' : 'Étape '}${et}</span>` + PARTIE.cycle.map((t, i) => {
+    const m = debut + i, cls = m < mm ? 'fait' : m === mm ? 'cours' : '';
     return `<i class="${cls}" title="${t === 'duel' ? 'Duel' : 'Cafards'}">${t === 'duel' ? '⚔️' : '🪳'}</i>`;
   }).join('');
   $('salon').innerHTML = [...partie.joueurs].sort((a, b) => (b.elimine ? -1 : b.vies) - (a.elimine ? -1 : a.vies)).map(j =>
@@ -313,10 +315,14 @@ export function afficherBilan(bilan, onPret) {
         ${ap.evolution.map(t => `<div>${TYPES[t].icone} <b>${TYPES[t].nom}</b> — ${esc(TYPES[t].desc)} <span class="petit">Contré par : ${TYPES[t].contre.map(c => STAT[c].icone + ' ' + STAT[c].nom).join(', ')}</span></div>`).join('')}</div>` : ''}
     </div>` : `<div class="apercu"><b>Après le duel, les cafards évolueront</b> : plus résistants, et de nouvelles espèces.</div>`;
 
+  const adv = bilan.adversaireSuivant;
+  const annonceAdv = adv ? `<div class="apercu">⚔️ <b>Prochain duel contre ${esc(adv.nom)}</b> (❤️ ${adv.vies}) —
+      ${SLOTS.map(sl => `${sl.icone} ${esc(PIECES_PAR_ID[adv.equipe[sl.id]].nom)}${adv.nivPieces[adv.equipe[sl.id]] > 1 ? ' niv ' + adv.nivPieces[adv.equipe[sl.id]] : ''}`).join(' · ')}</div>` : '';
   const ligne = (a, actuel, suivant) => {
     const prix = prixAmelio(a.id), n = partie.moi.niveaux[a.id] || 0;
-    return `<button class="amelio" data-a="${a.id}" ${prix == null || prix > partie.argent ? 'disabled' : ''} title="${esc(a.desc)}">
-      <span class="ic">${a.icone}</span><span><b>${a.nom}</b> <span class="niv">+${n}</span><br>
+    const conseil = (partie.conseils || []).includes(a.id);
+    return `<button class="amelio ${conseil ? 'conseil' : ''}" data-a="${a.id}" ${prix == null || prix > partie.argent ? 'disabled' : ''} title="${esc(a.desc)}">
+      <span class="ic">${a.icone}</span><span><b>${a.nom}</b> <span class="niv">+${n}</span>${conseil ? ' <span class="badge-conseil">conseillé</span>' : ''}<br>
       <span class="petit">${esc(actuel)}${suivant != null ? ` → <span class="plus">${esc(suivant)}</span>` : ''}</span></span>
       <span class="px">${prix == null ? 'MAX' : prix + ' 💰'}</span></button>`;
   };
@@ -324,15 +330,19 @@ export function afficherBilan(bilan, onPret) {
     const p = partie.moi;
     const niv = niveauxToupie(p.equipe, p.niveaux, p.nivPieces);
     const s = calcul(niv);
-    const colonneStats = groupe => STAT_ACHATS.filter(a => a.groupe === groupe).map(a => {
+    const offert = a => !partie.offres || partie.offres.includes(a.id);
+    const colonneStats = groupe => STAT_ACHATS.filter(a => a.groupe === groupe && offert(a)).map(a => {
       const plus = calcul({ ...niv, [a.id]: (niv[a.id] || 0) + 1 });
       return ligne(a, STAT[a.id].fmt(s), prixAmelio(a.id) == null ? null : STAT[a.id].fmt(plus));
     }).join('');
     const colonneBureau = colonneStats('bureau');
     $('bilanContenu').innerHTML = `${titre}${elim}${gains}
       ${apercu}
-      <div class="ligne" style="margin-top:12px"><h2>Boutique</h2><div class="pastille">💰 ${partie.argent}</div></div>
-      <div class="petit">Le bureau rapporte plus d'argent plus tard ; la toupie et le lanceur rendent plus fort tout de suite. Les pièces, elles, ne changent pas pendant la partie.</div>
+      ${annonceAdv}
+      <div class="ligne" style="margin-top:12px"><h2>Boutique</h2>
+        <span>${partie.offres ? `<button class="btn second petit-btn" id="relancer" ${partie.argent < BOUTIQUE.relance ? 'disabled' : ''}>🎲 Relancer (${BOUTIQUE.relance} 💰)</button>` : ''}
+        <span class="pastille">💰 ${partie.argent}</span></span></div>
+      <div class="petit">${partie.offres ? `${partie.offres.length} offres tirées au hasard : choisis !` : ''} Le bureau rapporte plus d'argent plus tard ; la toupie et le lanceur rendent plus fort tout de suite. Les pièces ne changent pas pendant la partie.</div>
       <div class="branches">
         <div class="branche"><h3>🪑 Bureau<small>économie</small></h3>${colonneBureau}</div>
         <div class="branche"><h3>🌀 Toupie<small>puissance</small></h3>${colonneStats('toupie')}</div>
@@ -344,8 +354,10 @@ export function afficherBilan(bilan, onPret) {
             : `<div class="petit">La priorité de terrain s'achète à partir de la manche ${MANCHE_PRIORITE}. ${esc(PRIORITE.desc)}</div>`}
         </div>
       </div>
-      <div class="ligne"><span class="petit">Prochaine manche : <b>${prochaine}</b></span><button class="btn" id="pret">Prêt ▶</button></div>`;
+      <div class="ligne pied"><span class="petit">Prochaine manche : <b>${prochaine}</b></span><button class="btn" id="pret">Prêt ▶</button></div>`;
     $('pret').onclick = () => { montrer('bilan', false); onPret(); };
+    const rel = $('relancer');
+    if (rel) rel.onclick = e => { e.stopPropagation(); if (relancerOffres()) { rendre(); majHud(); } };
   };
   $('bilanContenu').onclick = e => {
     const b = e.target.closest('[data-a]');
@@ -353,6 +365,7 @@ export function afficherBilan(bilan, onPret) {
   };
   rendre();
   montrer('bilan');
+  $('bilan').firstElementChild.scrollTop = 0; // on commence toujours en haut (résultat de la manche)
 }
 
 // ---------------------------------------------------------------- Fin

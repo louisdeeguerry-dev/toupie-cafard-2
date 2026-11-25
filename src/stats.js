@@ -39,14 +39,14 @@ export const STATS = [
     fmt: s => s.eclair ? `${Math.round(s.eclair * 100)} % de chance, ${Math.round(s.eclairDegats * 100)} % des dégâts, ${s.eclairRebonds} rebond${s.eclairRebonds > 1 ? 's' : ''}` : '—' },
   { id: 'tornade', groupe: 'toupie', nom: 'Tourbillon', icone: '🌪️', special: true, desc: 'La toupie aspire les cafards proches vers elle.',
     fmt: s => s.tornade ? `rayon ${Math.round(s.tornadeRayon * 100)} cm` : '—' },
-  { id: 'puissance', groupe: 'lanceur', nom: 'Puissance', icone: '🚀', desc: 'La toupie démarre en tournant plus vite (c\'est sa « vie » en duel).',
+  { id: 'puissance', groupe: 'lanceur', nom: 'Puissance', icone: '🚀', desc: 'La toupie démarre en tournant plus vite : elle encaisse plus de chocs avant de s\'arrêter (sa « vie » en duel).',
     fmt: s => `${Math.round(s.tours).toLocaleString('fr-FR')} tr/min` },
   { id: 'elan', groupe: 'lanceur', nom: 'Élan', icone: '💨', desc: 'La toupie part plus vite et plus loin.',
     fmt: s => `${Math.round(s.vitesse * 100)} cm/s` },
   { id: 'precision', groupe: 'lanceur', nom: 'Précision', icone: '🎯', desc: 'Zone « PARFAIT » de la jauge plus large (+8 % de puissance).',
     fmt: s => `zone de ${Math.round(s.parfait * 100)} %` },
   { id: 'multi', groupe: 'lanceur', nom: 'Multi-lancer', icone: '🌀', special: true, desc: 'Lance plusieurs toupies d\'un coup, mais chacune tourne moins fort.',
-    fmt: s => s.toupies > 1 ? `${s.toupies} toupies par lancer, −${Math.round((1 - Math.pow(0.8, s.toupies - 1)) * 100)} % de rotation chacune` : '1 toupie par lancer' },
+    fmt: s => s.toupies > 1 ? `${s.toupies} toupies par lancer, −${Math.round((1 - Math.pow(0.7, s.toupies - 1)) * 100)} % de rotation chacune` : '1 toupie par lancer' },
   // Bureau (économie, repris de l'atelier du jeu 1) : améliorables en partie, et donnés ou retirés par certaines pièces
   { id: 'nid', groupe: 'bureau', nom: 'Nid', icone: '🪺', desc: 'Plus de cafards à chaque vague (donc plus d\'argent… s\'ils meurent).',
     fmt: s => s.nid ? `${s.nid > 0 ? '+' : ''}${s.nid} cafards par vague` : 'nombre normal de cafards' },
@@ -73,7 +73,7 @@ const f = (a, L) => (L >= 0 ? 1 + a * L : 1 / (1 + a * -L));
 export function calculer(niv) {
   const L = id => niv[id] || 0, P = id => Math.max(0, niv[id] || 0);
   return {
-    rayon: 0.04 * f(0.07, L('diametre')),
+    rayon: 0.046 * f(0.07, L('diametre')),
     masse: 20 * f(0.15, L('poids')),
     inertie: 1 / f(0.12, L('inertie')),
     usure: 0.12 / f(0.15, L('endurance')),

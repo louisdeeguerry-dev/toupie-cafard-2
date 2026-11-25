@@ -6,7 +6,7 @@ import { PARTIE, CAFARDS, ECONOMIE } from './config.js';
 import { PIECES, SLOTS, RARETES } from './data/pieces.js';
 import { TERRAINS } from './data/terrains.js';
 import { AMELIO, MANCHE_PRIORITE } from './data/boutique.js';
-import { statsToupie, puissance, tempsRotation } from './stats.js';
+import { statsToupie, tempsRotation } from './stats.js';
 import { compositionEtape, TYPES } from './data/cafards.js';
 
 const hasard = a => a[Math.floor(Math.random() * a.length)];
@@ -30,10 +30,19 @@ function pieceAuHasard(slot) {
   return pool.length ? hasard(pool) : hasard(PIECES.filter(p => p.slot === slot));
 }
 
+const ARCHETYPES = [
+  ['poids', 'inertie', 'equilibre', 'puissance'], // lourd
+  ['elan', 'glisse', 'agressivite', 'vitesse'], // rapide
+  ['lames', 'critique', 'eclair', 'feu'], // tranchant
+  ['endurance', 'souffle', 'equilibre', 'inertie'], // endurant
+  ['prime', 'chance', 'combo', 'nid', 'lames'], // économe
+];
 export function creerBot(nom) {
-  const equipe = {}, nivPieces = {};
+  const equipe = {}, nivPieces = {}, arch = hasard(ARCHETYPES);
+  const score = p => Object.entries(p.niveaux).reduce((a, [k, v]) => a + (arch.includes(k) ? v : 0), 0);
   for (const s of SLOTS) {
-    const p = pieceAuHasard(s.id);
+    // Comme un vrai joueur : parmi quelques pièces possédées, il équipe celle qui colle à son style
+    const p = [pieceAuHasard(s.id), pieceAuHasard(s.id), pieceAuHasard(s.id)].sort((x, y) => score(y) - score(x))[0];
     equipe[s.id] = p.id;
     const r = Math.random();
     nivPieces[p.id] = r < 0.6 ? 1 : r < 0.88 ? 2 : 3; // certains bots jouent leurs doublons
@@ -61,7 +70,7 @@ export function jouerLancerBot(b, n, etape) {
   const capacite = Math.max(4, CAFARDS.capacite + s.nid);
   const tues = Math.round(capacite * taux * s.toupies ** 0.5);
   const primeMoy = Object.entries(comp).reduce((a, [t, p]) => a + p * TYPES[t].prime, 0);
-  const gain = Math.round(tues * CAFARDS.prime * CAFARDS.primeEtape(etape) * primeMoy * s.prime * (1 + s.chanceDore * 3) * (1 + s.comboBonus * 2));
+  const gain = Math.round(tues * CAFARDS.prime * CAFARDS.primeEtape(etape) * primeMoy * s.prime * (1 + s.chanceDore * 3) * (1 + s.comboBonus));
   b.argent += gain;
   return tues;
 }
@@ -96,15 +105,24 @@ export function finMancheBot(b, manche, etape) {
 // Lancer d'un bot face à toi : plus il est habile, plus il vise juste et lance fort (et touche parfois PARFAIT)
 export function lancerDuelBot(b, cible) {
   const bruit = (1 - b.habilete) * 0.5;
-  const tx = (cible ? cible.x : 0) + (Math.random() - 0.5) * bruit, tz = (cible ? cible.z : 0.1) + (Math.random() - 0.5) * bruit;
+  // Les bons bots anticipent : ils visent là où ta toupie VA être
+  const avance = 0.15 + 0.35 * b.habilete;
+  const tx = (cible ? cible.x + cible.vx * avance : 0) + (Math.random() - 0.5) * bruit;
+  const tz = (cible ? cible.z + cible.vz * avance : 0.1) + (Math.random() - 0.5) * bruit;
   const parfait = Math.random() < b.habilete * b.habilete * 0.8;
   const puiss = parfait ? 1.08 : Math.min(1, Math.max(0.3, 0.45 + 0.5 * b.habilete + (Math.random() - 0.5) * bruit));
   return { tx, tz, puiss };
 }
 
-// Duel entre deux bots (simulé) : puissance de la toupie × habileté × hasard
+// Duel entre deux bots (simulé) : stats de combat de la toupie (rotation, endurance, lames, inertie, poids)
+// × habileté × hasard. Les stats du Bureau ne comptent pas.
+export function forceDuel(j) {
+  const s = statsToupie(j.equipe, j.niveaux, j.nivPieces);
+  return (s.tours / 600) * Math.sqrt(tempsRotation(s) / 11.6) * Math.sqrt(s.lames) * Math.pow(s.masse / 20, 0.3) / Math.sqrt(s.inertie)
+    * Math.pow(0.7, s.toupies - 1) * s.toupies;
+}
 export function duelSimule(a, b) {
-  const f = j => puissance(j.equipe, j.niveaux, j.nivPieces) * (0.6 + 0.8 * j.habilete) * entre(0.7, 1.3);
+  const f = j => forceDuel(j) * (0.6 + 0.8 * j.habilete) * entre(0.7, 1.3);
   return f(a) >= f(b) ? a : b;
 }
 

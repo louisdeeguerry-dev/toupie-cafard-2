@@ -5,8 +5,9 @@ import { charger, sauver, reinitialiser } from './save.js';
 import { lanceur, majLanceur, lancerDirect } from './launcher.js';
 import { lancerDansEtape, capacite } from './match.js';
 import { partie, nouvellePartie, commencerManche, majPartie, brancherInterface, lancer, abandonner, acheter, _interne } from './match.js';
-import { majFx, majBarres } from './fx.js';
-import { activerAudio } from './audio.js';
+import { majFx, majBarres, majEtincelles, facteurTemps } from './fx.js';
+import { majCamera } from './scene.js';
+import { activerAudio, ronron } from './audio.js';
 import * as UI from './ui.js';
 import { VERSION } from './config.js';
 import { recompenser } from './progression.js';
@@ -14,6 +15,9 @@ import { TERRAIN } from './data/terrains.js';
 import { TYPES } from './data/cafards.js';
 
 let save = charger();
+const AIDE = window.matchMedia?.('(pointer: coarse)').matches
+  ? 'Touche le bas du bureau pour placer le lanceur, garde le doigt pour viser, lève-le pour lancer'
+  : 'Déplace le lanceur, clique et garde appuyé pour viser, relâche pour lancer';
 let mode = 'atelier';
 let modele = null;
 
@@ -54,18 +58,22 @@ brancherInterface({
       const sous = T ? `Terrain : ${T.icone} ${T.nom} (${td.de === partie.moi ? 'le tien' : 'celui de ' + partie.adversaire.nom})`
         : td.egalite ? 'Égalité de priorité de terrain : bureau neutre' : 'Bureau neutre';
       UI.bandeau(`⚔️ DUEL contre ${partie.adversaire.nom}`, sous, 2600);
-      UI.aide('Déplace le lanceur, clique et garde appuyé pour viser, relâche pour lancer');
+      UI.aide(AIDE);
     } else {
       if (partie.evolution?.length) UI.bandeau('🧬 Les cafards ont évolué !', 'Nouveaux : ' + partie.evolution.map(t => TYPES[t].icone + ' ' + TYPES[t].nom).join(', '), 2600);
       else UI.bandeau(`🪳 Lancer ${lancerDansEtape()}/3`, `${partie.renfort ? `+${partie.renfort} cafards : ` : ''}${capacite()} cafards sur le bureau`);
-      UI.aide('Déplace le lanceur, clique et garde appuyé pour viser, relâche pour lancer');
+      UI.aide(AIDE);
     }
   },
   hud: UI.majHud,
+  lance() { UI.aide(''); },
+  finDuel(gagne) {
+    UI.bandeau(gagne ? '🏆 VICTOIRE !' : '💥 K.O. !', gagne ? 'La toupie adverse s\'est arrêtée la première' : 'Ta toupie s\'est arrêtée la première', 2200);
+  },
   bilan(b) {
     UI.majHud();
     UI.aide('');
-    setTimeout(() => UI.afficherBilan(b, () => commencerManche()), 500);
+    setTimeout(() => UI.afficherBilan(b, () => commencerManche()), b.type === 'duel' ? 900 : 500);
   },
   fin(r) {
     UI.majHud();
@@ -96,7 +104,9 @@ document.addEventListener('pointerdown', activerAudio, { once: true });
 // ---------------------------------------------------------------- Boucle
 let avant = performance.now(), t = 0;
 function boucle(maintenant) {
-  const dt = Math.min(0.05, (maintenant - avant) / 1000) * (window.__tc2?.acceleration || 1); // acceleration : tests auto
+  const dtReel = Math.min(0.05, (maintenant - avant) / 1000);
+  // acceleration : tests auto ; facteurTemps : arrêt sur image et ralenti des gros chocs
+  const dt = dtReel * (window.__tc2?.acceleration ?? 1) * facteurTemps(dtReel);
   avant = maintenant;
   t += dt;
   if (mode === 'atelier') {
@@ -108,7 +118,20 @@ function boucle(maintenant) {
     for (let i = 0; i < n; i++) majPartie(dt / n, t);
     majLanceur(dt);
     majFx(dt);
+    majEtincelles(dt);
     majBarres(_interne.cafards, _interne.toupies);
+    // Caméra : en duel, elle se rapproche des toupies une fois lancées
+    const enJeuT = _interne.toupies.filter(x => x.lancee && !x.tombe);
+    const duelEnCours = partie.type === 'duel' && partie.phase === 'jeu' && partie.botLance && enJeuT.length;
+    let suivi = null;
+    if (duelEnCours) {
+      const xs = enJeuT.map(x => x.x), zs = enJeuT.map(x => x.z);
+      suivi = { x: (Math.min(...xs) + Math.max(...xs)) / 2, z: (Math.min(...zs) + Math.max(...zs)) / 2,
+        ecart: Math.hypot(Math.max(...xs) - Math.min(...xs), Math.max(...zs) - Math.min(...zs)) };
+    }
+    majCamera(dtReel, suivi);
+    const mesT = (partie.mesToupies || []).filter(x => x.lancee && !x.tombe);
+    ronron(mesT.length ? Math.max(...mesT.map(x => x.rotation / x.rotationMax)) : 0);
     renderer.render(scene, camera);
   }
   requestAnimationFrame(boucle);

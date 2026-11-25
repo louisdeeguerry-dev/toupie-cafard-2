@@ -114,15 +114,43 @@ export function decorTerrain(id) {
 }
 
 // ---------------------------------------------------------------- Caméra adaptée à l'écran
+// Caméra : position de base (tout le bureau) ; en duel elle se rapproche des toupies ; secousse sur les gros chocs
+const base = { pos: new THREE.Vector3(), cible: new THREE.Vector3(0, 0, 0.02) };
+const cam = { pos: new THREE.Vector3(), cible: new THREE.Vector3(0, 0, 0.02), secousse: 0 };
+export function secouer(force) { cam.secousse = Math.max(cam.secousse, force); }
+// suivi : null (vue normale) ou { x, z, ecart } (milieu des toupies et distance entre elles)
+export function majCamera(dt, suivi) {
+  let pos = base.pos, cible = base.cible;
+  if (suivi) {
+    const d = Math.min(1, Math.max(0.42, 0.42 + suivi.ecart * 0.9));
+    cible = new THREE.Vector3(suivi.x * 0.85, 0, suivi.z * 0.85);
+    pos = cible.clone().add(new THREE.Vector3(0, base.pos.y, base.pos.z - 0.02).normalize().multiplyScalar(base.pos.length() * d));
+  }
+  const k = 1 - Math.exp(-3 * dt);
+  cam.pos.lerp(pos, k); cam.cible.lerp(cible, k);
+  camera.position.copy(cam.pos);
+  if (cam.secousse > 0) {
+    camera.position.x += (Math.random() - 0.5) * cam.secousse;
+    camera.position.y += (Math.random() - 0.5) * cam.secousse;
+    cam.secousse = Math.max(0, cam.secousse - dt * 0.06);
+  }
+  camera.lookAt(cam.cible);
+}
+
 export function cadrer() {
   const w = conteneur.clientWidth || window.innerWidth, h = conteneur.clientHeight || window.innerHeight;
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
   const portrait = w / h < 1;
   camera.fov = portrait ? 58 : 40;
-  const dist = portrait ? 1.9 : 1.45;
-  camera.position.set(0, dist * 0.86, dist * 0.62);
-  camera.lookAt(0, 0, 0.02);
+  // En portrait, on recule assez pour que tout le bureau tienne en largeur
+  const demiLargeurVue = Math.atan(Math.tan((camera.fov * Math.PI) / 360) * (w / h));
+  const distLargeur = (DESK_X + 0.08) / Math.tan(demiLargeurVue) / 1.06;
+  const dist = portrait ? Math.max(1.9, distLargeur) : 1.45;
+  base.pos.set(0, dist * 0.86, dist * 0.62);
+  if (!cam.pos.lengthSq()) cam.pos.copy(base.pos);
+  camera.position.copy(cam.pos);
+  camera.lookAt(cam.cible);
   camera.updateProjectionMatrix();
   vitrineCam.aspect = w / h;
   // La toupie s'affiche à côté du panneau de l'atelier (à droite en paysage, en bas en portrait)

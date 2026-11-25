@@ -18,7 +18,10 @@ let duel = false;
 export function modeDuel(oui) { duel = !!oui; }
 // Réglages des chocs entre toupies : perte de rotation de la cible par contact, en part de sa rotation de départ.
 // Visé : 6 à 12 contacts par duel, et l'arrêt d'une toupie après 8 à 20 s.
-export const CHOC = { parLames: 0.007, parVitesse: 0.03, attraction: 0.7, poussee: 0.12, delai: 0.15, rebond: 0.5, usureDuel: 0.55 };
+// Pertes en tr/min ABSOLUS (référence : 600 tr/min) : une toupie qui tourne plus vite (Puissance) encaisse plus de chocs.
+// parVitesse porte sur la vitesse d'approche de l'ATTAQUANT : celui qui charge fait plus mal.
+// Mesures visées : ~4-6 % de barre par choc, plus de la moitié de la chute due aux chocs, 10-15 contacts, 10-20 s.
+export const CHOC = { ref: 600, base: 0.01, parLames: 0.03, parVitesse: 0.12, attraction: 0.7, poussee: 0.12, delai: 0.2, rebond: 0.5, usureDuel: 0.3 };
 
 export function creerToupieJeu(equipe, achats, camp, nivPieces = {}, { duel = false } = {}) {
   const s = statsToupie(equipe, achats, nivPieces);
@@ -132,6 +135,8 @@ function frapperCafard(t, c, degats, cb, depuisEclair = false) {
 
 // cb : { touche(cafard, toupie, degats, crit), tue(cafard, toupie, crit), choc(a, b, perte, bloque), mur(toupie), chute(toupie), eclair(cafard) }
 export function majToupies(dt, cb) {
+  // En duel, l'usure ne commence que quand les DEUX camps ont lancé : l'ordre de lancer ne décide pas du duel
+  const usureActive = !duel || new Set(toupies.filter(t => t.lancee).map(t => t.camp)).size > 1;
   for (const t of toupies) {
     if (!t.lancee) continue;
     if (t.tombe) { animerChute(t, dt); continue; }
@@ -142,12 +147,14 @@ export function majToupies(dt, cb) {
     t.errance += t.erranceVit * dt;
     let ax = Math.cos(t.errance) * s.derive * ratio, az = Math.sin(t.errance) * s.derive * ratio;
 
-    // Agressivité : attirée par la cible la plus proche (cafard ou toupie adverse)
-    if (s.attraction) {
+    // Agressivité : attirée par la cible la plus proche (cafard ou toupie adverse). Toute toupie a un petit flair de base
+    // pour les cafards (moins de temps morts dans un coin).
+    if (s.attraction || !duel) {
       let best = null, bd = 0.5;
       for (const c of cafards) if (!c.mort && c.chute <= 0) { const d = Math.hypot(c.x - t.x, c.z - t.z); if (d < bd) { bd = d; best = c; } }
       for (const o of toupies) if (o.camp !== t.camp && enJeu(o)) { const d = Math.hypot(o.x - t.x, o.z - t.z); if (d < bd) { bd = d; best = o; } }
-      if (best) { ax += ((best.x - t.x) / bd) * s.attraction * ratio; az += ((best.z - t.z) / bd) * s.attraction * ratio; }
+      const att = s.attraction + (duel ? 0 : 0.06);
+      if (best) { ax += ((best.x - t.x) / bd) * att * ratio; az += ((best.z - t.z) / bd) * att * ratio; }
     }
     // Duel : légère attraction vers la toupie adverse la plus proche
     if (duel) {
@@ -205,7 +212,7 @@ export function majToupies(dt, cb) {
       if (d >= min + 0.004) continue;
       if (c.coup <= 0) {
         c.coup = 0.12;
-        t.rotation -= t.rotationMax * 0.004 * s.inertie * 3; // frapper coûte un peu de rotation (moins avec l'Inertie)
+        t.rotation -= CHOC.ref * 0.012 * s.inertie; // frapper coûte un peu de rotation, en tr/min absolus (moins avec l'Inertie)
         frapperCafard(t, c, DEGATS_BASE * s.lames * elan * (0.9 + Math.random() * 0.2), cb);
       }
       if (d > 0 && d < min) { // on se sépare et on se repousse
@@ -228,8 +235,10 @@ export function majToupies(dt, cb) {
     }
 
     // Usure de la rotation (Endurance) et fatigue au-delà de 25 s : un lancer ne traîne jamais
-    t.age += dt;
-    t.rotation -= t.rotation * s.usure * (duel ? CHOC.usureDuel : 1) * dt;
+    if (usureActive) {
+      t.age += dt;
+      t.rotation -= t.rotation * s.usure * (duel ? CHOC.usureDuel : 1) * dt;
+    }
     if (t.age > 25) t.rotation -= t.rotation * 0.08 * (t.age - 25) * dt;
     if (t.rotation < t.rotationMax * s.seuilChute) { t.tombe = 0.001; cb.chute?.(t); }
   }
@@ -276,8 +285,10 @@ export function majToupies(dt, cb) {
     // Les deux toupies tournent dans le même sens : au contact, elles se repoussent sur le côté (ça « grince »)
     const k = CHOC.poussee * Math.min(a.rotation / a.rotationMax, b.rotation / b.rotationMax);
     a.vx += -nz * k; a.vz += nx * k; b.vx -= -nz * k; b.vz -= nx * k;
-    frapperToupie(a, b, Math.abs(vrel), cb);
-    frapperToupie(b, a, Math.abs(vrel), cb);
+    const contact = { x: (a.x + b.x) / 2, z: (a.z + b.z) / 2 };
+    frapperToupie(a, b, Math.max(0, a.vx * nx + a.vz * nz), cb, contact);
+    frapperToupie(b, a, Math.max(0, -(b.vx * nx + b.vz * nz)), cb, contact);
+    a.flash = b.flash = 1;
   }
 
   // Affichage
@@ -291,25 +302,29 @@ export function majToupies(dt, cb) {
     const penche = Math.min(0.5, (1 - ratio) * 0.06 / t.s.seuilChute);
     t.mesh.inclinaison.rotation.set(Math.cos(t.precession) * penche, 0, Math.sin(t.precession) * penche);
     t.mesh.rotor.traverse(o => { if (o.userData.gyro) o.rotation.z += dt * 9; });
+    // Flash d'impact : la toupie « gonfle » un instant
+    t.flash = Math.max(0, (t.flash || 0) - dt * 7);
+    const g = 1 + 0.18 * t.flash;
+    t.mesh.racine.scale.set(t.echelle * g, g, t.echelle * g);
   }
 }
 
 // Une toupie en frappe une autre : la cible perd de la rotation (moins avec l'Inertie, plus si l'attaquant est lourd)
-function frapperToupie(att, cible, vrel, cb) {
-  let frac = (CHOC.parLames * att.s.lames + CHOC.parVitesse * vrel) * (2 * att.s.masse / (att.s.masse + cible.s.masse)) * cible.s.inertie
-    * (0.5 + 0.5 * att.rotation / att.rotationMax);
+// approche : vitesse à laquelle l'attaquant fonce sur la cible (m/s)
+function frapperToupie(att, cible, approche, cb, contact) {
+  let perte = CHOC.ref * (CHOC.base + CHOC.parLames * att.s.lames + CHOC.parVitesse * approche)
+    * (2 * att.s.masse / (att.s.masse + cible.s.masse)) * cible.s.inertie * (0.5 + 0.5 * att.rotation / att.rotationMax);
   let crit = false;
-  if (att.s.crit && Math.random() < att.s.crit * 0.5) { frac *= 1.5; crit = true; } // critiques moins forts en duel
-  const perte = frac * cible.rotationMax;
-  if (cible.carapace && frac > 0.04) { cible.carapace = false; cb.choc?.(att, cible, 0, true, false); return; }
+  if (att.s.crit && Math.random() < att.s.crit * 0.5) { perte *= 1.5; crit = true; } // critiques moins forts en duel
+  if (cible.carapace && perte / cible.rotationMax > 0.04) { cible.carapace = false; cb.choc?.(att, cible, 0, true, false, contact); return; }
   cible.rotation -= perte;
-  cb.choc?.(att, cible, perte, false, crit);
+  cb.choc?.(att, cible, perte, false, crit, contact);
 }
 
 function animerChute(t, dt) {
   t.tombe += dt;
-  const k = Math.min(1, t.tombe / 0.5);
-  t.mesh.inclinaison.rotation.x = k * 1.35;
+  const k = Math.min(1, t.tombe / 0.9); // chute plus longue : on la voit
+  t.mesh.inclinaison.rotation.x = k * k * 1.45;
   t.mesh.racine.position.y = k * 0.01;
   t.vx *= 0.9; t.vz *= 0.9;
 }
