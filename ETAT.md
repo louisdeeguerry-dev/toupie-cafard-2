@@ -57,7 +57,17 @@
 ## Dernières mesures
 - **Duels** : environ 13 contacts et 13 s ; à toupies identiques, 7 victoires sur 12 (équitable).
 - **Cafards** : environ 3,6 écrasés par lancer (robot qui vise bien).
-- **Équilibrage par stratégie** (5 parties chacune, version avant la refonte de l'atelier) : *en cours, à reporter ici*.
+- **Équilibrage par stratégie** (25/11, 5 parties chacune, bots réalistes, plateau rond, boutique à offres) :
+
+  | Stratégie | Places | Place moyenne | Top 4 | Cafards par lancer, étapes 1 / 2 / 3 / 4+ | Duels gagnés |
+  |---|---|---|---|---|---|
+  | Sacrifice (économie + duels perdus exprès) | 4, 5, 5, 6, 6 | 5,2 | 1/5 | 4,5 / 3,9 / 3,2 / 3,3 | 7/13 |
+  | Économie d'abord | 4, 4, 4, 4, 7 | 4,6 | 4/5 | 4,1 / 2,6 / 3,1 / 3,3 | 8/14 |
+  | Mixte | 2, 4, 4, 4, 5 | 3,8 | 4/5 | 4,3 / 4,0 / 3,9 / 4,3 | 14/18 |
+  | Puissance | 3, 3, 3, 5, 6 | 4,0 | 3/5 | 4,8 / 4,0 / 3,9 / 3,8 | 13/17 |
+
+  → **Le sacrifice est maintenant clairement puni**, et le mixte comme la puissance font mieux. Les bots sont plus coriaces
+  (aucune 1re place pour le robot). Les cafards restent tuables à toutes les étapes (environ 4 par lancer).
 
 ## Prochaines étapes possibles
 - Faire jouer Louis à l'atelier refait, puis affiner la vitesse et les zooms.
