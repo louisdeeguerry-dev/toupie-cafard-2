@@ -7,7 +7,7 @@ for (const p of PIECES) for (let k = 1; k <= NIVEAU_PIECE_MAX; k++) {
   const n = Object.entries(niveauxPiece(p, k)).map(([s, v]) => v * (POIDS_EQUILIBRAGE[s] || 1));
   const somme = n.reduce((a, v) => a + v, 0), bonus = n.filter(v => v > 0).reduce((a, v) => a + v, 0);
   // niveau 1 : équilibre exact ; niveaux suivants : seuls les arrondis peuvent créer un petit écart
-  if (k === 1 ? somme !== 0 : Math.abs(somme) > Math.max(1, 0.25 * bonus)) { console.log(`✗ ${p.id} niv ${k} : somme ${somme}`); erreurs++; }
+  if (Math.abs(somme) > 0.05) { console.log(`✗ ${p.id} niv ${k} : somme ${somme}`); erreurs++; }
 }
 // Toutes les stats doivent être exploitables : chaque stat est un BONUS d'au moins une pièce
 import { STATS } from '../src/stats.js';

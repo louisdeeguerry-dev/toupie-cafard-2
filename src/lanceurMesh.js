@@ -169,3 +169,9 @@ export function animerLanceur(l, dt, charge, actif) {
   l.parts.poignee.position.z = NZ1 + 0.02 * charge;
   l.voyants.forEach((m, i) => { m.emissiveIntensity = charge > i / 4 ? 1.4 : 0.1; });
 }
+
+// Un engrenage ou un ressort seul (écran d'inspection)
+export function creerPieceLanceur(id) {
+  const p = PIECE[id];
+  return p.slot === 'engrenage' ? engrenage(p) : ressort(p);
+}

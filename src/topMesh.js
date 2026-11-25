@@ -247,3 +247,12 @@ export function libererToupie(t) {
   t.racine.traverse(o => { if (o.isMesh) { o.geometry.dispose(); o.material.dispose(); } });
   t.racine.removeFromParent();
 }
+
+// Une seule pièce de toupie, centrée (écran d'inspection de la collection / de l'atelier)
+export function creerPieceToupie(id) {
+  const p = PIECE[id], g = new THREE.Group();
+  const part = p.slot === 'pointe' ? pointe(p).g : p.slot === 'base' ? base(p, 0).g : p.slot === 'couronne' ? couronne(p, 0).g : ame(p, 0).g;
+  g.add(part);
+  g.traverse(o => { if (o.isMesh) o.castShadow = true; });
+  return g;
+}

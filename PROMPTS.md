@@ -454,3 +454,15 @@ cliquer sur une pièce ouvre ses choix, et seul « Retour » ramène aux autres 
 **Réalisé** : sortie d'une seule pièce (mouvement à ressort, elle se dévisse, toupie arrêtée face caméra) ; barres de
 stats compactes ; écrans Menu, Boutique (boîtes), Collection (pièces et terrains, manquants en « ??? ») ; liste des pièces
 avec bouton Retour. Testé (3 captures, 0 erreur).
+
+---
+
+## 2026-11-25 — Ambiance des menus, atelier pivotable, pièces adoucies, inspection des pièces
+
+**Prompt optimisé** : menus agréables (fond, lumières vives, musique d'ambiance) ; atelier avec zoom plus serré, pivot et
+zoom libres ; pièces moins radicales au niveau 1 ; effets en unités réelles (%, g…) ; collection : une pièce cliquée grandit
+au centre (pivot, zoom), fond flou, panneau d'effets avec onglets de niveau, retour par ← ou clic sur le fond ; même
+panneau dans l'atelier.
+**Réalisé** : décor animé (ciel, projecteurs, poussières) + musique lo-fi générée (🔊) ; contrôles glisser/molette/pincement ;
+`FORCE_PIECES` 0,6 ; `effet()` en unités réelles ; `src/inspecteur.js` (collection + 🔍 dans l'atelier, bouton Équiper).
+Testé : 0 erreur.

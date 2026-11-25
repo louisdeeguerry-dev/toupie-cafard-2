@@ -3,13 +3,14 @@ import { SLOTS, PIECES, PIECE, RARETES, tirerBoite, niveauxPiece, multiplicateur
 import { TERRAINS, TERRAIN } from './data/terrains.js';
 import { STAT_ACHATS, PRIORITE, MANCHE_PRIORITE } from './data/boutique.js';
 import { PARTIE } from './config.js';
-import { STATS, STAT, GROUPES, niveauxToupie, calculer as calcul, tempsRotation } from './stats.js';
+import { STATS, STAT, GROUPES, niveauxToupie, calculer as calcul, tempsRotation, effet } from './stats.js';
 import { partie, etape, prixAmelio, acheter, prioriteDispo, lancerDansEtape, relancerOffres, prixRelance, interetsPrevus, niveauxAchat, mesStats as mesStatsUI } from './match.js';
 import { ECONOMIE } from './config.js';
 import { PIECE as PIECES_PAR_ID } from './data/pieces.js';
 import { TYPES } from './data/cafards.js';
 import { MODES, MONNAIE, PRIX_BOITE, rangDe, RANGS, xpPourNiveau, acheterBoite } from './progression.js';
 import { son } from './audio.js';
+import { inspecter } from './inspecteur.js';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -17,11 +18,9 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 export function montrer(id, oui = true) { $(id).classList.toggle('cache', !oui); }
 export { son };
 
+// Effets d'une pièce en unités réelles (« 💥 +7 % de chance de critique »)
 function modsHtml(niveaux) {
-  return Object.entries(niveaux).map(([k, v]) => {
-    const st = STAT[k];
-    return `<span class="mod ${v > 0 ? 'plus' : 'moins'}">${st.icone} ${st.nom} ${v > 0 ? '+' : ''}${v}</span>`;
-  }).join('');
+  return Object.entries(niveaux).map(([k, v]) => `<span class="mod ${v > 0 ? 'plus' : 'moins'}" title="${STAT[k].nom}">${STAT[k].icone} ${esc(effet(k, v))}</span>`).join('');
 }
 
 function carteHtml(p, k = 1) {
@@ -80,7 +79,8 @@ export function creerAtelier(save, { onChange, onJouer, onBoite, onSelection = (
         `<span class="chip ${n === k ? 'on' : ''}" data-piece="${p.id}" data-niv="${n}" title="Tout ×${multiplicateurNiveau(n)}">${n}</span>`).join('')}
         <span class="petit">(${save.collection[p.id]} exemplaires — tout ×${multiplicateurNiveau(k)})</span></div>`
         : `<div class="petit">1 exemplaire — un doublon débloque le niveau 2</div>`;
-      return `<div class="carte ${eq[slotChoisi] === p.id ? 'equipee' : ''}" data-piece="${p.id}" data-niv="${k}">${carteHtml(p, k)}${chips}</div>`;
+      return `<div class="carte ${eq[slotChoisi] === p.id ? 'equipee' : ''}" data-piece="${p.id}" data-niv="${k}">${carteHtml(p, k)}${chips}
+        <button class="loupe" data-inspecter="${p.id}" title="Voir la pièce en grand">🔍</button></div>`;
     }).join('');
     rendreStats();
     $('bilanCollection').textContent = `${Object.keys(save.collection).length}/${PIECES.length} pièces`;
@@ -146,6 +146,8 @@ export function creerAtelier(save, { onChange, onJouer, onBoite, onSelection = (
     rendre(); onSelection(onglet, slotChoisi);
   });
   $('choix').addEventListener('click', e => {
+    const loupe = e.target.closest('[data-inspecter]');
+    if (loupe) return inspecter(loupe.dataset.inspecter, { save, onEquiper: (id, k) => equiper(id, k) });
     if (e.target.closest('.retour-piece')) { // on referme : la pièce revient, on revoit tous les emplacements
       slotChoisi = null; apercu = null;
       son('toc', { volume: 0.45, hauteur: 0.9 });
@@ -183,13 +185,21 @@ export function creerAtelier(save, { onChange, onJouer, onBoite, onSelection = (
 }
 
 // ---------------------------------------------------------------- Collection : tout ce qu'on possède (et ce qui manque)
+let collectionBranchee = false;
 export function rendreCollection(save) {
+  if (!collectionBranchee) {
+    collectionBranchee = true;
+    $('collectionContenu').addEventListener('click', e => {
+      const c = e.target.closest('[data-inspecter]');
+      if (c) inspecter(c.dataset.inspecter, { save });
+    });
+  }
   const possede = PIECES.filter(p => save.collection[p.id]).length;
   $('collectionTotal').textContent = `${possede}/${PIECES.length} pièces · ${save.terrains.length}/${TERRAINS.filter(t => t.rarete).length} terrains`;
   $('collectionContenu').innerHTML = SLOTS.map(sl => `<div class="col-groupe"><h3>${sl.icone} ${sl.nom}</h3><div class="col-grille">` +
     PIECES.filter(p => p.slot === sl.id).map(p => {
       const n = save.collection[p.id] || 0, r = RARETES[p.rarete];
-      return `<div class="col-carte ${n ? '' : 'manque'}" title="${esc(p.desc)}" style="border-color:${n ? r.couleur + '88' : ''}">
+      return `<div class="col-carte ${n ? '' : 'manque'}" ${n ? `data-inspecter="${p.id}"` : ''} title="${esc(p.desc)}" style="border-color:${n ? r.couleur + '88' : ''}">
         <span class="rar" style="color:${r.couleur}">${r.nom}</span><b>${n ? esc(p.nom) : '???'}</b>
         ${n ? `<span class="petit">×${n}${n > 1 ? ` · jusqu'au niveau ${Math.min(NIVEAU_PIECE_MAX, n)}` : ''}</span>` : '<span class="petit">à trouver</span>'}</div>`;
     }).join('') + '</div></div>').join('') +

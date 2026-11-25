@@ -30,9 +30,11 @@ export const RARETES = {
 export const NIVEAU_PIECE_MAX = 5;
 export const POIDS_EQUILIBRAGE = { multi: 14 };
 export const multiplicateurNiveau = k => 1 + 0.5 * (Math.max(1, k) - 1);
+// Les pièces agissent en douceur : leurs niveaux sont ×0,6 (sans arrondi : bonus et malus restent exactement équilibrés)
+export const FORCE_PIECES = 0.6;
 export function niveauxPiece(p, k = 1) {
-  const m = multiplicateurNiveau(k), r = {};
-  for (const [s, v] of Object.entries(p.niveaux)) r[s] = Math.sign(v) * Math.round(Math.abs(v) * m);
+  const m = multiplicateurNiveau(k) * FORCE_PIECES, r = {};
+  for (const [s, v] of Object.entries(p.niveaux)) r[s] = Math.round(v * m * 100) / 100;
   return r;
 }
 

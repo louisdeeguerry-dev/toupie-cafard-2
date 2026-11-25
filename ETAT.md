@@ -35,7 +35,17 @@
   - quand on clique sur une pièce, **seule cette pièce sort** en se dévissant, avec un petit rebond, et la caméra zoome dessus ;
   - la liste des pièces remplace les emplacements jusqu'au bouton « Retour » ;
   - les stats s'affichent en **barres qui se remplissent**, avec la valeur au survol ;
-  - nouveau lanceur 3D inspiré du jeu 1 (engrenage et ressort visibles).
+  - nouveau lanceur 3D inspiré du jeu 1 (engrenage et ressort visibles) ;
+  - **glisser pour pivoter, molette ou pincement pour zoomer**, avec un zoom serré sur la pièce choisie ;
+  - 🔍 sur chaque pièce ouvre l'**écran d'inspection**.
+- **Écran d'inspection** (Collection et atelier) :
+  - la pièce grandit au centre, le fond est flou, on peut la faire pivoter et zoomer ;
+  - onglets Niv 1 à 5 avec les effets en unités réelles ; bouton « Équiper » dans l'atelier ;
+  - on revient avec ← ou un clic sur le fond.
+- **Ambiance des menus** : ciel dégradé, 3 projecteurs colorés qui tournent, poussières lumineuses,
+  musique lo-fi générée à la volée (bouton 🔊 dans le menu).
+- **Pièces adoucies** : niveaux ×0,6 (`FORCE_PIECES` dans `src/data/pieces.js`) ; les effets sont affichés en unités réelles
+  (« +7 % de chance de critique », « −5 g »).
 
 ## Où est quoi
 | Sujet | Fichier |

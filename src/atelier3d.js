@@ -8,6 +8,69 @@ import { creerLanceur, libererLanceur } from './lanceurMesh.js';
 
 const R = 0.2; // rayon de la mini-arène
 
+// ---------------------------------------------------------------- Décor du menu : ciel dégradé, lumières colorées, poussières lumineuses
+const ciel = new THREE.Mesh(new THREE.SphereGeometry(6, 32, 16), new THREE.ShaderMaterial({
+  side: THREE.BackSide, depthWrite: false,
+  uniforms: { haut: { value: new THREE.Color(0x2b1d5c) }, milieu: { value: new THREE.Color(0xb4532a) }, bas: { value: new THREE.Color(0x24130a) } },
+  vertexShader: 'varying vec3 p; void main(){ p = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: 'uniform vec3 haut, milieu, bas; varying vec3 p; void main(){ float h = p.y; vec3 c = h > 0.0 ? mix(milieu, haut, smoothstep(0.0, 0.6, h)) : mix(milieu, bas, smoothstep(0.0, 0.35, -h)); gl_FragColor = vec4(c, 1.0); }',
+}));
+vitrine.add(ciel);
+vitrine.background = null;
+const projecteurs = [0xff8a3d, 0x3dc8ff, 0xff4fa3].map((c, i) => {
+  const l = new THREE.PointLight(c, 1.4, 1.6);
+  l.userData.phase = (i / 3) * Math.PI * 2;
+  vitrine.add(l);
+  return l;
+});
+const poussieres = [];
+const poussiereGeo = new THREE.SphereGeometry(1, 6, 4);
+for (let i = 0; i < 70; i++) {
+  const m = new THREE.Mesh(poussiereGeo, new THREE.MeshBasicMaterial({ color: [0xffd28a, 0x9fe0ff, 0xffa6d2][i % 3], transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false }));
+  m.scale.setScalar(0.002 + Math.random() * 0.004);
+  m.position.set((Math.random() - 0.5) * 1.6, Math.random() * 0.8 - 0.1, (Math.random() - 0.5) * 1.2 - 0.2);
+  m.userData.v = 0.01 + Math.random() * 0.03;
+  vitrine.add(m);
+  poussieres.push(m);
+}
+function majDecor(dt, t) {
+  for (const l of projecteurs) {
+    const a = t * 0.4 + l.userData.phase;
+    l.position.set(Math.cos(a) * 0.45, 0.25 + Math.sin(t * 0.7 + l.userData.phase) * 0.08, Math.sin(a) * 0.45);
+  }
+  for (const m of poussieres) {
+    m.position.y += m.userData.v * dt;
+    m.position.x += Math.sin(t + m.userData.v * 100) * 0.002 * dt;
+    if (m.position.y > 0.7) m.position.y = -0.1;
+  }
+}
+
+// ---------------------------------------------------------------- Contrôles : glisser = pivoter, molette / pincement = zoomer
+const vue = { yaw: 0, pitch: 0, zoom: 1, actif: false };
+const doigts = new Map();
+export function controlesActifs(oui) { vue.actif = oui; }
+export function initControles(canvas) {
+  canvas.addEventListener('pointerdown', e => { if (vue.actif) doigts.set(e.pointerId, { x: e.clientX, y: e.clientY }); });
+  canvas.addEventListener('pointermove', e => {
+    const a = doigts.get(e.pointerId);
+    if (!a || !vue.actif) return;
+    if (doigts.size === 2) {
+      const [p1, p2] = [...doigts.values()], d0 = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+      a.x = e.clientX; a.y = e.clientY;
+      const [q1, q2] = [...doigts.values()];
+      vue.zoom = Math.max(0.45, Math.min(2.2, vue.zoom * Math.hypot(q1.x - q2.x, q1.y - q2.y) / Math.max(1, d0)));
+      return;
+    }
+    vue.yaw -= (e.clientX - a.x) * 0.008;
+    vue.pitch = Math.max(-0.5, Math.min(0.9, vue.pitch + (e.clientY - a.y) * 0.006));
+    a.x = e.clientX; a.y = e.clientY;
+  });
+  const lacher = e => doigts.delete(e.pointerId);
+  canvas.addEventListener('pointerup', lacher);
+  canvas.addEventListener('pointercancel', lacher);
+  canvas.addEventListener('wheel', e => { if (!vue.actif) return; e.preventDefault(); vue.zoom = Math.max(0.45, Math.min(2.2, vue.zoom * Math.exp(e.deltaY * 0.0012))); }, { passive: false });
+}
+
 // ---------------------------------------------------------------- Mini-arène (couleur du rebord = terrain choisi)
 const bois = new THREE.MeshStandardMaterial({ color: 0x8a5a32, roughness: 0.45 });
 const arene = new THREE.Group();
@@ -79,7 +142,7 @@ const v = new THREE.Vector3();
 // mais on garde toute la vue éclatée autour
 function cibleDe(parts, slot, echelle, decalVue, centre) {
   parts[slot].getWorldPosition(v);
-  const cible = v.clone().lerp(centre, 0.25);
+  const cible = v.clone().lerp(centre, 0.15);
   return { cible, pos: cible.clone().add(new THREE.Vector3(...decalVue).multiplyScalar(echelle / 1.5)) };
 }
 
@@ -132,13 +195,19 @@ export function majAtelier(dt, t) {
   let pos, cible;
   if (etat.onglet === 'terrain') { pos = new THREE.Vector3(0, 0.34, 0.38); cible = new THREE.Vector3(0, 0, 0); }
   // Zoom : la pièce choisie au centre, mais assez de recul pour voir toute la vue éclatée
-  else if (eclateT) ({ pos, cible } = cibleDe(T.parts, etat.slot, ECHELLE_T, [0.07, 0.06, 0.42], new THREE.Vector3(0, T.racine.position.y + 0.02, 0)));
+  else if (eclateT) ({ pos, cible } = cibleDe(T.parts, etat.slot, ECHELLE_T, [0.05, 0.045, 0.28], new THREE.Vector3(0, T.racine.position.y + 0.02, 0)));
   else if (eclateL) ({ pos, cible } = cibleDe(L.parts, etat.slot, ECHELLE_L, etat.slot === 'engrenage' ? [0.1, 0.2, 0.36] : [0.18, 0.14, 0.36],
     new THREE.Vector3(0, L.racine.position.y + 0.08, 0.02)));
   else if (etat.onglet === 'lanceur') { pos = new THREE.Vector3(0.2, 0.3, 0.58); cible = new THREE.Vector3(0, 0.06, 0); }
   else { pos = new THREE.Vector3(0, 0.12, 0.42); cible = new THREE.Vector3(0, 0.045, 0); }
   const kc = 1 - Math.exp(-4 * dt);
   camPos.lerp(pos, kc); camCible.lerp(cible, kc);
-  vitrineCam.position.copy(camPos);
+  // Pivot et zoom choisis par le joueur, autour du point visé
+  const rel = camPos.clone().sub(camCible).multiplyScalar(vue.zoom);
+  rel.applyAxisAngle(new THREE.Vector3(0, 1, 0), vue.yaw);
+  const axe = new THREE.Vector3(rel.z, 0, -rel.x).normalize();
+  if (axe.lengthSq()) rel.applyAxisAngle(axe, -vue.pitch * 0.6);
+  vitrineCam.position.copy(camCible).add(rel);
   vitrineCam.lookAt(camCible);
+  majDecor(dt, t);
 }

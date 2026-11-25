@@ -1,13 +1,13 @@
 // Point d'entrée : relie l'atelier, la partie et la boucle de rendu.
 import { renderer, scene, camera, vitrine, vitrineCam } from './scene.js';
-import { majModeles, selection as selectionAtelier, majAtelier, terrainVitrine } from './atelier3d.js';
+import { majModeles, selection as selectionAtelier, majAtelier, terrainVitrine, initControles, controlesActifs } from './atelier3d.js';
 import { charger, sauver, reinitialiser } from './save.js';
 import { lanceur, majLanceur, lancerDirect, modeleLanceur } from './launcher.js';
 import { lancerDansEtape, capacite } from './match.js';
 import { partie, nouvellePartie, commencerManche, majPartie, brancherInterface, lancer, abandonner, acheter, _interne } from './match.js';
 import { majFx, majBarres, majEtincelles, facteurTemps } from './fx.js';
 import { majCamera } from './scene.js';
-import { activerAudio, ronron } from './audio.js';
+import { activerAudio, ronron, musique, basculerMusique, musiqueActive } from './audio.js';
 import * as UI from './ui.js';
 import { VERSION } from './config.js';
 import { recompenser } from './progression.js';
@@ -35,8 +35,10 @@ majVitrine();
 
 // ---------------------------------------------------------------- Écrans hors partie : menu, atelier, boutique, collection
 const ECRANS = ['menu', 'atelier', 'boutiqueMeta', 'collection'];
+initControles(renderer.domElement);
 function allerA(ecran) {
   for (const e of ECRANS) UI.montrer(e, e === ecran);
+  controlesActifs(ecran === 'atelier'); // dans l'atelier : glisser pour pivoter, molette pour zoomer
   if (ecran === 'collection') UI.rendreCollection(save);
   if (ecran !== 'atelier') selectionAtelier('toupie', null); // hors atelier : la toupie tourne, montée
   else { const et = atelier.etat(); selectionAtelier(et.onglet, et.slot); }
@@ -60,6 +62,7 @@ function demarrer() {
   nouvellePartie({ ...save.equipe }, { mode: save.mode, nivPieces: { ...save.niveauxPieces }, terrain: save.terrain });
   modeleLanceur(save.equipe);
   for (const e of ECRANS) UI.montrer(e, false);
+  controlesActifs(false);
   UI.rechercher(partie.joueurs.map(j => j.nom), save.mode, () => {
     mode = 'partie';
     UI.montrer('hud');
@@ -115,7 +118,10 @@ document.getElementById('quitter').addEventListener('click', () => {
   if (confirmerQuitter()) retourAtelier();
 });
 function confirmerQuitter() { return window.__tc2?.sansConfirmation || window.confirm('Quitter la partie ? Elle sera perdue.'); }
-document.addEventListener('pointerdown', activerAudio, { once: true });
+document.addEventListener('pointerdown', () => { activerAudio(); musique(); }, { once: true });
+const btnMusique = document.getElementById('btnMusique');
+btnMusique.textContent = musiqueActive ? '🔊 Musique' : '🔇 Musique';
+btnMusique.addEventListener('click', e => { e.stopPropagation(); activerAudio(); btnMusique.textContent = basculerMusique() ? '🔊 Musique' : '🔇 Musique'; });
 
 // ---------------------------------------------------------------- Boucle
 let avant = performance.now(), t = 0;

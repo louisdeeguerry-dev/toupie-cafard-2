@@ -128,3 +128,32 @@ export function puissance(equipe, achats = {}, nivPieces = {}) {
   const n = niveauxToupie(equipe, achats, nivPieces);
   return 40 + Object.entries(n).reduce((a, [k, v]) => a + v * (STAT[k]?.special ? 1.3 : 1), 0);
 }
+
+// Effet d'un nombre de niveaux sur une stat, en unités réelles et signé (« +7 % de chance », « −5 g »)
+const sg = x => (x >= 0 ? '+' : '−') + Math.abs(x);
+export function effet(id, n) {
+  const a = calculer({}), b = calculer({ [id]: n });
+  const r1 = x => Math.round(x * 10) / 10, r0 = Math.round;
+  switch (id) {
+    case 'endurance': return `${sg(r1(tempsRotation(b) - tempsRotation(a)))} s de rotation`;
+    case 'diametre': return `${sg(r1((b.rayon - a.rayon) * 200))} cm de diamètre`;
+    case 'poids': return `${sg(r0(b.masse - a.masse))} g`;
+    case 'glisse': return `${sg(r0((b.derive / b.frottement - a.derive / a.frottement) * 100))} cm/s de balade`;
+    case 'lames': return `${sg(r0((b.lames / a.lames - 1) * 100))} % de dégâts`;
+    case 'inertie': return `${sg(r0((b.inertie - a.inertie) * 100))} % de perte au choc`;
+    case 'equilibre': return `tombe sous ${r0(b.seuilChute * 100)} % (au lieu de ${r0(a.seuilChute * 100)} %)`;
+    case 'rebond': return `${sg(r0((b.rebond - a.rebond) * 100))} % de vitesse gardée aux bords`;
+    case 'agressivite': return `${sg(r1(b.attraction))} d'attraction vers les cibles`;
+    case 'critique': return `${sg(r0(b.crit * 100))} % de chance de critique`;
+    case 'puissance': return `${sg(r0(b.tours - a.tours))} tr/min`;
+    case 'elan': return `${sg(r0((b.vitesse - a.vitesse) * 100))} cm/s d'élan`;
+    case 'precision': return `${sg(r0((b.parfait - a.parfait) * 100))} % de zone PARFAIT`;
+    case 'multi': return `${sg(b.toupies - a.toupies)} toupie par lancer`;
+    case 'nid': return `${sg(b.nid - a.nid)} cafards sur le bureau`;
+    case 'prime': return `${sg(r0((b.prime - 1) * 100))} % d'argent par cafard`;
+    case 'chance': return `${r0(b.chanceDore * 100)} % de cafards dorés`;
+    case 'combo': return `${sg(r0((b.comboBonus - a.comboBonus) * 100))} % par cafard en combo`;
+    case 'tirelire': return `${sg(b.interetMax - a.interetMax)} 💰 d'intérêts max`;
+    default: return STAT[id].fmt(b); // pouvoirs (feu, souffle, éclairs, tourbillon) : la valeur obtenue
+  }
+}
