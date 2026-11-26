@@ -20,7 +20,7 @@ export const PARTIE = {
   // Une étape = 3 LANCERS contre les cafards (un lancer par manche, boutique entre chaque), puis 1 duel.
   cycle: ['cafards', 'cafards', 'cafards', 'duel'],
   // Vies perdues lors d'un duel perdu = numéro de l'étape : la partie se resserre vite.
-  degatsDuel: etape => etape,
+  degatsDuel: etape => Math.min(3, etape), // un duel perdu coûte cher, mais au plus 3 vies (sinon 2 défaites suffisaient)
   // Argent de départ : choisir un terrain de duel coûte tout l'argent de départ (à équilibrer)
   argentSansTerrain: 8,
   argentAvecTerrain: 0,
@@ -39,7 +39,9 @@ export const CAFARDS = {
 
 // Boutique : nombre d'offres tirées au hasard à chaque manche (0 = tout afficher) et prix pour relancer
 // La relance coûte de plus en plus cher dans une même boutique (2, 3, 5, 7, 10…), puis redevient à 2 à la manche suivante.
-export const BOUTIQUE = { offres: 4, relance: n => Math.round(2 * Math.pow(1.5, n)) };
+// Relance : 1, 2, 3, 5, 8, 13… 💰 (suite de Fibonacci) ; elle repart à zéro à chaque manche
+const fibo = n => { let a = 1, b = 2; for (let i = 0; i < n; i++) [a, b] = [b, a + b]; return a; };
+export const BOUTIQUE = { offres: 4, relance: fibo };
 
 // Rareté des offres de la boutique : MÊME PRIX, mais plus de niveaux gagnés (effet ×1,5 / ×2 / ×3).
 // La stat « Chance » (🎲) rend les raretés hautes plus fréquentes.

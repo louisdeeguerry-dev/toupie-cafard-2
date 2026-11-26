@@ -7,7 +7,7 @@
 - **Jeu de toupies en ligne façon auto-battler** (TFT) avec un côté **gacha / deck-building** (SPAM). Partie à **8 joueurs**
   (bots pour l'instant), **5 vies**, **plateau rond**.
 - **Étape** = **3 lancers contre les cafards** (le bureau est rempli à 10 + Nid avant chaque lancer, les survivants restent),
-  puis **1 duel**. La boutique est ouverte entre chaque manche. Un duel perdu coûte autant de vies que le numéro de l'étape ;
+  puis **1 duel**. La boutique est ouverte entre chaque manche. Un duel perdu coûte autant de vies que le numéro de l'étape, au plus 3 ;
   un duel ne rapporte ni ne coûte d'argent.
 - **Duel** : il n'y a pas de vie ; chaque choc fait perdre de la rotation, et **la première toupie arrêtée perd**.
   L'usure ne démarre qu'une fois les deux toupies lancées.
@@ -19,7 +19,8 @@
 - **Stats** : celles du jeu 1 (toupie, lanceur) et le bureau (Nid, Prime, Trèfle, Combo, Tirelire).
 - **Boutique** :
   - 6 offres au hasard, achetées par paquets de +3 niveaux ;
-  - relance de plus en plus chère (2, 3, 5, 7… 💰) ;
+  - 4 offres au hasard, avec une rareté (commune, rare ×1,5, épique ×2, légendaire ×3, même prix) que la stat Chance 🎲 améliore ; un achat relance les offres ;
+  - relance de plus en plus chère (1, 2, 3, 5, 8… 💰) ;
   - intérêts : +1 💰 par tranche de 5 💰 gardés, plafonné par la Tirelire.
 - **Terrains de duel** :
   - rebondissant, collant ou cuve ; ce sont des lots légendaires des boîtes, sans doublon ;
