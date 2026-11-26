@@ -486,3 +486,12 @@ plus grand autour de la pièce choisie, et la caméra zoome dessus.
 **Réalisé** : `eclatementAxeL()` le long de l'axe de lancer (plot → engrenage → corps → ressort → poignée ; 2 cm entre
 voisines, 5,5 cm autour de la pièce choisie), lanceur tourné de profil pendant l'éclaté, engrenage qui reste dans l'axe.
 Testé (0 erreur).
+
+---
+
+## 2026-11-26 — Lanceur : chaque pièce éclatée dans son propre axe
+
+**Prompt optimisé** : éclater chaque pièce du lanceur dans son axe : le ressort le long de l'axe du lanceur, l'engrenage
+selon son axe sans pivoter ; surélever le lanceur pour mieux voir.
+**Réalisé** : axe vertical (corps → engrenage → plot) et axe du lanceur (corps → ressort → poignée), écarts agrandis autour
+de la pièce choisie ; engrenage à plat et immobile ; lanceur surélevé de 15 cm ; cadrage montrant d'où sort la pièce. Testé.
