@@ -1,7 +1,7 @@
 # État du projet — Toupie Cafard 2
 
 > À lire au début de chaque session, **à la place** des longs documents. À mettre à jour à la fin de chaque session.
-> Dernière mise à jour : 2026-11-25.
+> Dernière mise à jour : 2026-11-26.
 
 ## Le jeu en bref
 - **Jeu de toupies en ligne façon auto-battler** (TFT) avec un côté **gacha / deck-building** (SPAM). Partie à **8 joueurs**
@@ -33,6 +33,7 @@
 - **Atelier** :
   - onglets Toupie / Lanceur / Terrain ;
   - quand on clique sur une pièce, **la toupie s'éclate dans son axe** (toutes les pièces s'écartent verticalement, avec un écart plus grand autour de la pièce choisie) et la caméra zoome sur cette pièce ;
+  - lanceur : vu de profil et surélevé ; le ressort sort entièrement du manche, le long de son axe, et l'engrenage descend sans pivoter ; la 3D est centrée entre les deux panneaux ;
   - la liste des pièces remplace les emplacements jusqu'au bouton « Retour » ;
   - les stats s'affichent en **barres qui se remplissent**, avec la valeur au survol ;
   - nouveau lanceur 3D inspiré du jeu 1 (engrenage et ressort visibles) ;

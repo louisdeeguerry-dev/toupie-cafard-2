@@ -118,15 +118,20 @@ function eclatementAxe(choisi) {
 // - axe du lanceur (z) : corps → ressort → poignée, vers l'arrière.
 // Petit écart entre voisines, grand écart de part et d'autre de la pièce choisie.
 const ECART_L = 0.02, ECART_L_CHOISI = 0.055;
+// Le manche fait 7,5 cm (de z = 0 à z = 0,075) : choisi, le ressort glisse ENTIÈREMENT hors du manche, par l'arrière,
+// et la poignée s'écarte encore plus loin pour le laisser passer.
+const MANCHE = 0.075;
 function eclatementAxeL(choisi) {
   const g = (a, b) => (a === choisi || b === choisi ? ECART_L_CHOISI : ECART_L);
-  const yEng = -g('corps', 'engrenage'), zRes = g('corps', 'ressort');
+  const yEng = -g('corps', 'engrenage');
+  const zRes = choisi === 'ressort' ? MANCHE + 0.015 : g('corps', 'ressort') * 0.4;
+  const zPoi = choisi === 'ressort' ? zRes + 0.02 : zRes + g('ressort', 'poignee'); // juste derrière le ressort sorti
   return {
     corps: [0, 0, 0],
     engrenage: [0, yEng, 0],
     plot: [0, yEng - g('engrenage', 'plot'), 0],
     ressort: [0, 0, zRes],
-    poignee: [0, 0, zRes + g('ressort', 'poignee')],
+    poignee: [0, 0, zPoi],
   };
 }
 
@@ -144,7 +149,11 @@ export function majModeles(equipe, slotChange = null) {
   etat.lanceur.racine.position.set(0, 0, 0.02);
   supportVitrine.add(etat.toupie.racine, etat.lanceur.racine);
   for (const [k, p] of Object.entries(etat.toupie.parts)) if (decal['t' + k]) p.position.copy(decal['t' + k]);
-  for (const [k, p] of Object.entries(etat.lanceur.parts)) if (decal['l' + k]) p.position.copy(decal['l' + k]);
+  // Les pièces du lanceur ont une position de montage (engrenage, poignée) : l'éclaté s'AJOUTE à cette position
+  for (const [k, p] of Object.entries(etat.lanceur.parts)) {
+    p.userData.base = p.position.clone();
+    if (decal['l' + k]) p.position.add(decal['l' + k]);
+  }
   if (slotChange) etat.rebond = 1; // la pièce changée « saute »
   etat.slotChange = slotChange;
   appliquerVisibilite();
@@ -172,7 +181,41 @@ function cibleDe(parts, slot, echelle, decalVue, centre, versCentre = 0.15) {
   return { cible, pos: cible.clone().add(new THREE.Vector3(...decalVue).multiplyScalar(echelle / 1.5)) };
 }
 
+// Lanceur éclaté : on vise le milieu de tout l'ensemble (un peu tiré vers la pièce choisie)
+// et on recule assez pour qu'il tienne en largeur dans la zone libre entre les deux panneaux
+const boiteL = new THREE.Box3(), tailleL = new THREE.Vector3(), DIR_L = new THREE.Vector3(0.02, 0.3, 1).normalize();
+function cadrerLanceur(L, slot) {
+  boiteL.setFromObject(L.racine);
+  const centre = boiteL.getCenter(new THREE.Vector3());
+  boiteL.getSize(tailleL);
+  boiteVisee.setFromObject(L.parts[slot]).getCenter(v);
+  const cible = centre.lerp(v, 0.25);
+  const demi = Math.tan(THREE.MathUtils.degToRad(vitrineCam.fov / 2));
+  const dLarg = (tailleL.x * 0.56) / (demi * vitrineCam.aspect * zoneLibre.part);
+  const dHaut = (tailleL.y * 0.75) / demi;
+  return { cible, pos: cible.clone().addScaledVector(DIR_L, Math.max(dLarg, dHaut, 0.12)) };
+}
+
+// Zone libre entre le panneau des stats (gauche) et celui des pièces (droite) : on y centre la 3D
+const zoneLibre = { part: 0.5, minuteur: 0 };
+function majZoneLibre(dt) {
+  if ((zoneLibre.minuteur -= dt) > 0) return;
+  zoneLibre.minuteur = 0.3;
+  const w = innerWidth, h = innerHeight;
+  const g = document.querySelector('#atelier .gauche')?.getBoundingClientRect();
+  const d = document.querySelector('#atelier .cote')?.getBoundingClientRect();
+  if (w <= 720 || !g?.width || !d?.width || d.left <= g.right) return; // portrait : réglage de scene.js
+  zoneLibre.part = (d.left - g.right) / w;
+  const decalage = w / 2 - (g.right + d.left) / 2;
+  if (Math.abs(decalage - (zoneLibre.decalage ?? NaN)) > 1 || zoneLibre.w !== w) {
+    zoneLibre.decalage = decalage; zoneLibre.w = w;
+    vitrineCam.setViewOffset(w, h, decalage, 0, w, h);
+    vitrineCam.updateProjectionMatrix();
+  }
+}
+
 export function majAtelier(dt, t) {
+  majZoneLibre(dt);
   const T = etat.toupie, L = etat.lanceur;
   if (!T || !L) return;
   const k = 1 - Math.exp(-8 * dt);
@@ -192,11 +235,12 @@ export function majAtelier(dt, t) {
   // Lanceur
   for (const [nom, p] of Object.entries(L.parts)) {
     // Lanceur : seule la pièce choisie sort, avec le même mouvement à ressort
-    const cible = new THREE.Vector3(...(eclateL ? eclatementAxeL(etat.slot)[nom] : [0, 0, 0]));
+    const base = p.userData.base ||= p.position.clone();
+    const cible = new THREE.Vector3(...(eclateL ? eclatementAxeL(etat.slot)[nom] : [0, 0, 0])).add(base);
     const vit = p.userData.vit ||= new THREE.Vector3();
     vit.add(cible.clone().sub(p.position).multiplyScalar(70 * dt)).multiplyScalar(Math.exp(-10 * dt));
     p.position.addScaledVector(vit, dt);
-    decal['l' + nom] = p.position.clone();
+    decal['l' + nom] = p.position.clone().sub(base);
   }
   // L'engrenage se redresse pour qu'on voie ses dents ; il tourne toujours un peu
   const eng = L.parts.engrenage;
@@ -220,8 +264,7 @@ export function majAtelier(dt, t) {
   if (etat.onglet === 'terrain') { pos = new THREE.Vector3(0, 0.34, 0.38); cible = new THREE.Vector3(0, 0, 0); }
   // Zoom : la pièce choisie au centre, mais assez de recul pour voir toute la vue éclatée
   else if (eclateT) ({ pos, cible } = cibleDe(T.parts, etat.slot, ECHELLE_T, [0.05, 0.05, 0.32], new THREE.Vector3(0, T.racine.position.y + 0.02, 0)));
-  else if (eclateL) ({ pos, cible } = cibleDe(L.parts, etat.slot, ECHELLE_L, [0.02, 0.17, 0.5],
-    new THREE.Vector3(0, L.racine.position.y + 0.08, 0.02), 0.4)); // lanceur : on voit aussi d'où sort la pièce
+  else if (eclateL) ({ pos, cible } = cadrerLanceur(L, etat.slot)); // tout le lanceur éclaté tient entre les panneaux
   else if (etat.onglet === 'lanceur') { pos = new THREE.Vector3(0.2, 0.3, 0.58); cible = new THREE.Vector3(0, 0.06, 0); }
   else { pos = new THREE.Vector3(0, 0.12, 0.42); cible = new THREE.Vector3(0, 0.045, 0); }
   const kc = 1 - Math.exp(-4 * dt);

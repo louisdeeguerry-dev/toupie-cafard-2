@@ -495,3 +495,15 @@ Testé (0 erreur).
 selon son axe sans pivoter ; surélever le lanceur pour mieux voir.
 **Réalisé** : axe vertical (corps → engrenage → plot) et axe du lanceur (corps → ressort → poignée), écarts agrandis autour
 de la pièce choisie ; engrenage à plat et immobile ; lanceur surélevé de 15 cm ; cadrage montrant d'où sort la pièce. Testé.
+
+---
+
+## 2026-11-26 — Lanceur : le ressort sort du manche (schéma de Louis) + agent de contrôle
+
+**Prompt optimisé** : (rôle : dev 3D Three.js) refaire l'éclaté du lanceur selon le schéma : le ressort glisse le long
+du manche horizontal jusqu'à en sortir, dans le sens de la flèche ; l'engrenage descend sans pivoter ; faire contrôler
+le résultat par un agent.
+**Réalisé** : correction du bug de fond, l'éclaté écrasait la position de montage de l'engrenage et de la poignée
+(engrenage au sol, poignée au pied). Les décalages s'ajoutent maintenant à cette position. Le ressort sort entièrement
+du manche, avec la poignée juste derrière. La caméra cadre tout le lanceur éclaté et la 3D est centrée dans la zone libre
+entre les deux panneaux. L'agent de contrôle (Sonnet) a signalé la poignée hors écran et le cadrage trop serré : corrigé.
