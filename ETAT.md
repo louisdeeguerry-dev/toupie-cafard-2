@@ -83,6 +83,10 @@
   → **Le sacrifice est maintenant clairement puni**, et le mixte comme la puissance font mieux. Les bots sont plus coriaces
   (aucune 1re place pour le robot). Les cafards restent tuables à toutes les étapes (environ 4 par lancer).
 
+- **26/11, boutique à 4 offres avec raretés et Chance** (3 parties par stratégie, échantillon faible) : places moyennes
+  sacrifice 5,3, économie 5,7, mixte 5,7, puissance 4,0 ; aucune erreur. Le robot fait moins bien qu'avant : les bots
+  achètent encore librement (hors des 4 offres), à corriger.
+
 ## Prochaines étapes possibles
 - Faire jouer Louis à l'atelier refait, puis affiner la vitesse et les zooms.
 - Relire l'équilibrage avec les résultats ci-dessus (sacrifice, économie, mixte, puissance).

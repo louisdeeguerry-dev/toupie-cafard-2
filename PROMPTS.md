@@ -613,3 +613,12 @@ La jauge de lancer en partie a été vérifiée : elle fonctionne.
 - Nouvelle âme « Fer à cheval » (Chance +5, endurance et lames en baisse), pour que chaque stat soit le bonus d'au moins une pièce.
 - Intérêts max arrondis à l'entier inférieur.
 - Repères mesurés : multiplicateur moyen ×1,16 sans Chance, ×1,29 après un achat, ×1,54 vers 10 niveaux.
+
+---
+
+## 2026-11-26 — Résultats d'équilibrage (raretés + Chance)
+
+**Prompt optimisé** : envoyer la synthèse des 12 parties robot (3 par stratégie) quand elles sont finies.
+**Réalisé** : places moyennes : sacrifice 5,3, économie 5,7, mixte 5,7, puissance 4,0. Elles sont en baisse par rapport à
+l'ancienne boutique. Cause probable : le joueur est limité à 4 offres au hasard, alors que les bots achètent encore librement
+n'importe quelle stat. Proposition : soumettre les bots aux mêmes 4 offres.
