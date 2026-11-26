@@ -640,3 +640,13 @@ amélioré.
   - les cafards rapportent peu aux étapes tardives.
 
 Des pistes chiffrées ont été proposées à Louis, sans être appliquées.
+
+---
+
+## 2026-11-26 — Points 1 et 3 appliqués (duel perdu au plus 3 vies, relances 1, 2, 3, 5, 8…) et nouveaux tests
+
+**Prompt optimisé** : appliquer les pistes 1 et 3 du retour des robots, rejouer 5 parties par stratégie (×100) et envoyer les résultats.
+**Réalisé** :
+- Les deux réglages sont dans `src/config.js`.
+- Places moyennes : sacrifice 5,6, économie 6,0, mixte 4,2 (4/5 dans le top 4), puissance 4,2 ; aucune erreur.
+- Les parties durent plus longtemps : 17 à 18 manches pour mixte et puissance.

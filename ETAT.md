@@ -90,6 +90,8 @@
 - **26/11, bots soumis aux mêmes 4 offres** (5 parties par stratégie, robot ×100) : sacrifice 5,8, économie 4,6, mixte 4,6,
   puissance 4,2. Les trois stratégies actives sont à égalité et le sacrifice est puni. Le robot ne dépasse jamais la 3e place.
   Pistes à décider : coût d'un duel perdu plafonné, intérêts par tranche de 10, relances moins chères, cafards en fin de partie.
+- **26/11, duel perdu au plus 3 vies et relances 1, 2, 3, 5, 8…** (5 parties par stratégie) : sacrifice 5,6, économie 6,0, mixte 4,2
+  (top 4 : 4/5), puissance 4,2. Les parties sont plus longues. L'économie pure est en retrait (2 duels gagnés sur 11) : à surveiller.
 
 ## Prochaines étapes possibles
 - Faire jouer Louis à l'atelier refait, puis affiner la vitesse et les zooms.
