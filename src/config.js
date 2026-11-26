@@ -32,7 +32,8 @@ export const PARTIE = {
 // etape = 1 + nombre de duels passés. Après chaque duel, les cafards ÉVOLUENT (voir src/data/cafards.js).
 export const CAFARDS = {
   capacite: 10, // cafards sur le bureau au début de chaque lancer (+ Nid)
-  vieCafard: (n, etape) => 1.7 * Math.pow(1.03, n - 1) * Math.pow(1.12, etape - 1),
+  // +12 % de vie par étape jusqu'à l'étape 3, puis +6 % (les parties durent maintenant 7 étapes et plus)
+  vieCafard: (n, etape) => 1.7 * Math.pow(1.03, n - 1) * Math.pow(1.12, Math.min(etape, 3) - 1) * Math.pow(1.06, Math.max(0, etape - 3)),
   prime: 1.5, // 💰 par cafard normal (les autres espèces rapportent plus ; les centimes sont gardés)
   primeEtape: etape => 1 + 0.2 * (etape - 1), // les cafards évolués rapportent plus : investir dans la toupie reste rentable
 };

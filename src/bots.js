@@ -66,9 +66,12 @@ export function jouerLancerBot(b, n, etape) {
   const vieMoy = CAFARDS.vieCafard(n, etape) * Object.entries(comp).reduce((a, [t, p]) => a + p * TYPES[t].vie, 0);
   const coups = Math.max(1, vieMoy / (2.6 * s.lames * (1 + s.crit * (s.critMult - 1))));
   const couverture = (s.rayon / 0.04) * Math.sqrt(s.vitesse / 0.95) * Math.min(1.3, Math.sqrt(tempsRotation(s) / 11.6));
-  const taux = Math.min(0.85, Math.max(0.05, b.habilete * 0.75 * couverture / Math.pow(coups, 0.7) * entre(0.75, 1.25)));
+  const taux = Math.min(0.6, Math.max(0.05, b.habilete * 0.75 * couverture / Math.pow(coups, 0.7) * entre(0.75, 1.25)));
   const capacite = Math.max(4, CAFARDS.capacite + s.nid);
-  const tues = Math.round(capacite * taux * s.toupies ** 0.5);
+  // Un lancer ne traverse qu'une partie du bureau : plafond « géométrique » (≈ ce qu'un vrai lancer bien visé écrase),
+  // sinon un gros Nid ferait tuer aux bots bien plus de cafards qu'un vrai joueur
+  const plafond = 4.8 * Math.min(1.6, couverture) * s.toupies ** 0.5;
+  const tues = Math.round(Math.min(capacite * taux * s.toupies ** 0.5, plafond * entre(0.8, 1.2)));
   const primeMoy = Object.entries(comp).reduce((a, [t, p]) => a + p * TYPES[t].prime, 0);
   const gain = Math.round(tues * CAFARDS.prime * CAFARDS.primeEtape(etape) * primeMoy * s.prime * (1 + s.chanceDore * 3) * (1 + s.comboBonus));
   b.argent += gain;
