@@ -59,6 +59,13 @@ Projet : **Toupie Cafard 2**, suite du jeu « Toupie contre Cafards »
 - **Réponses courtes** : l'essentiel, sans répéter ce qui est déjà dans le dépôt.
 - Le journal `PROMPTS.md` reste obligatoire (règle 1), mais avec des entrées courtes.
 
+## Règle 5 — Toujours garder une logique mécanique
+- Chaque pièce (toupie, lanceur, terrain) doit être **mécaniquement crédible** : ce qu'on voit explique ce que fait la pièce.
+  Exemple : l'engrenage fin a un plus petit diamètre que le standard, donc moins de vitesse de rotation ; l'engrenage choisi
+  engrène sur le pignon central du pied, avec un rapport de denture exact.
+- Pas de pièce décorative qui ne sert à rien ; les vues éclatées suivent l'axe réel de montage de chaque pièce.
+- Toute nouvelle pièce ou stat : sa forme 3D (taille, poids, dents, spires…) doit être cohérente avec ses bonus et ses malus.
+
 ## Contexte technique de l'utilisateur (déduit des projets existants)
 - Jeux web en **Three.js** (modules ES, GLTFLoader, modèles `.glb`), HTML/JS sans framework lourd.
 - Portage mobile via **Capacitor** (Android / iOS), desktop via **Electron + Steam** (SteamPipe),

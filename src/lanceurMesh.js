@@ -1,12 +1,12 @@
-// Le lanceur en 3D, inspiré de celui de Toupie contre Cafards (jeu 1) : un plot de départ gradué, un boîtier rond
+// Le lanceur en 3D, inspiré de celui de Toupie contre Cafards (jeu 1) : un boîtier rond
 // à emblème en spirale, une roue dentée (= l'ENGRENAGE choisi) qui entraîne le pignon central monté sur le pied,
 // et un manche rond à voyants entouré d'un ressort (= le RESSORT choisi). Chaque pièce est un groupe à part, pour la vue éclatée de l'atelier.
-// Repère : le plot (là où part la toupie) est vers −z, la poignée vers +z.
+// Repère : le boîtier (là où part la toupie) est vers −z, la poignée vers +z.
 import * as THREE from 'three';
 import { PIECE } from './data/pieces.js';
 
 const HY = 0.05; // hauteur du boîtier
-const LZ = -0.03; // position du plot
+const LZ = -0.03; // axe du boîtier (d'où part la toupie)
 const NZ0 = LZ + 0.03, NZ1 = 0.075; // le manche
 
 const M = (color, metal = 0.35, rough = 0.4, extra = {}) => new THREE.MeshStandardMaterial({ color, metalness: metal, roughness: rough, ...extra });
@@ -119,21 +119,11 @@ function ressort(p) {
 }
 
 // ---------------------------------------------------------------- Le lanceur complet
-// equipe : { engrenage, ressort } ; renvoie { racine, parts: { plot, corps, engrenage, ressort }, voyants }
+// equipe : { engrenage, ressort } ; renvoie { racine, parts: { corps, engrenage, ressort }, voyants }
 export function creerLanceur(equipe) {
   const racine = new THREE.Group();
   const sombre = M(0x23262c, 0.5, 0.4), acier = M(0x8f99a4, 0.9, 0.28), coque = M(0xd35400, 0.3, 0.4), accent = M(0xffd36b, 0.4, 0.35);
 
-  // Plot de départ gradué
-  const plot = new THREE.Group();
-  const anneau = ajouter(plot, new THREE.RingGeometry(0.03, 0.04, 48), M(0x3a3f47, 0.3, 0.3), 0, 0.0015, LZ);
-  anneau.rotation.x = -Math.PI / 2; anneau.castShadow = false;
-  for (let i = 0; i < 12; i++) {
-    const a = (i / 12) * Math.PI * 2;
-    const t = ajouter(plot, new THREE.BoxGeometry(i % 3 ? 0.004 : 0.007, 0.0012, 0.0016), accent, Math.cos(a) * 0.0445, 0.0016, LZ + Math.sin(a) * 0.0445);
-    t.rotation.y = -a; t.castShadow = false;
-  }
-  racine.add(plot);
 
   // Engrenage choisi : sous le boîtier, sur l'axe de la toupie
   const eng = engrenage(PIECE[equipe.engrenage] || PIECE['engrenage-standard']);
@@ -182,7 +172,7 @@ export function creerLanceur(equipe) {
   const res = ressort(PIECE[equipe.ressort] || PIECE['ressort-standard']);
   racine.add(res);
 
-  return { racine, parts: { plot, corps, engrenage: eng, ressort: res }, voyants, base: { engrenageZ: LZ, ressortZ0: NZ0 } };
+  return { racine, parts: { corps, engrenage: eng, ressort: res }, voyants, base: { engrenageZ: LZ, ressortZ0: NZ0 } };
 }
 
 export function libererLanceur(l) {

@@ -36,7 +36,7 @@
   - lanceur : vu de profil et surélevé ; le ressort sort entièrement du manche, le long de son axe, et l'engrenage descend sans pivoter ; la 3D est centrée entre les deux panneaux ;
   - la liste des pièces remplace les emplacements jusqu'au bouton « Retour » ;
   - les stats s'affichent en **barres qui se remplissent**, avec la valeur au survol ;
-  - lanceur 3D mécanique : l'engrenage choisi (vraie roue dentée) entraîne un pignon central monté sur le pied ; manche rond à voyants entouré du ressort ; plus de poignée en T ;
+  - lanceur 3D mécanique : l'engrenage choisi (vraie roue dentée) entraîne un pignon central monté sur le pied ; manche rond à voyants entouré du ressort ; plus de poignée en T ni de plot gradué au sol ; changer de pièce ou de terrain ne rejoue pas le démontage ; **règle 5 de CLAUDE.md : toujours une logique mécanique** ;
   - **glisser pour pivoter, molette ou pincement pour zoomer**, avec un zoom serré sur la pièce choisie ;
   - 🔍 sur chaque pièce ouvre l'**écran d'inspection**.
 - **Écran d'inspection** (Collection et atelier) :
@@ -65,6 +65,7 @@
 - `tests/lancer-strategies.sh 5 2` : 5 parties par stratégie jouées par un robot, avec synthèse (environ 45 min, en arrière-plan).
 - Dans la console du jeu : `__tc2.demarrerTest(3)` lance directement un duel, `__tc2.demarrerTest(0)` un lancer contre les cafards,
   `__tc2.acceleration = 4` accélère le jeu.
+- Menu → **🧪 Mode test** : toutes les pièces au niv 5 et tous les terrains ; la vraie sauvegarde est mise de côté et revient avec « Quitter le mode test ».
 - Publication : `git push origin main` **puis** `git push origin main:gh-pages`. Le jeu est sur https://louisdeeguerry-dev.github.io/toupie-cafard-2/
 
 ## Dernières mesures

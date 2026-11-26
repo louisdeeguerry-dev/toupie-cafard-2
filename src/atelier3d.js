@@ -114,7 +114,7 @@ function eclatementAxe(choisi) {
   return y;
 }
 // Lanceur éclaté : chaque pièce sort selon SON axe.
-// - axe vertical (axe de rotation de l'engrenage) : corps → engrenage → plot, vers le bas ;
+// - axe vertical (axe de rotation de l'engrenage) : corps → engrenage, vers le bas ;
 // - axe du lanceur (z) : corps → ressort → poignée, vers l'arrière.
 // Petit écart entre voisines, grand écart de part et d'autre de la pièce choisie.
 const ECART_L = 0.02, ECART_L_CHOISI = 0.055;
@@ -128,7 +128,6 @@ function eclatementAxeL(choisi) {
   return {
     corps: [0, 0, 0],
     engrenage: [0, yEng, 0],
-    plot: [0, yEng - g('engrenage', 'plot'), 0],
     ressort: [0, 0, zRes],
   };
 }

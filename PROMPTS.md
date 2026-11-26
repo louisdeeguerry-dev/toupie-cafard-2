@@ -539,3 +539,21 @@ toupie comme pour le lanceur.
 **Réalisé** : `majModeles` ne reconstruit plus que le modèle concerné (toupie ou lanceur), et le nouveau modèle reprend
 exactement l'état de l'ancien : pose, hauteur, rotation, décalages de l'éclaté, vitesses. Seule la pièce changée fait un
 petit rebond. Vérifié avec l'engrenage et la pointe, aucune erreur.
+
+---
+
+## 2026-11-26 — Onglet terrain, plot retiré, règle « logique mécanique », mode test
+
+**Prompt optimisé** : (rôle : dev Three.js / game designer)
+- dans l'onglet Terrain, changer de terrain ne doit pas rejouer l'animation ;
+- retirer le plot gradué au sol sous le lanceur, inutile ;
+- inscrire dans les règles du projet qu'on garde toujours une logique mécanique (ex. un engrenage plus petit donne moins de rotation) ;
+- préparer une partie test avec toutes les pièces débloquées au maximum.
+
+**Réalisé** :
+- un changement de terrain ne reconstruit plus aucun modèle ;
+- plot retiré (modèle 3D et vue éclatée) ;
+- règle 5 ajoutée à `CLAUDE.md` ;
+- bouton « 🧪 Mode test » dans le menu : les 56 pièces au niv 5 et les 3 terrains ; la sauvegarde est mise de côté puis restaurée.
+
+Testé : passage en mode test et partie lancée, aucune erreur.

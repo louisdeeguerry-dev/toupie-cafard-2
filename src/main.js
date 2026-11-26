@@ -119,6 +119,28 @@ document.getElementById('quitter').addEventListener('click', () => {
 });
 function confirmerQuitter() { return window.__tc2?.sansConfirmation || window.confirm('Quitter la partie ? Elle sera perdue.'); }
 document.addEventListener('pointerdown', () => { activerAudio(); musique(); }, { once: true });
+// Mode test : toutes les pièces et tous les terrains au niveau max. La vraie sauvegarde est mise de côté et revient
+// quand on quitte le mode test.
+const CLE_AVANT_TEST = 'toupie-cafard-2-avant-test';
+const btnTest = document.getElementById('btnTest');
+const enTest = () => { try { return !!localStorage.getItem(CLE_AVANT_TEST); } catch { return false; } };
+btnTest.textContent = enTest() ? '🧪 Quitter le mode test' : '🧪 Mode test (tout débloqué)';
+btnTest.addEventListener('click', async e => {
+  e.stopPropagation();
+  try {
+    if (enTest()) {
+      save = JSON.parse(localStorage.getItem(CLE_AVANT_TEST));
+      localStorage.removeItem(CLE_AVANT_TEST);
+    } else {
+      localStorage.setItem(CLE_AVANT_TEST, JSON.stringify(save));
+      const { PIECES } = await import('./data/pieces.js');
+      for (const p of PIECES) { save.collection[p.id] = 5; save.niveauxPieces[p.id] = 5; }
+      save.terrains = Object.keys(TERRAIN).filter(t => t !== 'aucun');
+    }
+    sauver(save);
+  } catch { /* stockage bloqué */ }
+  location.reload();
+});
 const btnMusique = document.getElementById('btnMusique');
 btnMusique.textContent = musiqueActive ? '🔊 Musique' : '🔇 Musique';
 btnMusique.addEventListener('click', e => { e.stopPropagation(); activerAudio(); btnMusique.textContent = basculerMusique() ? '🔊 Musique' : '🔇 Musique'; });
