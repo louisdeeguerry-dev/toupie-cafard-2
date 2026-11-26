@@ -258,6 +258,13 @@
 .offre.rarete-epique { background: linear-gradient(160deg, rgba(179,107,255,.16), transparent 60%); }
 .offre.rarete-rare { background: linear-gradient(160deg, rgba(63,167,255,.13), transparent 60%); }
 .petit-btn { font-size: 13px; padding: 6px 10px; line-height: 1.2; }
+/* Minuteurs : lancer (15 s), accélération, boutique (25 s) */
+#minuteur { position: absolute; left: 50%; top: 84px; transform: translateX(-50%); font-weight: 800; font-size: 15px; color: #ffd36b; text-shadow: 0 2px 6px #000; pointer-events: none; }
+#minuteur.urgent { color: #ff5a4a; animation: pulse .5s infinite alternate; }
+@keyframes pulse { to { transform: translateX(-50%) scale(1.15); } }
+.barre-temps { height: 6px; border-radius: 3px; background: #1a130e; overflow: hidden; margin-top: -4px; }
+.barre-temps i { display: block; height: 100%; background: linear-gradient(90deg, #3fcf6e, #ffd36b); transition: width .25s linear; }
+.barre-temps i.urgent { background: #ff5a4a; }
 /* Vignettage : bords assombris, l'œil va au centre */
 #jeu::after { content: ''; position: fixed; inset: 0; pointer-events: none;
   background: radial-gradient(ellipse 75% 70% at 50% 50%, transparent 55%, rgba(8, 4, 2, 0.5) 100%); }
@@ -368,6 +375,7 @@
   <div class="panneau" id="salon"></div>
   <div id="bandeau"></div>
   <div id="aide"></div>
+  <div id="minuteur"></div>
   <div class="bas"><div class="pastille" id="objectif"></div><div class="pastille" id="lancers"></div></div>
 </div>
 <div id="jauge"><div class="remplie"></div><div class="zone"></div></div>

@@ -86,13 +86,14 @@ brancherInterface({
     }
   },
   hud: UI.majHud,
+  minuteur: UI.minuteur,
   lance() { UI.aide(''); },
   finDuel(gagne) {
     UI.bandeau(gagne ? '🏆 VICTOIRE !' : '💥 K.O. !', gagne ? 'La toupie adverse s\'est arrêtée la première' : 'Ta toupie s\'est arrêtée la première', 2200);
   },
   bilan(b) {
     UI.majHud();
-    UI.aide('');
+    UI.aide(''); UI.minuteur('');
     setTimeout(() => UI.afficherBilan(b, () => commencerManche()), b.type === 'duel' ? 900 : 500);
   },
   fin(r) {
@@ -108,6 +109,7 @@ function retourAtelier() {
   mode = 'atelier';
   UI.montrer('hud', false);
   UI.montrer('panneauStats', false);
+  UI.minuteur('');
   allerA('menu');
   majVitrine();
 }
@@ -150,7 +152,7 @@ let avant = performance.now(), t = 0;
 function boucle(maintenant) {
   const dtReel = Math.min(0.05, (maintenant - avant) / 1000);
   // acceleration : tests auto ; facteurTemps : arrêt sur image et ralenti des gros chocs
-  const dt = dtReel * (window.__tc2?.acceleration ?? 1) * facteurTemps(dtReel);
+  const dt = dtReel * (window.__tc2?.acceleration ?? 1) * facteurTemps(dtReel) * (mode === 'partie' && partie.phase === 'jeu' ? partie.acceleration || 1 : 1);
   avant = maintenant;
   t += dt;
   if (mode === 'atelier') {

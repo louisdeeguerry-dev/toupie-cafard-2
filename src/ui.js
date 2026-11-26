@@ -5,7 +5,7 @@ import { STAT_ACHATS, PRIORITE, MANCHE_PRIORITE } from './data/boutique.js';
 import { PARTIE } from './config.js';
 import { STATS, STAT, GROUPES, niveauxToupie, calculer as calcul, tempsRotation, effet, BORNES } from './stats.js';
 import { partie, etape, prixAmelio, acheter, prioriteDispo, lancerDansEtape, relancerOffres, prixRelance, interetsPrevus, niveauxAchat, mesStats as mesStatsUI } from './match.js';
-import { ECONOMIE, RARETE_OFFRE } from './config.js';
+import { ECONOMIE, RARETE_OFFRE, PARTIE as REGLES_PARTIE } from './config.js';
 import { PIECE as PIECES_PAR_ID } from './data/pieces.js';
 import { TYPES } from './data/cafards.js';
 import { MODES, MONNAIE, PRIX_BOITE, rangDe, RANGS, xpPourNiveau, acheterBoite } from './progression.js';
@@ -339,6 +339,14 @@ export function majHud() {
 }
 
 export function aide(texte) { $('aide').textContent = texte; }
+let dernierMinuteur = null;
+export function minuteur(texte, urgent = false) {
+  const cle = texte + urgent;
+  if (cle === dernierMinuteur) return;
+  dernierMinuteur = cle;
+  $('minuteur').textContent = texte;
+  $('minuteur').classList.toggle('urgent', urgent);
+}
 
 // Panneau « 📊 Stats » en partie : toutes les stats de ta toupie (pièces + améliorations achetées)
 function rendrePanneauStats() {
@@ -398,12 +406,14 @@ export function afficherBilan(bilan, onPret) {
           <div class="petit" title="À la fin de chaque manche : +1 💰 par tranche de ${ECONOMIE.interetPour} 💰 gardés, plafonné par la Tirelire">
             Intérêts : <b>+${interets} 💰</b> à la fin de la manche<br>(+1 par ${ECONOMIE.interetPour} 💰 gardés, max ${mesStatsUI().interetMax})</div>
           <button class="btn second" id="relancer" ${partie.argent < prixR ? 'disabled' : ''}>🎲 Relancer · ${prixR} 💰</button>
-          <button class="btn" id="pret">Prêt ▶</button>
+          <button class="btn" id="pret">Prêt ▶ <span id="chronoBoutique"></span></button>
+          <div class="barre-temps"><i id="barreTempsBoutique"></i></div>
           ${prioriteHtml()}
           <div class="petit">${suite}</div>
         </div>
       </div>`;
-    $('pret').onclick = () => { montrer('bilan', false); onPret(); };
+    $('pret').onclick = () => { if (fini) return; fini = true; clearInterval(chrono); montrer('bilan', false); onPret(); };
+    majChrono();
     $('relancer').onclick = e => { e.stopPropagation(); if (relancerOffres()) { rendre(); majHud(); } };
     const bp = $('btnPriorite');
     if (bp) bp.onclick = e => { e.stopPropagation(); if (acheter('priorite')) { rendre(); majHud(); } };
@@ -421,6 +431,19 @@ export function afficherBilan(bilan, onPret) {
     // Acheter relance automatiquement les offres (gratuit)
     if (b && acheter(b.dataset.a, b.dataset.r)) { rendre(); majHud(); }
   };
+  // Temps limité pour la boutique : au bout du temps, on passe à la suite comme si on avait cliqué « Prêt »
+  let fini = false, reste = REGLES_PARTIE.tempsBoutique;
+  const majChrono = () => {
+    const c = $('chronoBoutique'), b = $('barreTempsBoutique');
+    if (c) c.textContent = `(${Math.ceil(reste)} s)`;
+    if (b) { b.style.width = `${(reste / REGLES_PARTIE.tempsBoutique) * 100}%`; b.classList.toggle('urgent', reste <= 5); }
+  };
+  const chrono = setInterval(() => {
+    if ($('bilan').classList.contains('cache') || !partie.active) { clearInterval(chrono); return; } // partie quittée
+    reste -= 0.25;
+    majChrono();
+    if (reste <= 0) $('pret')?.click();
+  }, 250);
   rendre();
   montrer('bilan');
   $('bilan').firstElementChild.scrollTop = 0;

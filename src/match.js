@@ -9,7 +9,7 @@ import { ajouterCafard, viderCafards, cafards, majCafards } from './bugs.js';
 import { especesVague, compositionEtape, nouveauxTypes, TYPES } from './data/cafards.js';
 import { creerToupieJeu, viderToupies, retirerToupie, lancerToupie, majToupies, enJeu, toupies, choisirTerrain, modeDuel } from './physics.js';
 import { creerBot, jouerLancerBot, finMancheBot, lancerDuelBot, duelSimule } from './bots.js';
-import { lanceur } from './launcher.js';
+import { lanceur, lancerDirect, valeurJauge } from './launcher.js';
 import { railAdverse, decorTerrain } from './scene.js';
 import { popup, tache, viderTaches, etincelles, geler, ralentir } from './fx.js';
 import { secouer } from './scene.js';
@@ -61,7 +61,8 @@ function choisirAdversaire() {
 export function commencerManche() {
   partie.mancheAffichee = null;
   partie.type = typeManche();
-  Object.assign(partie, { gainsManche: 0, resultat: null, chrono: 0, combo: 0, renfortT: 0, tues: 0, contacts: 0, attenteRelance: 0 });
+  Object.assign(partie, { gainsManche: 0, resultat: null, chrono: 0, combo: 0, renfortT: 0, tues: 0, contacts: 0, attenteRelance: 0,
+    tempsLancer: 0, depuisLancer: 0, acceleration: 1, horloge: null });
   // Le plateau : on retire les toupies ; les cafards survivants restent d'un lancer à l'autre dans une même étape
   const nouvelleEtape = partie.manche % PARTIE.cycle.length === 0;
   viderToupies(); partie.mesToupies = []; partie.sesToupies = [];
@@ -177,6 +178,30 @@ const rappels = {
   chute() { son('chute', { volume: 0.6 }); },
 };
 
+// ---------------------------------------------------------------- Temps limités
+// 15 s pour lancer (sinon la toupie part toute seule, avec la jauge du moment) ; une fois lancée, si une toupie tourne
+// encore après 10 s, le temps accélère progressivement (jusqu'à ×5) : personne n'attend le dernier.
+// Les minuteurs suivent l'HORLOGE RÉELLE (pas le temps de jeu, qui ralentit sur un appareil lent) ; __tc2.acceleration pour les tests
+function minuteurs(dt, lancees) {
+  const now = performance.now(), d = Math.min(1, (now - (partie.horloge ?? now)) / 1000) * (window.__tc2?.acceleration ?? 1);
+  partie.horloge = now;
+  if (!lancees) {
+    partie.tempsLancer += d;
+    const reste = Math.ceil(PARTIE.tempsLancer - partie.tempsLancer);
+    ui.minuteur?.(`⏱️ ${Math.max(0, reste)} s pour lancer`, reste <= 5);
+    if (partie.tempsLancer >= PARTIE.tempsLancer && lanceur.actif) {
+      const puiss = lanceur.etat === 'charge' ? valeurJauge() : 0.55;
+      lanceur.etat = 'libre';
+      lancerDirect(lanceur.x, lanceur.dir.x, lanceur.dir.y, puiss);
+    }
+    return;
+  }
+  partie.depuisLancer += d;
+  const surplus = partie.depuisLancer - PARTIE.accelererApres;
+  partie.acceleration = surplus > 0 && !partie.resultat ? Math.min(PARTIE.accelerationMax, 1 + surplus * 0.5) : 1;
+  ui.minuteur?.(partie.acceleration > 1.05 ? `⏩ Accéléré ×${Math.round(partie.acceleration)}` : '', false);
+}
+
 // ---------------------------------------------------------------- Boucle
 export function majPartie(dt, t) {
   if (!partie.active) return;
@@ -189,6 +214,7 @@ export function majPartie(dt, t) {
   }
   majToupies(dt, rappels);
   const mes = partie.mesToupies, lancees = mes.length > 0, toutesTombees = lancees && !mes.some(enJeu);
+  minuteurs(dt, lancees);
 
   if (partie.type === 'cafards') {
     // Le lancer est fini quand toutes mes toupies sont tombées (ou qu'il n'y a plus de cafards)

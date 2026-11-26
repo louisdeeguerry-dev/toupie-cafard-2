@@ -671,3 +671,23 @@ Des pistes chiffrées ont été proposées à Louis, sans être appliquées.
 **Réalisé** : mixte 6,6 (0 top 4 sur 5), puissance 5,2 (2 sur 5), économie 5,8. Toutes les stratégies du robot reculent
 sur les parties longues, et les cafards tués par lancer tombent à environ 2 à partir de l'étape 4. Cause probable : la vie des cafards
 (+12 % par étape) devient trop forte quand les parties durent 7 étapes.
+
+---
+
+## 2026-11-26 — Temps limités : lancer, accélération, boutique
+
+**Prompt optimisé** : (rôle : dev gameplay, jeu en ligne à venir) rendre le jeu dynamique pour que personne n'attende.
+- Un temps limité pour lancer, 15 s par exemple ; à la fin du temps, la toupie part toute seule.
+- Après le lancer, on attend que la dernière toupie s'arrête ; si c'est trop long, le temps accélère.
+- Un temps limité pour la boutique ; quand tout le monde est prêt, on passe directement à la suite.
+
+Durées au choix de Claude.
+**Réalisé** :
+- Réglages dans `PARTIE` (`src/config.js`) :
+  - 15 s pour lancer ; au bout du temps, la toupie part avec la jauge du moment, ou à 55 % ;
+  - accélération progressive à partir de 10 s après le lancer, jusqu'à ×5 ;
+  - 25 s de boutique, avec un compte à rebours sur « Prêt » et une barre de temps ; au bout du temps, on passe à la suite.
+- Minuteur affiché sous l'aide ; il clignote en rouge sous 5 s.
+- Les minuteurs suivent l'horloge réelle.
+
+Testé : lancer automatique, accélération ×2 puis ×5, boutique chronométrée ; aucune erreur.
