@@ -86,6 +86,9 @@
 - **26/11, boutique à 4 offres avec raretés et Chance** (3 parties par stratégie, échantillon faible) : places moyennes
   sacrifice 5,3, économie 5,7, mixte 5,7, puissance 4,0 ; aucune erreur. Le robot fait moins bien qu'avant : les bots
   achètent encore librement (hors des 4 offres), à corriger.
+- **26/11, bots soumis aux mêmes 4 offres** (5 parties par stratégie, robot ×100) : sacrifice 5,8, économie 4,6, mixte 4,6,
+  puissance 4,2. Les trois stratégies actives sont à égalité et le sacrifice est puni. Le robot ne dépasse jamais la 3e place.
+  Pistes à décider : coût d'un duel perdu plafonné, intérêts par tranche de 10, relances moins chères, cafards en fin de partie.
 
 ## Prochaines étapes possibles
 - Faire jouer Louis à l'atelier refait, puis affiner la vitesse et les zooms.

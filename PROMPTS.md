@@ -622,3 +622,21 @@ La jauge de lancer en partie a été vérifiée : elle fonctionne.
 **Réalisé** : places moyennes : sacrifice 5,3, économie 5,7, mixte 5,7, puissance 4,0. Elles sont en baisse par rapport à
 l'ancienne boutique. Cause probable : le joueur est limité à 4 offres au hasard, alors que les bots achètent encore librement
 n'importe quelle stat. Proposition : soumettre les bots aux mêmes 4 offres.
+
+---
+
+## 2026-11-26 — Bots à la même boutique, 20 parties ×100, retour des robots
+
+**Prompt optimisé** : faire acheter les bots avec les mêmes règles de boutique que le joueur, rejouer 5 parties par stratégie
+en vitesse ×100 et envoyer les résultats, puis faire rédiger par un agent léger un retour des robots sur ce qui pourrait être
+amélioré.
+**Réalisé** :
+- `tirerOffresPour` est partagé par le joueur et les bots ; les bots prennent la meilleure affaire et relancent 4 fois au maximum.
+- Places moyennes : sacrifice 5,8, économie 4,6, mixte 4,6, puissance 4,2, aucune erreur.
+- Retour de l'agent :
+  - parties courtes, et le robot ne dépasse jamais la 3e place ;
+  - l'argent dort ;
+  - les relances sont peu rentables ;
+  - les cafards rapportent peu aux étapes tardives.
+
+Des pistes chiffrées ont été proposées à Louis, sans être appliquées.
