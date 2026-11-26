@@ -11,7 +11,7 @@ const STRAT = process.argv[2] || 'mixte';
   const errs = []; p.on('pageerror', e => errs.push(e.message));
   await p.goto('http://localhost:8123/');
   await p.evaluate(() => localStorage.clear()); await p.reload(); await p.waitForTimeout(500);
-  await p.evaluate(() => { __tc2.acceleration = 8; __tc2.sansConfirmation = true; });
+  await p.evaluate(() => { __tc2.acceleration = 100; __tc2.sansConfirmation = true; });
   await p.click('#jouer');
   const t0 = Date.now(), vagues = [];
   const R = { strat: STRAT, place: null, manches: 0, vagues: 0, vaguesOk: 0, okParEtape: {}, totParEtape: {}, duelsGagnes: 0, duelsPerdus: 0, argentMax: 0 };

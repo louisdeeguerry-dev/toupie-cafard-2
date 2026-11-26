@@ -2,10 +2,10 @@
 // un niveau de jeu (habileté), une façon de dépenser son argent (style), parfois un terrain.
 // Pendant que tu joues tes lancers, eux « jouent » les leurs : leur argent dépend de leur toupie, de leur habileté
 // et de la résistance des cafards, et ils achètent vraiment dans la boutique (mêmes prix que toi).
-import { PARTIE, CAFARDS, ECONOMIE, tirerRarete } from './config.js';
+import { PARTIE, CAFARDS, ECONOMIE, BOUTIQUE } from './config.js';
 import { PIECES, SLOTS, RARETES } from './data/pieces.js';
 import { TERRAINS } from './data/terrains.js';
-import { AMELIO, MANCHE_PRIORITE, paquet } from './data/boutique.js';
+import { AMELIO, MANCHE_PRIORITE, paquet, tirerOffresPour } from './data/boutique.js';
 import { statsToupie, tempsRotation } from './stats.js';
 import { compositionEtape, TYPES } from './data/cafards.js';
 
@@ -18,7 +18,7 @@ export const STYLES = {
   mixte: { nom: 'équilibré', desc: 'Un peu de tout' },
   specialiste: { nom: 'spécialiste', desc: 'Pousse 2 ou 3 stats à fond' },
 };
-const BUREAU = ['nid', 'prime', 'combo', 'chance', 'tirelire'];
+const BUREAU = ['nid', 'prime', 'combo', 'chance', 'tirelire', 'veine'];
 const COMBAT = ['lames', 'endurance', 'puissance', 'elan', 'inertie', 'equilibre', 'poids', 'diametre', 'critique', 'glisse', 'precision'];
 
 // Une pièce au hasard, avec les mêmes chances de rareté que les boîtes mystère (un bot a ouvert des boîtes lui aussi)
@@ -86,14 +86,25 @@ export function finMancheBot(b, manche, etape) {
     return Math.random() < 0.45 ? BUREAU : COMBAT;
   };
   const garde = b.style === 'eco' && etape < 3 ? 10 : 0; // l'économe garde de quoi toucher des intérêts
+  // Même boutique que le joueur : 4 offres au hasard (raretés selon sa Chance), relance après chaque achat,
+  // relances payantes (prix croissant) quand rien ne lui convient
+  const tirer = () => tirerOffresPour(b.achats, statsToupie(b.equipe, b.niveaux, b.nivPieces).veine);
+  let offres = tirer(), relances = 0;
   for (let essais = 0; essais < 30; essais++) {
-    const id = hasard(voulu()), a = AMELIO[id], n = b.achats[id] || 0;
-    if (!a || n >= a.max) continue;
-    const pq = paquet(a, n, tirerRarete(s.veine)); // même boutique que le joueur : rareté selon sa Chance
-    if (!pq || b.argent - pq.prix < garde) continue;
-    b.argent -= pq.prix;
-    b.niveaux[id] = (b.niveaux[id] || 0) + pq.niveaux;
-    b.achats[id] = n + pq.achats;
+    const voulus = voulu();
+    const ok = offres.map(o => ({ o, pq: paquet(AMELIO[o.id], b.achats[o.id] || 0, o.rarete) }))
+      .filter(({ o, pq }) => pq && voulus.includes(o.id) && b.argent - pq.prix >= garde);
+    if (ok.length) {
+      const { o, pq } = ok.sort((x, y) => y.pq.niveaux / y.pq.prix - x.pq.niveaux / x.pq.prix)[0]; // la meilleure affaire
+      b.argent -= pq.prix;
+      b.niveaux[o.id] = (b.niveaux[o.id] || 0) + pq.niveaux;
+      b.achats[o.id] = (b.achats[o.id] || 0) + pq.achats;
+      offres = tirer();
+      continue;
+    }
+    const prixR = BOUTIQUE.relance(relances);
+    if (relances < 4 && b.argent - prixR >= garde + 6) { b.argent -= prixR; relances++; offres = tirer(); continue; }
+    break;
   }
   // Priorité de terrain, en secret, à partir de la 3e manche
   if (b.terrain !== 'aucun' && manche >= MANCHE_PRIORITE && b.argent >= 4 && Math.random() < 0.4) {

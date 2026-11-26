@@ -3,7 +3,7 @@
 // La toupie choisie avant la partie est VERROUILLÉE jusqu'à la fin : en partie, on n'achète que des niveaux.
 import { PARTIE, CAFARDS, ECONOMIE, BOUTIQUE, RAIL_XMAX, railZ, tirerRarete } from './config.js';
 import { terrainDuel } from './data/terrains.js';
-import { AMELIO, STAT_ACHATS, NOMS_BOTS, MANCHE_PRIORITE, paquet, SANS_RARETE } from './data/boutique.js';
+import { AMELIO, STAT_ACHATS, NOMS_BOTS, MANCHE_PRIORITE, paquet, tirerOffresPour } from './data/boutique.js';
 import { statsToupie } from './stats.js';
 import { ajouterCafard, viderCafards, cafards, majCafards } from './bugs.js';
 import { especesVague, compositionEtape, nouveauxTypes, TYPES } from './data/cafards.js';
@@ -310,21 +310,7 @@ function finPartie(place) {
 // La priorité de terrain n'est pas une offre : elle a son bouton à part.
 export function tirerOffres() {
   if (!BOUTIQUE.offres) { partie.offres = null; return; }
-  const dispo = STAT_ACHATS.filter(a => ach(a.id) < a.max);
-  const poids = a => (a.id === 'multi' ? 0.3 : a.prix(0) >= 6 ? 0.6 : 1);
-  const tirer = liste => {
-    const tot = liste.reduce((x, a) => x + poids(a), 0);
-    let r = Math.random() * tot;
-    for (const a of liste) if ((r -= poids(a)) < 0) return a;
-    return liste[0];
-  };
-  const offres = [], veine = mesStats().veine;
-  while (offres.length < BOUTIQUE.offres && offres.length < dispo.length) {
-    const l = dispo.filter(a => !offres.some(o => o.id === a.id));
-    const a = tirer(l);
-    offres.push({ id: a.id, rarete: SANS_RARETE(a.id) ? 'commune' : tirerRarete(veine) });
-  }
-  partie.offres = offres;
+  partie.offres = tirerOffresPour(partie.moi.achats, mesStats().veine);
 }
 
 export const prixRelance = () => BOUTIQUE.relance(partie.relances || 0);

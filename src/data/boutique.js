@@ -2,7 +2,7 @@
 // ou dans la TOUPIE / le LANCEUR (plus fort tout de suite). Mêmes améliorations que l'atelier du jeu 1.
 // On n'y change PAS de pièces : la toupie choisie avant la partie reste la même jusqu'à la fin.
 import { STATS } from '../stats.js';
-import { RARETE_OFFRE } from '../config.js';
+import { RARETE_OFFRE, BOUTIQUE, tirerRarete } from '../config.js';
 
 // Prix et plafonds des améliorations de partie. Le BUREAU (économie) est un groupe de stats comme la toupie et le lanceur
 // (voir src/stats.js) : certaines pièces en donnent ou en retirent aussi.
@@ -43,6 +43,21 @@ export function paquet(a, n, rarete = 'commune') {
   for (let i = 0; i < k; i++) prix += a.prix(n + i);
   const mult = SANS_RARETE(a.id) ? 1 : RARETE_OFFRE[rarete]?.mult || 1;
   return { achats: k, niveaux: Math.round(k * mult * 10) / 10, prix: k > 1 ? Math.round(prix * 0.85) : prix };
+}
+
+// Les offres de la boutique (joueur ET bots, mêmes règles) : 4 stats au hasard parmi celles pas encore au plafond,
+// chacune avec une rareté tirée selon la Chance.
+export function tirerOffresPour(achats = {}, veine = 0) {
+  const dispo = STAT_ACHATS.filter(a => (achats[a.id] || 0) < a.max);
+  const poids = a => (a.id === 'multi' ? 0.3 : a.prix(0) >= 6 ? 0.6 : 1);
+  const offres = [];
+  while (offres.length < BOUTIQUE.offres && offres.length < dispo.length) {
+    const l = dispo.filter(a => !offres.some(o => o.id === a.id));
+    let r = Math.random() * l.reduce((x, a) => x + poids(a), 0), choisi = l[0];
+    for (const a of l) if ((r -= poids(a)) < 0) { choisi = a; break; }
+    offres.push({ id: choisi.id, rarete: SANS_RARETE(choisi.id) ? 'commune' : tirerRarete(veine) });
+  }
+  return offres;
 }
 
 export const NOMS_BOTS = [
