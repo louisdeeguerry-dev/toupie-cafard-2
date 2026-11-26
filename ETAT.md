@@ -7,7 +7,7 @@
 - **Jeu de toupies en ligne façon auto-battler** (TFT) avec un côté **gacha / deck-building** (SPAM). Partie à **8 joueurs**
   (bots pour l'instant), **5 vies**, **plateau rond**.
 - **Étape** = **3 lancers contre les cafards** (le bureau est rempli à 10 + Nid avant chaque lancer, les survivants restent),
-  puis **1 duel**. La boutique est ouverte entre chaque manche. Un duel perdu coûte autant de vies que le numéro de l'étape, au plus 3 ;
+  puis **1 duel**. La boutique est ouverte entre chaque manche. Un duel perdu coûte 1 vie (5 vies = 5 défaites possibles) ;
   un duel ne rapporte ni ne coûte d'argent.
 - **Duel** : il n'y a pas de vie ; chaque choc fait perdre de la rotation, et **la première toupie arrêtée perd**.
   L'usure ne démarre qu'une fois les deux toupies lancées.

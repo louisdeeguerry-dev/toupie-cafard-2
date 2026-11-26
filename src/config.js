@@ -20,7 +20,7 @@ export const PARTIE = {
   // Une étape = 3 LANCERS contre les cafards (un lancer par manche, boutique entre chaque), puis 1 duel.
   cycle: ['cafards', 'cafards', 'cafards', 'duel'],
   // Vies perdues lors d'un duel perdu = numéro de l'étape : la partie se resserre vite.
-  degatsDuel: etape => Math.min(3, etape), // un duel perdu coûte cher, mais au plus 3 vies (sinon 2 défaites suffisaient)
+  degatsDuel: () => 1, // un duel perdu coûte 1 vie : 5 vies = 5 défaites possibles
   // Argent de départ : choisir un terrain de duel coûte tout l'argent de départ (à équilibrer)
   argentSansTerrain: 8,
   argentAvecTerrain: 0,

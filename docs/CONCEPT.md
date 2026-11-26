@@ -232,7 +232,7 @@ Simulation : un joueur trouve son premier terrain en environ 30 boîtes (médian
   - barres d'énergie en % qui clignotent sous 25 % ;
   - ronronnement de la toupie qui faiblit avec sa rotation ;
   - coup final au ralenti, puis bandeau **VICTOIRE / K.O.** avant le bilan.
-- Le perdant perd autant de vies que le numéro de l'étape. **Un duel ne rapporte et ne coûte pas d'argent.**
+- Le perdant perd 1 vie (5 vies = 5 défaites possibles). **Un duel ne rapporte et ne coûte pas d'argent.**
 - Au bout de 30 s, la toupie qui tourne le plus fort gagne.
 - Les autres joueurs s'affrontent entre eux pendant ce temps. Entre bots, le duel est simulé selon leur toupie, leur habileté et le hasard.
 
