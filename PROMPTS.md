@@ -706,3 +706,4 @@ plafond sur la mesure réelle, environ 3,5 par lancer.
 
 **Prompt optimisé** : caler le plafond des cafards écrasés par les bots sur la mesure réelle du robot (environ 3,5 par lancer) et rejouer 5 parties par stratégie.
 **Réalisé** : plafond 3,4 × couverture (couverture plafonnée à 1,3) ; les bots passent de 3,4 cafards par lancer à l'étape 1 à 4,2 à l'étape 7. Tests relancés.
+Résultats (5 parties par stratégie) : sacrifice 6,6, économie 4,8, mixte 5,8, puissance 4,8 ; aucune erreur.

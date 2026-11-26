@@ -99,6 +99,8 @@
   quand la partie atteint 7 étapes (environ 2 tués par lancer).
 - **26/11, cafards à +6 %/étape après l'étape 3 et bots plafonnés** : sacrifice 6,8, économie 5,2, mixte 5,8, puissance 6,0.
   Les bots écrasent encore plus de cafards que le robot (4 à 6 contre 2 à 4,6 par lancer) : plafond à caler sur environ 3,5.
+- **26/11, bots calés sur environ 3,5 cafards par lancer** : sacrifice 6,6, économie 4,8, mixte 5,8, puissance 4,8 ; parties de 22 à 33 manches.
+  Économie et puissance sont à égalité, le sacrifice est puni ; le robot plafonne vers la 4e place (sa visée reste simple).
 
 ## Prochaines étapes possibles
 - Faire jouer Louis à l'atelier refait, puis affiner la vitesse et les zooms.
