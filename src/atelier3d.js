@@ -136,21 +136,48 @@ function eclatementAxeL(choisi) {
 const etat = { onglet: 'toupie', slot: null, toupie: null, lanceur: null, rebond: 0, rotation: 0 };
 const decal = {}; // décalages actuels, par pièce (pour garder la vue éclatée quand on reconstruit un modèle)
 
+// Ne reconstruit QUE le modèle concerné par la pièce changée, et reprend exactement l'état de l'ancien
+// (pose, hauteur, rotation, vue éclatée, vitesses) : changer de pièce ne relance pas l'animation de démontage.
+const SLOTS_LANCEUR = ['engrenage', 'ressort'];
+function reprendreEtat(ancien, nouveau, objets) {
+  if (!ancien) return;
+  for (const k of objets) if (ancien[k] && nouveau[k]) {
+    nouveau[k].position.copy(ancien[k].position); nouveau[k].rotation.copy(ancien[k].rotation); nouveau[k].scale.copy(ancien[k].scale);
+  }
+  for (const [k, p] of Object.entries(nouveau.parts)) {
+    const q = ancien.parts[k];
+    if (!q) continue;
+    if (q.userData.vit) p.userData.vit = q.userData.vit.clone();
+    p.scale.copy(q.scale); p.rotation.copy(q.rotation);
+  }
+}
 export function majModeles(equipe, slotChange = null) {
-  if (etat.toupie) libererToupie(etat.toupie);
-  if (etat.lanceur) libererLanceur(etat.lanceur);
-  etat.toupie = creerToupie(equipe);
-  etat.toupie.racine.scale.setScalar(ECHELLE_T);
-  etat.toupie.racine.position.y = 0.003;
-  etat.lanceur = creerLanceur(equipe);
-  etat.lanceur.racine.scale.setScalar(ECHELLE_L);
-  etat.lanceur.racine.position.set(0, 0, 0.02);
-  supportVitrine.add(etat.toupie.racine, etat.lanceur.racine);
-  for (const [k, p] of Object.entries(etat.toupie.parts)) if (decal['t' + k]) p.position.copy(decal['t' + k]);
-  // Les pièces du lanceur ont une position de montage (engrenage, poignée) : l'éclaté s'AJOUTE à cette position
-  for (const [k, p] of Object.entries(etat.lanceur.parts)) {
-    p.userData.base = p.position.clone();
-    if (decal['l' + k]) p.position.add(decal['l' + k]);
+  if (slotChange === 'terrain') return;
+  const refaireT = !slotChange || !SLOTS_LANCEUR.includes(slotChange);
+  const refaireL = !slotChange || SLOTS_LANCEUR.includes(slotChange);
+  if (refaireT) {
+    const ancien = etat.toupie;
+    etat.toupie = creerToupie(equipe);
+    etat.toupie.racine.scale.setScalar(ECHELLE_T);
+    etat.toupie.racine.position.y = 0.003;
+    reprendreEtat(ancien, etat.toupie, ['racine', 'inclinaison', 'rotor']);
+    for (const [k, p] of Object.entries(etat.toupie.parts)) if (decal['t' + k]) p.position.copy(decal['t' + k]);
+    if (ancien) libererToupie(ancien);
+    supportVitrine.add(etat.toupie.racine);
+  }
+  if (refaireL) {
+    const ancien = etat.lanceur;
+    etat.lanceur = creerLanceur(equipe);
+    etat.lanceur.racine.scale.setScalar(ECHELLE_L);
+    etat.lanceur.racine.position.set(0, 0, 0.02);
+    reprendreEtat(ancien, etat.lanceur, ['racine']);
+    // Les pièces du lanceur ont une position de montage (engrenage) : l'éclaté s'AJOUTE à cette position
+    for (const [k, p] of Object.entries(etat.lanceur.parts)) {
+      p.userData.base = p.position.clone();
+      if (decal['l' + k]) p.position.add(decal['l' + k]);
+    }
+    if (ancien) libererLanceur(ancien);
+    supportVitrine.add(etat.lanceur.racine);
   }
   if (slotChange) etat.rebond = 1; // la pièce changée « saute »
   etat.slotChange = slotChange;

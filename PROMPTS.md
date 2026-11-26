@@ -528,3 +528,14 @@ L'agent de contrôle n'est plus utilisé.
 - carte de reflets « studio » pour tous les métaux ;
 - halo lumineux (bloom, Three.js r160 MIT, dans `vendor/jsm`) et vignettage ;
 - vue d'ensemble du lanceur élargie.
+
+---
+
+## 2026-11-26 — Atelier : changer de pièce ne relance plus le démontage
+
+**Prompt optimisé** : (rôle : dev Three.js) dans l'atelier, une fois une partie ouverte (engrenage, pointe…), équiper une autre
+pièce doit remplacer uniquement cette pièce dans la vue éclatée, sans rejouer toute l'animation de démontage. Valable pour la
+toupie comme pour le lanceur.
+**Réalisé** : `majModeles` ne reconstruit plus que le modèle concerné (toupie ou lanceur), et le nouveau modèle reprend
+exactement l'état de l'ancien : pose, hauteur, rotation, décalages de l'éclaté, vitesses. Seule la pièce changée fait un
+petit rebond. Vérifié avec l'engrenage et la pointe, aucune erreur.
