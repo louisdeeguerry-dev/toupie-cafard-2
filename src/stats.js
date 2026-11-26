@@ -1,7 +1,7 @@
 // Les stats de la toupie : TOUTES celles de Toupie contre Cafards (jeu 1), avec les mêmes noms et la même
 // logique (des niveaux qui se convertissent en valeurs réelles : secondes, cm, grammes, tr/min…).
 // Les pièces donnent des niveaux (+ ou −), la boutique en partie en ajoute.
-import { PIECE, niveauxPiece } from './data/pieces.js';
+import { PIECE, PIECES, SLOTS, niveauxPiece, NIVEAU_PIECE_MAX } from './data/pieces.js';
 
 export const GROUPES = [
   { id: 'toupie', nom: 'Toupie', icone: '🌀' },
@@ -118,6 +118,24 @@ export function niveauxToupie(equipe, achats = {}, nivPieces = {}) {
   for (const st of STATS) if (achats[st.id]) n[st.id] = (n[st.id] || 0) + achats[st.id];
   return n;
 }
+
+// Bornes de chaque stat sur TOUS les assortiments possibles (une pièce par emplacement, niveaux 1 à max).
+// Les niveaux s'additionnent emplacement par emplacement : le pire (meilleur) assortiment = la somme des pires (meilleures)
+// contributions de chaque emplacement. Les barres vont de 1 % (pire assortiment) à 100 % (meilleur assortiment au niveau max).
+export const BORNES = (() => {
+  const b = {};
+  for (const st of STATS) {
+    let lo = 0, hi = 0;
+    for (const slot of SLOTS) {
+      let mn = Infinity, mx = -Infinity;
+      for (const p of PIECES.filter(x => x.slot === slot.id))
+        for (let k = 1; k <= NIVEAU_PIECE_MAX; k++) { const v = niveauxPiece(p, k)[st.id] || 0; mn = Math.min(mn, v); mx = Math.max(mx, v); }
+      if (mn !== Infinity) { lo += mn; hi += mx; }
+    }
+    b[st.id] = { min: lo, max: hi };
+  }
+  return b;
+})();
 
 export function statsToupie(equipe, achats = {}, nivPieces = {}) { return calculer(niveauxToupie(equipe, achats, nivPieces)); }
 

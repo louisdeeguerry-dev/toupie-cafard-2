@@ -3,7 +3,7 @@ import { SLOTS, PIECES, PIECE, RARETES, tirerBoite, niveauxPiece, multiplicateur
 import { TERRAINS, TERRAIN } from './data/terrains.js';
 import { STAT_ACHATS, PRIORITE, MANCHE_PRIORITE } from './data/boutique.js';
 import { PARTIE } from './config.js';
-import { STATS, STAT, GROUPES, niveauxToupie, calculer as calcul, tempsRotation, effet } from './stats.js';
+import { STATS, STAT, GROUPES, niveauxToupie, calculer as calcul, tempsRotation, effet, BORNES } from './stats.js';
 import { partie, etape, prixAmelio, acheter, prioriteDispo, lancerDansEtape, relancerOffres, prixRelance, interetsPrevus, niveauxAchat, mesStats as mesStatsUI } from './match.js';
 import { ECONOMIE } from './config.js';
 import { PIECE as PIECES_PAR_ID } from './data/pieces.js';
@@ -32,9 +32,13 @@ function carteHtml(p, k = 1) {
 // Tableau de TOUTES les stats (celles du jeu 1), avec niveau et valeur réelle ; « apres » = aperçu d'un changement
 // Les stats en barres qui se remplissent (0 = vide, à fond = très haut). Survol : la valeur réelle et le niveau.
 // Pouvoirs (stats spéciales) : vides tant qu'on ne les a pas.
-// Échelle douce (jamais saturée) : avec les pièces niveau 5, les niveaux dépassent ±10 ; une échelle linéaire collait alors
-// la barre à fond (ou à vide) et on ne voyait plus la différence entre deux ressorts.
-const pctStat = (st, n) => st.special ? Math.max(0, 1 - Math.exp(-Math.max(0, n) / 8)) : 0.5 + 0.5 * Math.tanh(n / 10);
+// Barres : 1 % = le pire assortiment de pièces possible pour cette stat, 100 % = le meilleur assortiment au niveau max
+// (calculés sur toutes les combinaisons, voir BORNES). Les pouvoirs (stats spéciales) sont vides tant qu'on ne les a pas.
+const pctStat = (st, n) => {
+  const { min, max } = BORNES[st.id];
+  if (st.special) return max > 0 ? Math.max(0, Math.min(1, n / max)) : 0;
+  return max > min ? Math.max(0.01, Math.min(1, 0.01 + 0.99 * (n - min) / (max - min))) : 0.5;
+};
 export function tableauStats(niv, nivApres = null) {
   const v = calcul(niv), w = nivApres ? calcul(nivApres) : null;
   const t = tempsRotation(w || v);

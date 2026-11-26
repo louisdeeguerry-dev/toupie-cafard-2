@@ -578,3 +578,17 @@ le ressort en titane ne peut pas alléger la toupie. Corriger aussi la barre d'�
   ressorts affichaient une barre pleine ; l'échelle est maintenant douce et ne sature jamais.
 
 La jauge de lancer en partie a été vérifiée : elle fonctionne.
+
+---
+
+## 2026-11-26 — Barres de stats de 1 % (pire assortiment) à 100 % (meilleur au niveau max)
+
+**Prompt optimisé** : (rôle : dev UI / game designer) une barre de stat ne doit jamais paraître négative ou vide.
+- Le pire assortiment de pièces possible pour cette stat donne environ 1 %.
+- Le meilleur assortiment, avec les pièces au niveau max, donne 100 %.
+- Les bornes sont calculées sur toutes les combinaisons de pièces, pour que remplir une barre soit un vrai objectif pour le joueur.
+
+**Réalisé** :
+- `BORNES` dans `src/stats.js` : minimum et maximum de chaque stat sur tous les assortiments (une pièce par emplacement, niveaux 1 à 5). C'est exact, car les niveaux s'additionnent emplacement par emplacement.
+- Les barres vont de 1 % à 100 % ; les pouvoirs vont de 0 au maximum.
+- Les achats en partie peuvent faire déborder la barre, qui reste alors pleine.
