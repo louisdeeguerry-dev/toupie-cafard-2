@@ -1,9 +1,9 @@
 // Le déroulement d'une partie : salon de 8 joueurs (toi + bots), étapes de 3 LANCERS contre les cafards + 1 duel,
 // économie entre les manches, vies, éliminations, classement final.
 // La toupie choisie avant la partie est VERROUILLÉE jusqu'à la fin : en partie, on n'achète que des niveaux.
-import { PARTIE, CAFARDS, ECONOMIE, BOUTIQUE, RAIL_XMAX, railZ } from './config.js';
+import { PARTIE, CAFARDS, ECONOMIE, BOUTIQUE, RAIL_XMAX, railZ, tirerRarete } from './config.js';
 import { terrainDuel } from './data/terrains.js';
-import { AMELIO, STAT_ACHATS, NOMS_BOTS, MANCHE_PRIORITE, paquet } from './data/boutique.js';
+import { AMELIO, STAT_ACHATS, NOMS_BOTS, MANCHE_PRIORITE, paquet, SANS_RARETE } from './data/boutique.js';
 import { statsToupie } from './stats.js';
 import { ajouterCafard, viderCafards, cafards, majCafards } from './bugs.js';
 import { especesVague, compositionEtape, nouveauxTypes, TYPES } from './data/cafards.js';
@@ -27,7 +27,7 @@ export function nouvellePartie(equipe, { pseudo = 'Toi', mode = 'normale', nivPi
   const noms = melanger([...NOMS_BOTS]);
   const nivEquipe = Object.fromEntries(Object.values(equipe).map(id => [id, nivPieces[id] || 1]));
   const joueurs = [{ nom: pseudo, bot: false, vies: PARTIE.vies, equipe: Object.freeze({ ...equipe }), nivPieces: Object.freeze(nivEquipe),
-    terrain, niveaux: {}, elimine: false, place: 0 }];
+    terrain, niveaux: {}, achats: {}, elimine: false, place: 0 }];
   for (let i = 1; i < PARTIE.joueurs; i++) joueurs.push(creerBot(noms[i]));
   const avecTerrain = terrain && terrain !== 'aucun';
   Object.assign(partie, {
@@ -47,6 +47,7 @@ export const lancerDansEtape = (m = partie.manche) => (m % PARTIE.cycle.length) 
 export const vivants = () => partie.joueurs.filter(j => !j.elimine);
 export const mesStats = () => statsToupie(partie.moi.equipe, partie.moi.niveaux, partie.moi.nivPieces);
 const niv = id => partie.moi.niveaux[id] || 0;
+const ach = id => partie.moi.achats?.[id] || 0; // nombre d'achats (prix et plafond)
 export const capacite = () => Math.max(4, CAFARDS.capacite + mesStats().nid);
 const chanceDore = () => mesStats().chanceDore;
 // Adversaire du prochain duel : jamais deux fois de suite le même (s'il y a le choix)
@@ -305,24 +306,24 @@ function finPartie(place) {
 
 // ---------------------------------------------------------------- Boutique
 // Offres tirées au hasard à chaque manche (comme une boutique d'auto-battler) : on choisit, on ne coche pas tout.
-// Au moins une offre du bureau et une de la toupie ; une offre « conseillée » contre les prochains cafards si possible.
+// 4 offres complètement au hasard (toupie, lanceur ou bureau), chacune avec une rareté tirée selon la Chance.
+// La priorité de terrain n'est pas une offre : elle a son bouton à part.
 export function tirerOffres() {
   if (!BOUTIQUE.offres) { partie.offres = null; return; }
-  const dispo = [...STAT_ACHATS, ...(prioriteDispo() ? [AMELIO.priorite] : [])].filter(a => (partie.moi.niveaux[a.id] || 0) < a.max);
-  const poids = a => (a.id === 'multi' ? 0.3 : a.id === 'priorite' ? 1.5 : a.prix(0) >= 6 ? 0.6 : 1);
+  const dispo = STAT_ACHATS.filter(a => ach(a.id) < a.max);
+  const poids = a => (a.id === 'multi' ? 0.3 : a.prix(0) >= 6 ? 0.6 : 1);
   const tirer = liste => {
     const tot = liste.reduce((x, a) => x + poids(a), 0);
     let r = Math.random() * tot;
     for (const a of liste) if ((r -= poids(a)) < 0) return a;
     return liste[0];
   };
-  const offres = [];
-  const prendre = liste => { const l = liste.filter(a => !offres.includes(a.id)); if (l.length) offres.push(tirer(l).id); };
-  prendre(dispo.filter(a => a.groupe === 'bureau'));
-  prendre(dispo.filter(a => a.groupe === 'toupie'));
-  const conseil = dispo.filter(a => (partie.conseils || []).includes(a.id));
-  if (conseil.length) prendre(conseil);
-  while (offres.length < BOUTIQUE.offres && offres.length < dispo.length) prendre(dispo);
+  const offres = [], veine = mesStats().veine;
+  while (offres.length < BOUTIQUE.offres && offres.length < dispo.length) {
+    const l = dispo.filter(a => !offres.some(o => o.id === a.id));
+    const a = tirer(l);
+    offres.push({ id: a.id, rarete: SANS_RARETE(a.id) ? 'commune' : tirerRarete(veine) });
+  }
   partie.offres = offres;
 }
 
@@ -342,18 +343,22 @@ export const interetsPrevus = () => Math.min(Math.floor(partie.argent / ECONOMIE
 export const prioriteDispo = () => partie.moi.terrain !== 'aucun' && partie.manche >= MANCHE_PRIORITE;
 
 export function prixAmelio(id) {
-  const a = AMELIO[id], n = niv(id);
+  const a = AMELIO[id], n = ach(id);
   if (id === 'priorite' && !prioriteDispo()) return null;
   return n >= a.max ? null : paquet(a, n).prix;
 }
-export const niveauxAchat = id => (paquet(AMELIO[id], niv(id))?.niveaux || 0);
+export const niveauxAchat = (id, rarete = 'commune') => (paquet(AMELIO[id], ach(id), rarete)?.niveaux || 0);
 
-export function acheter(id) {
+// Acheter une offre : les niveaux gagnés dépendent de sa rareté (même prix) ; ensuite les offres sont relancées (gratuit)
+export function acheter(id, rarete = 'commune') {
   const prix = prixAmelio(id);
   if (prix == null || partie.argent < prix) { son('refus'); return false; }
+  const pq = paquet(AMELIO[id], ach(id), rarete);
   partie.argent -= prix;
-  partie.moi.niveaux[id] = niv(id) + niveauxAchat(id);
+  partie.moi.niveaux[id] = niv(id) + pq.niveaux;
+  partie.moi.achats = { ...(partie.moi.achats || {}), [id]: ach(id) + pq.achats };
   son('achat');
+  if (id !== 'priorite' && partie.offres) tirerOffres();
   return true;
 }
 

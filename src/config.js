@@ -39,7 +39,31 @@ export const CAFARDS = {
 
 // Boutique : nombre d'offres tirées au hasard à chaque manche (0 = tout afficher) et prix pour relancer
 // La relance coûte de plus en plus cher dans une même boutique (2, 3, 5, 7, 10…), puis redevient à 2 à la manche suivante.
-export const BOUTIQUE = { offres: 6, relance: n => Math.round(2 * Math.pow(1.5, n)) };
+export const BOUTIQUE = { offres: 4, relance: n => Math.round(2 * Math.pow(1.5, n)) };
+
+// Rareté des offres de la boutique : MÊME PRIX, mais plus de niveaux gagnés (effet ×1,5 / ×2 / ×3).
+// La stat « Chance » (🎲) rend les raretés hautes plus fréquentes.
+export const RARETES_OFFRE = [
+  { id: 'commune', nom: 'Commune', mult: 1, poids: 76, couleur: '#b2bec3' },
+  { id: 'rare', nom: 'Rare', mult: 1.5, poids: 18, couleur: '#3fa7ff' },
+  { id: 'epique', nom: 'Épique', mult: 2, poids: 5, couleur: '#b36bff' },
+  { id: 'legendaire', nom: 'Légendaire', mult: 3, poids: 1, couleur: '#ffb52e' },
+];
+export const RARETE_OFFRE = Object.fromEntries(RARETES_OFFRE.map(r => [r.id, r]));
+// Chaque niveau de Chance : les raretés hautes pèsent plus, la commune moins (plafonné, rendements décroissants)
+const BONUS_CHANCE = [-0.06, 0.15, 0.3, 0.5];
+export function poidsRaretes(veine = 0) {
+  const L = Math.min(25, Math.max(0, veine));
+  return RARETES_OFFRE.map((r, i) => r.poids * Math.max(0.15, 1 + BONUS_CHANCE[i] * L));
+}
+export function tirerRarete(veine = 0) {
+  const w = poidsRaretes(veine), tot = w.reduce((a, b) => a + b, 0);
+  let x = Math.random() * tot;
+  for (let i = 0; i < w.length; i++) if ((x -= w[i]) < 0) return RARETES_OFFRE[i].id;
+  return 'commune';
+}
+// Probabilité d'avoir mieux que commune (affichée dans la stat Chance)
+export const probaMieux = veine => { const w = poidsRaretes(veine); return 1 - w[0] / w.reduce((a, b) => a + b, 0); };
 
 // Économie entre les manches
 export const ECONOMIE = {

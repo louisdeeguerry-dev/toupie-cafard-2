@@ -178,6 +178,7 @@ function ame(p, y) {
   let sym;
   switch (p.forme) {
     case 'flamme': sym = new THREE.Mesh(new THREE.ConeGeometry(0.005, 0.012, 10), mat(p.couleur, lum)); sym.position.y = s + 0.004; break;
+    case 'fer': sym = new THREE.Mesh(new THREE.TorusGeometry(0.0055, 0.0016, 8, 20, Math.PI * 1.4), mat(p.couleur, lum)); sym.rotation.z = -Math.PI * 0.2; sym.position.y = s + 0.006; break;
     case 'aimant': sym = new THREE.Mesh(new THREE.TorusGeometry(0.005, 0.0018, 8, 16, Math.PI), mat(p.couleur, lum)); sym.position.y = s + 0.002; break;
     case 'ressort': {
       sym = new THREE.Group();

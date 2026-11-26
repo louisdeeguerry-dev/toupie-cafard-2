@@ -592,3 +592,24 @@ La jauge de lancer en partie a été vérifiée : elle fonctionne.
 - `BORNES` dans `src/stats.js` : minimum et maximum de chaque stat sur tous les assortiments (une pièce par emplacement, niveaux 1 à 5). C'est exact, car les niveaux s'additionnent emplacement par emplacement.
 - Les barres vont de 1 % à 100 % ; les pouvoirs vont de 0 au maximum.
 - Les achats en partie peuvent faire déborder la barre, qui reste alors pleine.
+
+---
+
+## 2026-11-26 — Stat Chance, rareté des améliorations, boutique à 4 offres, priorité toujours achetable
+
+**Prompt optimisé** : (rôle : game designer / dev gameplay)
+- Ajouter une stat **Chance** (🎲), achetable en partie.
+- Les améliorations de la boutique ont une **rareté**, à prix égal : commune, rare (effet ×1,5), épique (×2), légendaire (×3). La Chance augmente la probabilité des raretés hautes.
+- Afficher la rareté sur chaque carte par un code couleur et une étiquette.
+- La boutique passe à **4 offres complètement aléatoires** (toupie, lanceur ou bureau, dans n'importe quelle proportion). Chaque achat relance les offres.
+- Rendre la **priorité de terrain achetable à tout moment**, avec un petit bouton sous Relancer et Prêt.
+- Surveiller l'équilibrage.
+
+**Réalisé** :
+- Raretés et Chance dans `config.js` (`RARETES_OFFRE`, `tirerRarete`).
+- Stat `veine` affichée « Chance », sur 5 achats maximum. L'id `chance` reste le Trèfle doré.
+- Prix et plafond comptés en achats (`achats`), et effet en niveaux multipliés par la rareté.
+- Les bots tirent les mêmes raretés selon leur propre Chance.
+- Nouvelle âme « Fer à cheval » (Chance +5, endurance et lames en baisse), pour que chaque stat soit le bonus d'au moins une pièce.
+- Intérêts max arrondis à l'entier inférieur.
+- Repères mesurés : multiplicateur moyen ×1,16 sans Chance, ×1,29 après un achat, ×1,54 vers 10 niveaux.

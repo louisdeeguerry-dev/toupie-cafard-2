@@ -2,6 +2,7 @@
 // logique (des niveaux qui se convertissent en valeurs réelles : secondes, cm, grammes, tr/min…).
 // Les pièces donnent des niveaux (+ ou −), la boutique en partie en ajoute.
 import { PIECE, PIECES, SLOTS, niveauxPiece, NIVEAU_PIECE_MAX } from './data/pieces.js';
+import { probaMieux } from './config.js';
 
 export const GROUPES = [
   { id: 'toupie', nom: 'Toupie', icone: '🌀' },
@@ -58,6 +59,8 @@ export const STATS = [
     fmt: s => `+${Math.round(s.comboBonus * 100)} % / cafard, ${s.comboFenetre.toFixed(1)} s` },
   { id: 'tirelire', groupe: 'bureau', nom: 'Tirelire', icone: '🐷', desc: 'Plus d\'intérêts sur l\'argent gardé entre les manches.',
     fmt: s => `${s.interetMax} 💰 d'intérêts max` },
+  { id: 'veine', groupe: 'bureau', nom: 'Chance', icone: '🎲', desc: 'Les améliorations de la boutique sortent plus souvent rares, épiques ou légendaires : même prix, mais effet ×1,5, ×2 ou ×3.',
+    fmt: s => `${Math.round(probaMieux(s.veine) * 100)} % d'offres rares ou mieux` },
 ];
 export const STAT = Object.fromEntries(STATS.map(s => [s.id, s]));
 
@@ -100,7 +103,8 @@ export function calculer(niv) {
     chanceDore: P('chance') ? 0.02 + 0.02 * P('chance') : 0,
     comboFenetre: Math.max(0.6, 1.0 + 0.15 * L('combo')),
     comboBonus: Math.max(0, 0.05 + 0.03 * L('combo')),
-    interetMax: Math.max(0, 3 + L('tirelire')),
+    interetMax: Math.max(0, Math.floor(3 + L('tirelire'))),
+    veine: P('veine'),
   };
 }
 
@@ -172,6 +176,7 @@ export function effet(id, n) {
     case 'chance': return `${r0(b.chanceDore * 100)} % de cafards dorés`;
     case 'combo': return `${sg(r0((b.comboBonus - a.comboBonus) * 100))} % par cafard en combo`;
     case 'tirelire': return `${sg(b.interetMax - a.interetMax)} 💰 d'intérêts max`;
+    case 'veine': return `${sg(Math.round((probaMieux(b.veine) - probaMieux(a.veine)) * 100))} % d'offres rares ou mieux`;
     default: return STAT[id].fmt(b); // pouvoirs (feu, souffle, éclairs, tourbillon) : la valeur obtenue
   }
 }

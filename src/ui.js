@@ -5,7 +5,7 @@ import { STAT_ACHATS, PRIORITE, MANCHE_PRIORITE } from './data/boutique.js';
 import { PARTIE } from './config.js';
 import { STATS, STAT, GROUPES, niveauxToupie, calculer as calcul, tempsRotation, effet, BORNES } from './stats.js';
 import { partie, etape, prixAmelio, acheter, prioriteDispo, lancerDansEtape, relancerOffres, prixRelance, interetsPrevus, niveauxAchat, mesStats as mesStatsUI } from './match.js';
-import { ECONOMIE } from './config.js';
+import { ECONOMIE, RARETE_OFFRE } from './config.js';
 import { PIECE as PIECES_PAR_ID } from './data/pieces.js';
 import { TYPES } from './data/cafards.js';
 import { MODES, MONNAIE, PRIX_BOITE, rangDe, RANGS, xpPourNiveau, acheterBoite } from './progression.js';
@@ -370,19 +370,18 @@ export function afficherBilan(bilan, onPret) {
   const suite = adv ? `Prochain : ⚔️ duel contre <b>${esc(adv.nom)}</b>`
     : ap ? `Prochain : 🪳 lancer ${ap.lancer}/3 · ${ap.capacite} cafards${ap.evolution?.length ? ` · 🧬 nouveaux : ${ap.evolution.map(t => TYPES[t].icone + ' ' + TYPES[t].nom).join(', ')}` : ''}` : '';
 
-  const carte = id => {
-    const a = id === 'priorite' ? PRIORITE : STAT_ACHATS.find(x => x.id === id);
-    const p = partie.moi, n = p.niveaux[id] || 0, prix = prixAmelio(id), k = niveauxAchat(id) || 1;
-    let avant, apres;
-    if (id === 'priorite') { avant = PRIORITE.fmt(n); apres = PRIORITE.fmt(n + 1); }
-    else {
-      const niv = niveauxToupie(p.equipe, p.niveaux, p.nivPieces);
-      avant = STAT[id].fmt(calcul(niv)); apres = STAT[id].fmt(calcul({ ...niv, [id]: (niv[id] || 0) + k }));
-    }
+  const carte = o => {
+    const { id, rarete = 'commune' } = typeof o === 'string' ? { id: o } : o;
+    const a = STAT_ACHATS.find(x => x.id === id), R = RARETE_OFFRE[rarete];
+    const p = partie.moi, prix = prixAmelio(id), k = niveauxAchat(id, rarete) || 1;
+    const niv = niveauxToupie(p.equipe, p.niveaux, p.nivPieces);
+    const avant = STAT[id].fmt(calcul(niv)), apres = STAT[id].fmt(calcul({ ...niv, [id]: (niv[id] || 0) + k }));
     const conseil = (partie.conseils || []).includes(id);
-    return `<button class="offre ${conseil ? 'conseil' : ''}" data-a="${id}" ${prix == null || prix > partie.argent ? 'disabled' : ''} title="${esc(a.desc)}">
+    const fmtK = String(k).replace('.', ',');
+    return `<button class="offre rarete-${rarete} ${conseil ? 'conseil' : ''}" style="--rar:${R.couleur}" data-a="${id}" data-r="${rarete}" ${prix == null || prix > partie.argent ? 'disabled' : ''} title="${esc(a.desc)}">
+      <span class="badge-rarete">${R.nom}${R.mult > 1 ? ` · effet ×${String(R.mult).replace('.', ',')}` : ''}</span>
       ${conseil ? '<span class="badge-conseil">conseillé</span>' : ''}
-      <span class="ic">${a.icone}</span><b>${esc(a.nom)}</b>${k > 1 ? `<span class="paquet">+${k} niveaux</span>` : ''}
+      <span class="ic">${a.icone}</span><b>${esc(a.nom)}</b>${k > 1 ? `<span class="paquet">+${fmtK} niveaux</span>` : ''}
       <span class="effet">${esc(avant)}<br>→ <span class="plus">${esc(apres)}</span></span>
       <span class="px">${prix == null ? 'MAX' : prix + ' 💰'}</span></button>`;
   };
@@ -400,19 +399,27 @@ export function afficherBilan(bilan, onPret) {
             Intérêts : <b>+${interets} 💰</b> à la fin de la manche<br>(+1 par ${ECONOMIE.interetPour} 💰 gardés, max ${mesStatsUI().interetMax})</div>
           <button class="btn second" id="relancer" ${partie.argent < prixR ? 'disabled' : ''}>🎲 Relancer · ${prixR} 💰</button>
           <button class="btn" id="pret">Prêt ▶</button>
+          ${prioriteHtml()}
           <div class="petit">${suite}</div>
         </div>
       </div>`;
     $('pret').onclick = () => { montrer('bilan', false); onPret(); };
     $('relancer').onclick = e => { e.stopPropagation(); if (relancerOffres()) { rendre(); majHud(); } };
+    const bp = $('btnPriorite');
+    if (bp) bp.onclick = e => { e.stopPropagation(); if (acheter('priorite')) { rendre(); majHud(); } };
+  };
+  // Priorité de terrain : toujours achetable (si on a un terrain), petit bouton sous Relancer / Prêt
+  const prioriteHtml = () => {
+    const n = partie.moi.niveaux.priorite || 0, prix = prixAmelio('priorite');
+    const sansTerrain = partie.moi.terrain === 'aucun';
+    return `<button class="btn second petit-btn" id="btnPriorite" ${sansTerrain || prix == null || prix > partie.argent ? 'disabled' : ''}
+      title="${esc(PRIORITE.desc)}${sansTerrain ? ' (il faut avoir choisi un terrain de duel dans l\'atelier)' : ''}">
+      🏟️ Priorité de terrain · ${prix == null ? 'MAX' : prix + ' 💰'}<br><span class="petit">${sansTerrain ? 'pas de terrain choisi' : PRIORITE.fmt(n)}</span></button>`;
   };
   $('bilanContenu').onclick = e => {
     const b = e.target.closest('[data-a]');
-    if (b && acheter(b.dataset.a)) {
-      // l'offre achetée disparaît (comme une carte achetée)
-      if (partie.offres) partie.offres = partie.offres.filter(x => x !== b.dataset.a);
-      rendre(); majHud();
-    }
+    // Acheter relance automatiquement les offres (gratuit)
+    if (b && acheter(b.dataset.a, b.dataset.r)) { rendre(); majHud(); }
   };
   rendre();
   montrer('bilan');

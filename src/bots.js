@@ -2,7 +2,7 @@
 // un niveau de jeu (habileté), une façon de dépenser son argent (style), parfois un terrain.
 // Pendant que tu joues tes lancers, eux « jouent » les leurs : leur argent dépend de leur toupie, de leur habileté
 // et de la résistance des cafards, et ils achètent vraiment dans la boutique (mêmes prix que toi).
-import { PARTIE, CAFARDS, ECONOMIE } from './config.js';
+import { PARTIE, CAFARDS, ECONOMIE, tirerRarete } from './config.js';
 import { PIECES, SLOTS, RARETES } from './data/pieces.js';
 import { TERRAINS } from './data/terrains.js';
 import { AMELIO, MANCHE_PRIORITE, paquet } from './data/boutique.js';
@@ -53,7 +53,7 @@ export function creerBot(nom) {
   const style = hasard(Object.keys(STYLES));
   const focus = style === 'specialiste' ? [...COMBAT].sort(() => Math.random() - 0.5).slice(0, 2 + Math.floor(Math.random() * 2)) : null;
   return {
-    nom, bot: true, vies: PARTIE.vies, equipe, nivPieces, terrain, niveaux: {}, elimine: false, place: 0,
+    nom, bot: true, vies: PARTIE.vies, equipe, nivPieces, terrain, niveaux: {}, achats: {}, elimine: false, place: 0,
     habilete, style, focus, argent: terrain !== 'aucun' ? PARTIE.argentAvecTerrain : PARTIE.argentSansTerrain,
   };
 }
@@ -87,12 +87,13 @@ export function finMancheBot(b, manche, etape) {
   };
   const garde = b.style === 'eco' && etape < 3 ? 10 : 0; // l'économe garde de quoi toucher des intérêts
   for (let essais = 0; essais < 30; essais++) {
-    const id = hasard(voulu()), a = AMELIO[id], niv = b.niveaux[id] || 0;
-    if (!a || niv >= a.max) continue;
-    const pq = paquet(a, niv);
+    const id = hasard(voulu()), a = AMELIO[id], n = b.achats[id] || 0;
+    if (!a || n >= a.max) continue;
+    const pq = paquet(a, n, tirerRarete(s.veine)); // même boutique que le joueur : rareté selon sa Chance
     if (!pq || b.argent - pq.prix < garde) continue;
     b.argent -= pq.prix;
-    b.niveaux[id] = niv + pq.niveaux;
+    b.niveaux[id] = (b.niveaux[id] || 0) + pq.niveaux;
+    b.achats[id] = n + pq.achats;
   }
   // Priorité de terrain, en secret, à partir de la 3e manche
   if (b.terrain !== 'aucun' && manche >= MANCHE_PRIORITE && b.argent >= 4 && Math.random() < 0.4) {

@@ -97,6 +97,8 @@ export const PIECES = [
     niveaux: { eclair: 6, puissance: -3, endurance: -3 }, desc: 'Ses coups lancent des éclairs qui sautent de cafard en cafard.' },
   { id: 'ame-cyclone', slot: 'ame', nom: 'Âme cyclone', rarete: 'epique', forme: 'cyclone', couleur: 0xb2bec3,
     niveaux: { tornade: 6, glisse: -3, elan: -3 }, desc: 'Aspire les cafards proches.' },
+  { id: 'ame-fer', slot: 'ame', nom: 'Fer à cheval', rarete: 'rare', forme: 'fer', couleur: 0xc0c7cf,
+    niveaux: { veine: 5, endurance: -3, lames: -2 }, desc: 'Porte-bonheur : la boutique propose plus souvent des améliorations rares, mais ce fer pèse sur la rotation.' },
   { id: 'ame-carapace', slot: 'ame', nom: 'Âme carapace', rarete: 'legendaire', forme: 'carapace', couleur: 0xf1c40f,
     niveaux: { inertie: 2, poids: 2, lames: -2, elan: -2 }, passif: 'carapace', desc: 'Le premier gros choc reçu en duel est annulé.' },
 
