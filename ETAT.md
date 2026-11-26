@@ -94,6 +94,8 @@
   (top 4 : 4/5), puissance 4,2. Les parties sont plus longues. L'économie pure est en retrait (2 duels gagnés sur 11) : à surveiller.
 - **26/11, duel perdu = 1 vie** (10 parties en économie, robot qui relance) : 5,8 de moyenne, 1 top 4 sur 10, 34 % de duels gagnés,
   environ 27 manches par partie. L'économie pure reste faible ; il faut comparer avec mixte et puissance sous la même règle.
+  Comparaison faite : mixte 6,6 et puissance 5,2. Tout le monde recule, car les cafards deviennent trop résistants
+  quand la partie atteint 7 étapes (environ 2 tués par lancer).
 
 ## Prochaines étapes possibles
 - Faire jouer Louis à l'atelier refait, puis affiner la vitesse et les zooms.

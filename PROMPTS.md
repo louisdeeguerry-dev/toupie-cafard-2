@@ -668,4 +668,6 @@ Des pistes chiffrées ont été proposées à Louis, sans être appliquées.
 ## 2026-11-26 — Comparaison mixte et puissance (duel perdu = 1 vie)
 
 **Prompt optimisé** : jouer 5 parties de mixte et 5 de puissance avec la règle « 1 vie par duel perdu », pour les comparer à l'économie (5,8).
-**Réalisé** : voir le message suivant de la conversation (résultats).
+**Réalisé** : mixte 6,6 (0 top 4 sur 5), puissance 5,2 (2 sur 5), économie 5,8. Toutes les stratégies du robot reculent
+sur les parties longues, et les cafards tués par lancer tombent à environ 2 à partir de l'étape 4. Cause probable : la vie des cafards
+(+12 % par étape) devient trop forte quand les parties durent 7 étapes.
