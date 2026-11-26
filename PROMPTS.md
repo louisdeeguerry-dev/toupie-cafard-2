@@ -650,3 +650,15 @@ Des pistes chiffrées ont été proposées à Louis, sans être appliquées.
 - Les deux réglages sont dans `src/config.js`.
 - Places moyennes : sacrifice 5,6, économie 6,0, mixte 4,2 (4/5 dans le top 4), puissance 4,2 ; aucune erreur.
 - Les parties durent plus longtemps : 17 à 18 manches pour mixte et puissance.
+
+---
+
+## 2026-11-26 — Duel perdu = 1 vie ; parties en stratégie économie
+
+**Prompt optimisé** : un duel perdu coûte toujours 1 vie (5 vies = 5 défaites possibles) ; rejouer des parties en stratégie
+économie.
+**Réalisé** :
+- `degatsDuel = 1`.
+- 1re série de 10 parties : 6,1 de place moyenne, mais le robot gardait 116 💰 sans s'en servir, faute de relancer.
+- Le robot de test relance maintenant quand aucune offre ne lui convient.
+- 2e série de 10 parties : 5,8 de place moyenne, 21 duels gagnés sur 61, environ 27 manches par partie, et l'argent est bien dépensé.

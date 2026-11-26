@@ -92,6 +92,8 @@
   Pistes à décider : coût d'un duel perdu plafonné, intérêts par tranche de 10, relances moins chères, cafards en fin de partie.
 - **26/11, duel perdu au plus 3 vies et relances 1, 2, 3, 5, 8…** (5 parties par stratégie) : sacrifice 5,6, économie 6,0, mixte 4,2
   (top 4 : 4/5), puissance 4,2. Les parties sont plus longues. L'économie pure est en retrait (2 duels gagnés sur 11) : à surveiller.
+- **26/11, duel perdu = 1 vie** (10 parties en économie, robot qui relance) : 5,8 de moyenne, 1 top 4 sur 10, 34 % de duels gagnés,
+  environ 27 manches par partie. L'économie pure reste faible ; il faut comparer avec mixte et puissance sous la même règle.
 
 ## Prochaines étapes possibles
 - Faire jouer Louis à l'atelier refait, puis affiner la vitesse et les zooms.
