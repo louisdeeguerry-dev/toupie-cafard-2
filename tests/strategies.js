@@ -23,12 +23,16 @@ const STRAT = process.argv[2] || 'mixte';
       if (vis('fin')) return { fin: true, place: P.moi.place, manche: P.manche };
       if (vis('bilan')) {
         const etape = Math.floor(P.manche / 4) + 1;
-        const BUREAU = ['nid', 'prime', 'combo', 'tirelire', 'chance'], TOUPIE = ['lames', 'endurance', 'elan', 'critique', 'diametre', 'puissance'];
+        const BUREAU = ['nid', 'prime', 'combo', 'tirelire', 'chance', 'veine'], TOUPIE = ['lames', 'endurance', 'elan', 'critique', 'diametre', 'puissance'];
         const veut = (STRAT === 'eco' || STRAT === 'sacrifice') ? (etape < 3 ? BUREAU : TOUPIE) : STRAT === 'force' ? TOUPIE : (P.manche % 2 ? BUREAU : TOUPIE);
         // achète le moins cher disponible dans la liste voulue
         const btns = [...document.querySelectorAll('#bilanContenu .offre:not([disabled])')].filter(x => veut.includes(x.dataset.a));
         btns.sort((a, c) => parseInt(a.querySelector('.px').textContent) - parseInt(c.querySelector('.px').textContent));
         if (btns.length) { btns[0].click(); return { achat: true }; }
+        // Rien d'intéressant : relance si l'argent le permet (en gardant de quoi toucher des intérêts au début pour l'éco)
+        const rel = document.getElementById('relancer'), prixR = parseInt((rel?.textContent || '').replace(/\D+/g, ' ').trim().split(' ').pop());
+        const garde = STRAT === 'eco' && etape < 3 ? 10 : 0;
+        if (rel && !rel.disabled && P.argent - prixR >= garde + 4 && (P.relancesRobot = (P.relancesRobot || 0) + 1) < 200) { rel.click(); return { relance: true }; }
         const res = document.querySelector('#bilanContenu .resume')?.textContent || '';
         document.getElementById('pret').click();
         return { bilan: true, res, manche: P.manche, etape: Math.floor((P.manche - 1) / 4) + 1, vies: P.moi.vies, argent: P.argent };
