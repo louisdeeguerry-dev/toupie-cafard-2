@@ -662,3 +662,10 @@ Des pistes chiffrées ont été proposées à Louis, sans être appliquées.
 - 1re série de 10 parties : 6,1 de place moyenne, mais le robot gardait 116 💰 sans s'en servir, faute de relancer.
 - Le robot de test relance maintenant quand aucune offre ne lui convient.
 - 2e série de 10 parties : 5,8 de place moyenne, 21 duels gagnés sur 61, environ 27 manches par partie, et l'argent est bien dépensé.
+
+---
+
+## 2026-11-26 — Comparaison mixte et puissance (duel perdu = 1 vie)
+
+**Prompt optimisé** : jouer 5 parties de mixte et 5 de puissance avec la règle « 1 vie par duel perdu », pour les comparer à l'économie (5,8).
+**Réalisé** : voir le message suivant de la conversation (résultats).
