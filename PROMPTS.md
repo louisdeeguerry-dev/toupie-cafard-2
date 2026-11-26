@@ -557,3 +557,10 @@ petit rebond. Vérifié avec l'engrenage et la pointe, aucune erreur.
 - bouton « 🧪 Mode test » dans le menu : les 56 pièces au niv 5 et les 3 terrains ; la sauvegarde est mise de côté puis restaurée.
 
 Testé : passage en mode test et partie lancée, aucune erreur.
+
+---
+
+## 2026-11-26 — Lien du test
+
+**Prompt optimisé** : envoyer à Louis le lien de la version en ligne pour jouer la partie test (mode test).
+**Réalisé** : lien de GitHub Pages et marche à suivre envoyés.
