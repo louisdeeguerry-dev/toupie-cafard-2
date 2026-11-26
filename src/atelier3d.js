@@ -113,8 +113,18 @@ function eclatementAxe(choisi) {
   y.ame = gap(1) + gap(2);
   return y;
 }
-const ECLATE_L = { plot: [0, -0.012, -0.02], corps: [0, 0, 0], engrenage: [0, -0.03, 0], ressort: [0, 0.035, 0], poignee: [0, 0, 0.035] };
-const SORTIE_L = { engrenage: [0, -0.02, -0.02], ressort: [0, 0.025, 0.01] };
+// Lanceur éclaté DANS SON AXE (l'axe de lancer, z) : de l'avant vers l'arrière plot → engrenage → corps → ressort → poignée.
+// Petit écart entre voisines, grand écart de part et d'autre de la pièce choisie.
+const ORDRE_L = ['plot', 'engrenage', 'corps', 'ressort', 'poignee'];
+const ECART_L = 0.02, ECART_L_CHOISI = 0.055;
+function eclatementAxeL(choisi) {
+  const i0 = ORDRE_L.indexOf(choisi), c = ORDRE_L.indexOf('corps');
+  const gap = i => (i === i0 || i + 1 === i0 ? ECART_L_CHOISI : ECART_L); // écart entre i et i+1
+  const z = { corps: 0 };
+  for (let i = c - 1; i >= 0; i--) z[ORDRE_L[i]] = z[ORDRE_L[i + 1]] - gap(i);
+  for (let i = c + 1; i < ORDRE_L.length; i++) z[ORDRE_L[i]] = z[ORDRE_L[i - 1]] + gap(i - 1);
+  return z;
+}
 
 const etat = { onglet: 'toupie', slot: null, toupie: null, lanceur: null, rebond: 0, rotation: 0 };
 const decal = {}; // décalages actuels, par pièce (pour garder la vue éclatée quand on reconstruit un modèle)
@@ -178,8 +188,7 @@ export function majAtelier(dt, t) {
   // Lanceur
   for (const [nom, p] of Object.entries(L.parts)) {
     // Lanceur : seule la pièce choisie sort, avec le même mouvement à ressort
-    const cible = new THREE.Vector3(...(eclateL && nom === etat.slot ? ECLATE_L[nom] : [0, 0, 0]));
-    if (eclateL && nom === etat.slot && SORTIE_L[nom]) cible.add(new THREE.Vector3(...SORTIE_L[nom]));
+    const cible = new THREE.Vector3(0, 0, eclateL ? eclatementAxeL(etat.slot)[nom] : 0);
     const vit = p.userData.vit ||= new THREE.Vector3();
     vit.add(cible.clone().sub(p.position).multiplyScalar(70 * dt)).multiplyScalar(Math.exp(-10 * dt));
     p.position.addScaledVector(vit, dt);
@@ -187,7 +196,7 @@ export function majAtelier(dt, t) {
   }
   // L'engrenage se redresse pour qu'on voie ses dents ; il tourne toujours un peu
   const eng = L.parts.engrenage;
-  eng.rotation.x += ((eclateL && etat.slot === 'engrenage' ? 1.1 : eclateL ? 0.5 : 0) - eng.rotation.x) * k;
+  eng.rotation.x += (0 - eng.rotation.x) * k; // l'engrenage reste dans l'axe
   for (const r of eng.children) if (r.userData.roue) r.rotation.y += dt * (etat.slot === 'engrenage' ? 1.5 : 0.4);
   etat.rebond = Math.max(0, etat.rebond - dt * 2.2);
   if (!etat.rebond) etat.slotChange = null;
@@ -198,7 +207,7 @@ export function majAtelier(dt, t) {
   // Éclatée, la toupie flotte plus haut : toutes ses pièces restent au-dessus de l'arène
   T.racine.position.y += ((eclateT ? 0.09 : 0.003 + Math.sin(t * 1.5) * 0.003) - T.racine.position.y) * k;
   // Le lanceur pivote doucement sur lui-même (vue 3D), s'arrête de trois quarts quand on regarde une pièce
-  if (eclateL) L.racine.rotation.y += (-0.6 - L.racine.rotation.y) * k;
+  if (eclateL) L.racine.rotation.y += (-Math.PI / 2 - L.racine.rotation.y) * k; // de profil : l'axe traverse l'écran
   else L.racine.rotation.y += dt * 0.35;
   L.racine.position.y += ((eclateL ? 0.07 : 0) - L.racine.position.y) * k;
 
@@ -207,7 +216,7 @@ export function majAtelier(dt, t) {
   if (etat.onglet === 'terrain') { pos = new THREE.Vector3(0, 0.34, 0.38); cible = new THREE.Vector3(0, 0, 0); }
   // Zoom : la pièce choisie au centre, mais assez de recul pour voir toute la vue éclatée
   else if (eclateT) ({ pos, cible } = cibleDe(T.parts, etat.slot, ECHELLE_T, [0.05, 0.05, 0.32], new THREE.Vector3(0, T.racine.position.y + 0.02, 0)));
-  else if (eclateL) ({ pos, cible } = cibleDe(L.parts, etat.slot, ECHELLE_L, etat.slot === 'engrenage' ? [0.1, 0.2, 0.36] : [0.18, 0.14, 0.36],
+  else if (eclateL) ({ pos, cible } = cibleDe(L.parts, etat.slot, ECHELLE_L, [0.02, 0.17, 0.5],
     new THREE.Vector3(0, L.racine.position.y + 0.08, 0.02)));
   else if (etat.onglet === 'lanceur') { pos = new THREE.Vector3(0.2, 0.3, 0.58); cible = new THREE.Vector3(0, 0.06, 0); }
   else { pos = new THREE.Vector3(0, 0.12, 0.42); cible = new THREE.Vector3(0, 0.045, 0); }

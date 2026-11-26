@@ -476,3 +476,13 @@ grand autour de la pièce choisie ; en changeant de pièce, les autres restent �
 la nouvelle pièce s'éloignent ; la caméra zoome sur la pièce concernée.
 **Réalisé** : `eclatementAxe()` (écart 1,8 cm entre voisines, 5 cm autour de la pièce choisie, animation à ressort) ; caméra
 visant le vrai centre de la pièce. Testé (2 captures, 0 erreur).
+
+---
+
+## 2026-11-26 — Lanceur éclaté dans l'axe
+
+**Prompt optimisé** : même principe que la toupie pour le lanceur : toutes ses pièces s'éclatent dans son axe, avec un écart
+plus grand autour de la pièce choisie, et la caméra zoome dessus.
+**Réalisé** : `eclatementAxeL()` le long de l'axe de lancer (plot → engrenage → corps → ressort → poignée ; 2 cm entre
+voisines, 5,5 cm autour de la pièce choisie), lanceur tourné de profil pendant l'éclaté, engrenage qui reste dans l'axe.
+Testé (0 erreur).
