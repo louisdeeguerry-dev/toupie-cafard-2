@@ -691,3 +691,11 @@ Durées au choix de Claude.
 - Les minuteurs suivent l'horloge réelle.
 
 Testé : lancer automatique, accélération ×2 puis ×5, boutique chronométrée ; aucune erreur.
+
+---
+
+## 2026-11-26 — Résultats après cafards adoucis et bots recalibrés
+
+**Réalisé** (5 parties par stratégie) : sacrifice 6,8, économie 5,2, mixte 5,8, puissance 6,0 ; parties d'environ 26 à 29 manches.
+Le robot écrase 2 à 4,6 cafards par lancer, les bots simulés 4 à 6 : ils restent un peu plus riches. Proposition : caler leur
+plafond sur la mesure réelle, environ 3,5 par lancer.

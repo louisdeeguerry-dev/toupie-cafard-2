@@ -97,6 +97,8 @@
   environ 27 manches par partie. L'économie pure reste faible ; il faut comparer avec mixte et puissance sous la même règle.
   Comparaison faite : mixte 6,6 et puissance 5,2. Tout le monde recule, car les cafards deviennent trop résistants
   quand la partie atteint 7 étapes (environ 2 tués par lancer).
+- **26/11, cafards à +6 %/étape après l'étape 3 et bots plafonnés** : sacrifice 6,8, économie 5,2, mixte 5,8, puissance 6,0.
+  Les bots écrasent encore plus de cafards que le robot (4 à 6 contre 2 à 4,6 par lancer) : plafond à caler sur environ 3,5.
 
 ## Prochaines étapes possibles
 - Faire jouer Louis à l'atelier refait, puis affiner la vitesse et les zooms.
