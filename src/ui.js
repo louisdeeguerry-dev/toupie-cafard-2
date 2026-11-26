@@ -32,7 +32,9 @@ function carteHtml(p, k = 1) {
 // Tableau de TOUTES les stats (celles du jeu 1), avec niveau et valeur réelle ; « apres » = aperçu d'un changement
 // Les stats en barres qui se remplissent (0 = vide, à fond = très haut). Survol : la valeur réelle et le niveau.
 // Pouvoirs (stats spéciales) : vides tant qu'on ne les a pas.
-const pctStat = (st, n) => Math.max(0, Math.min(1, st.special ? n / 15 : (n + 10) / 30));
+// Échelle douce (jamais saturée) : avec les pièces niveau 5, les niveaux dépassent ±10 ; une échelle linéaire collait alors
+// la barre à fond (ou à vide) et on ne voyait plus la différence entre deux ressorts.
+const pctStat = (st, n) => st.special ? Math.max(0, 1 - Math.exp(-Math.max(0, n) / 8)) : 0.5 + 0.5 * Math.tanh(n / 10);
 export function tableauStats(niv, nivApres = null) {
   const v = calcul(niv), w = nivApres ? calcul(nivApres) : null;
   const t = tempsRotation(w || v);

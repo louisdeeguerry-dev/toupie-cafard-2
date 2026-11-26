@@ -564,3 +564,17 @@ Testé : passage en mode test et partie lancée, aucune erreur.
 
 **Prompt optimisé** : envoyer à Louis le lien de la version en ligne pour jouer la partie test (mode test).
 **Réalisé** : lien de GitHub Pages et marche à suivre envoyés.
+
+---
+
+## 2026-11-26 — Ressort en titane illogique, barre d'élan
+
+**Prompt optimisé** : (rôle : game designer, règle 5 « logique mécanique ») une pièce de lanceur ne doit modifier que le lancer :
+le ressort en titane ne peut pas alléger la toupie. Corriger aussi la barre d'élan, qui ne réagit pas.
+**Réalisé** :
+- ressort en titane : élan +7, puissance −4, précision −3 (plus de poids ni d'endurance) ;
+- règle appliquée aux autres pièces : ressort de matelas sans rebond, engrenage horloger sans critique ;
+- barre d'élan : les barres saturaient au-delà de ±10 niveaux, fréquent avec les pièces niv 5 du mode test, et tous les gros
+  ressorts affichaient une barre pleine ; l'échelle est maintenant douce et ne sature jamais.
+
+La jauge de lancer en partie a été vérifiée : elle fonctionne.

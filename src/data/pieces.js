@@ -160,11 +160,11 @@ export const PIECES = [
   { id: 'engrenage-rouille', slot: 'engrenage', nom: 'Engrenage rouillé', rarete: 'commune', forme: 'standard', couleur: 0xa0522d,
     niveaux: { puissance: 2, elan: 2, precision: -4 }, desc: 'Un peu plus fort partout, mais la jauge est capricieuse.' },
   { id: 'engrenage-horloger', slot: 'engrenage', nom: 'Engrenage horloger', rarete: 'rare', forme: 'fin', couleur: 0xdfe6e9,
-    niveaux: { precision: 6, critique: 2, puissance: -5, elan: -3 }, desc: 'Mécanisme de précision : PARFAIT presque à chaque fois.' },
+    niveaux: { precision: 8, puissance: -5, elan: -3 }, desc: 'Mécanisme de précision : PARFAIT presque à chaque fois.' },
   { id: 'ressort-matelas', slot: 'ressort', nom: 'Ressort de matelas', rarete: 'commune', forme: 'souple', couleur: 0xdcdde1,
-    niveaux: { rebond: 3, precision: 2, elan: -5 }, desc: 'Mou et régulier : lancers doux et précis.' },
+    niveaux: { precision: 5, elan: -5 }, desc: 'Mou et régulier : lancers doux et précis.' },
   { id: 'ressort-titane', slot: 'ressort', nom: 'Ressort en titane', rarete: 'epique', forme: 'renforce', couleur: 0xb2bec3,
-    niveaux: { elan: 6, endurance: 2, puissance: -4, poids: -4 }, desc: 'Léger et nerveux : la toupie part comme une flèche, mais légère.' },
+    niveaux: { elan: 7, puissance: -4, precision: -3 }, desc: 'Raide et nerveux : la toupie part comme une flèche, mais ce gros ressort prend la place de l\'engrenage et la détente est brutale (jauge moins précise).' },
 ];
 
 export const PIECE = Object.fromEntries(PIECES.map(p => [p.id, p]));
