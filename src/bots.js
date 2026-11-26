@@ -70,7 +70,7 @@ export function jouerLancerBot(b, n, etape) {
   const capacite = Math.max(4, CAFARDS.capacite + s.nid);
   // Un lancer ne traverse qu'une partie du bureau : plafond « géométrique » (≈ ce qu'un vrai lancer bien visé écrase),
   // sinon un gros Nid ferait tuer aux bots bien plus de cafards qu'un vrai joueur
-  const plafond = 4.8 * Math.min(1.6, couverture) * s.toupies ** 0.5;
+  const plafond = 3.4 * Math.min(1.3, couverture) * s.toupies ** 0.5;
   const tues = Math.round(Math.min(capacite * taux * s.toupies ** 0.5, plafond * entre(0.8, 1.2)));
   const primeMoy = Object.entries(comp).reduce((a, [t, p]) => a + p * TYPES[t].prime, 0);
   const gain = Math.round(tues * CAFARDS.prime * CAFARDS.primeEtape(etape) * primeMoy * s.prime * (1 + s.chanceDore * 3) * (1 + s.comboBonus));

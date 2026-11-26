@@ -699,3 +699,10 @@ Testé : lancer automatique, accélération ×2 puis ×5, boutique chronométré
 **Réalisé** (5 parties par stratégie) : sacrifice 6,8, économie 5,2, mixte 5,8, puissance 6,0 ; parties d'environ 26 à 29 manches.
 Le robot écrase 2 à 4,6 cafards par lancer, les bots simulés 4 à 6 : ils restent un peu plus riches. Proposition : caler leur
 plafond sur la mesure réelle, environ 3,5 par lancer.
+
+---
+
+## 2026-11-26 — Calage des bots sur environ 3,5 cafards par lancer
+
+**Prompt optimisé** : caler le plafond des cafards écrasés par les bots sur la mesure réelle du robot (environ 3,5 par lancer) et rejouer 5 parties par stratégie.
+**Réalisé** : plafond 3,4 × couverture (couverture plafonnée à 1,3) ; les bots passent de 3,4 cafards par lancer à l'étape 1 à 4,2 à l'étape 7. Tests relancés.
