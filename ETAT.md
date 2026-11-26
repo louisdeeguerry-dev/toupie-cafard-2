@@ -32,7 +32,7 @@
 - **Hors partie** : **menu principal** (Jouer + mode, Atelier, Boutique de boîtes, Collection).
 - **Atelier** :
   - onglets Toupie / Lanceur / Terrain ;
-  - quand on clique sur une pièce, **seule cette pièce sort** en se dévissant, avec un petit rebond, et la caméra zoome dessus ;
+  - quand on clique sur une pièce, **la toupie s'éclate dans son axe** (toutes les pièces s'écartent verticalement, avec un écart plus grand autour de la pièce choisie) et la caméra zoome sur cette pièce ;
   - la liste des pièces remplace les emplacements jusqu'au bouton « Retour » ;
   - les stats s'affichent en **barres qui se remplissent**, avec la valeur au survol ;
   - nouveau lanceur 3D inspiré du jeu 1 (engrenage et ressort visibles) ;

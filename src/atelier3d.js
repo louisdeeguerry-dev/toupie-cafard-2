@@ -101,7 +101,18 @@ const ECHELLE_T = 1.5, ECHELLE_L = 1.7;
 // Écartement de la vue éclatée (repère du modèle, en mètres) ; la pièce choisie sort encore plus
 // Seule la pièce choisie sort (les autres restent montées) : elle se « dévisse » en tournant, avec un petit rebond.
 // La toupie s'arrête face à la caméra (+z) pendant ce temps, donc z = vers le joueur.
-const SORTIE_T = { pointe: [0, -0.055, 0.02], base: [0, -0.01, 0.075], couronne: [0, 0.03, 0.045], ame: [0, 0.07, 0.02] };
+// Vue éclatée DANS L'AXE de la toupie : toutes les pièces s'écartent verticalement, dans l'ordre pointe → base → couronne → âme.
+// L'écart est petit entre pièces voisines, et grand de part et d'autre de la pièce choisie.
+const ORDRE_T = ['pointe', 'base', 'couronne', 'ame'];
+const ECART = 0.018, ECART_CHOISI = 0.05;
+function eclatementAxe(choisi) {
+  const i0 = ORDRE_T.indexOf(choisi), gap = i => (i === i0 || i + 1 === i0 ? ECART_CHOISI : ECART); // écart entre i et i+1
+  const y = { base: 0 };
+  y.pointe = -gap(0);
+  y.couronne = gap(1);
+  y.ame = gap(1) + gap(2);
+  return y;
+}
 const ECLATE_L = { plot: [0, -0.012, -0.02], corps: [0, 0, 0], engrenage: [0, -0.03, 0], ressort: [0, 0.035, 0], poignee: [0, 0, 0.035] };
 const SORTIE_L = { engrenage: [0, -0.02, -0.02], ressort: [0, 0.025, 0.01] };
 
@@ -140,8 +151,9 @@ const camPos = new THREE.Vector3(0, 0.12, 0.42), camCible = new THREE.Vector3(0,
 const v = new THREE.Vector3();
 // La caméra vise entre la pièce choisie et le centre de l'objet : la pièce est au centre de l'écran,
 // mais on garde toute la vue éclatée autour
+const boiteVisee = new THREE.Box3();
 function cibleDe(parts, slot, echelle, decalVue, centre) {
-  parts[slot].getWorldPosition(v);
+  boiteVisee.setFromObject(parts[slot]).getCenter(v); // le vrai centre de la pièce, pas l'origine de son groupe
   const cible = v.clone().lerp(centre, 0.15);
   return { cible, pos: cible.clone().add(new THREE.Vector3(...decalVue).multiplyScalar(echelle / 1.5)) };
 }
@@ -153,7 +165,7 @@ export function majAtelier(dt, t) {
   const eclateT = etat.onglet === 'toupie' && etat.slot, eclateL = etat.onglet === 'lanceur' && etat.slot;
   // Toupie : vue éclatée et pièce sortie
   for (const [nom, p] of Object.entries(T.parts)) {
-    const cible = new THREE.Vector3(...(eclateT && nom === etat.slot ? SORTIE_T[nom] : [0, 0, 0]));
+    const cible = new THREE.Vector3(0, eclateT ? eclatementAxe(etat.slot)[nom] : 0, 0);
     // Ressort amorti : mouvement mécanique avec un léger dépassement
     const vit = p.userData.vit ||= new THREE.Vector3();
     vit.add(cible.clone().sub(p.position).multiplyScalar(70 * dt)).multiplyScalar(Math.exp(-10 * dt));
@@ -182,8 +194,7 @@ export function majAtelier(dt, t) {
 
   // La toupie tourne (plus lentement quand elle est éclatée, pour qu'on voie bien les pièces)
   // Éclatée, la toupie s'arrête face à la caméra ; sinon elle tourne
-  if (eclateT) { const cibleA = Math.round(T.rotor.rotation.y / (Math.PI * 2)) * Math.PI * 2; T.rotor.rotation.y += (cibleA - T.rotor.rotation.y) * k; }
-  else T.rotor.rotation.y += dt * 2.2;
+  T.rotor.rotation.y += dt * (eclateT ? 0.4 : 2.2); // éclatée, elle tourne lentement sur son axe
   // Éclatée, la toupie flotte plus haut : toutes ses pièces restent au-dessus de l'arène
   T.racine.position.y += ((eclateT ? 0.09 : 0.003 + Math.sin(t * 1.5) * 0.003) - T.racine.position.y) * k;
   // Le lanceur pivote doucement sur lui-même (vue 3D), s'arrête de trois quarts quand on regarde une pièce
@@ -195,7 +206,7 @@ export function majAtelier(dt, t) {
   let pos, cible;
   if (etat.onglet === 'terrain') { pos = new THREE.Vector3(0, 0.34, 0.38); cible = new THREE.Vector3(0, 0, 0); }
   // Zoom : la pièce choisie au centre, mais assez de recul pour voir toute la vue éclatée
-  else if (eclateT) ({ pos, cible } = cibleDe(T.parts, etat.slot, ECHELLE_T, [0.05, 0.045, 0.28], new THREE.Vector3(0, T.racine.position.y + 0.02, 0)));
+  else if (eclateT) ({ pos, cible } = cibleDe(T.parts, etat.slot, ECHELLE_T, [0.05, 0.05, 0.32], new THREE.Vector3(0, T.racine.position.y + 0.02, 0)));
   else if (eclateL) ({ pos, cible } = cibleDe(L.parts, etat.slot, ECHELLE_L, etat.slot === 'engrenage' ? [0.1, 0.2, 0.36] : [0.18, 0.14, 0.36],
     new THREE.Vector3(0, L.racine.position.y + 0.08, 0.02)));
   else if (etat.onglet === 'lanceur') { pos = new THREE.Vector3(0.2, 0.3, 0.58); cible = new THREE.Vector3(0, 0.06, 0); }

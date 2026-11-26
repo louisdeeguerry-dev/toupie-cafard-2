@@ -466,3 +466,13 @@ panneau dans l'atelier.
 **Réalisé** : décor animé (ciel, projecteurs, poussières) + musique lo-fi générée (🔊) ; contrôles glisser/molette/pincement ;
 `FORCE_PIECES` 0,6 ; `effet()` en unités réelles ; `src/inspecteur.js` (collection + 🔍 dans l'atelier, bouton Équiper).
 Testé : 0 erreur.
+
+---
+
+## 2026-11-26 — Vue éclatée dans l'axe de la toupie
+
+**Prompt optimisé** : dans l'atelier, toutes les pièces s'éclatent en restant dans l'axe de la toupie ; l'écart est plus
+grand autour de la pièce choisie ; en changeant de pièce, les autres restent éclatées mais se resserrent, et les voisines de
+la nouvelle pièce s'éloignent ; la caméra zoome sur la pièce concernée.
+**Réalisé** : `eclatementAxe()` (écart 1,8 cm entre voisines, 5 cm autour de la pièce choisie, animation à ressort) ; caméra
+visant le vrai centre de la pièce. Testé (2 captures, 0 erreur).
