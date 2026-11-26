@@ -6,7 +6,7 @@ import { lanceur, majLanceur, lancerDirect, modeleLanceur } from './launcher.js'
 import { lancerDansEtape, capacite } from './match.js';
 import { partie, nouvellePartie, commencerManche, majPartie, brancherInterface, lancer, abandonner, acheter, _interne } from './match.js';
 import { majFx, majBarres, majEtincelles, facteurTemps } from './fx.js';
-import { majCamera } from './scene.js';
+import { majCamera, rendre } from './scene.js';
 import { activerAudio, ronron, musique, basculerMusique, musiqueActive } from './audio.js';
 import * as UI from './ui.js';
 import { VERSION } from './config.js';
@@ -133,7 +133,7 @@ function boucle(maintenant) {
   t += dt;
   if (mode === 'atelier') {
     majAtelier(dt, t);
-    renderer.render(vitrine, vitrineCam);
+    rendre(vitrine, vitrineCam);
   } else {
     // Sous-pas : physique stable même si une image prend du retard
     const n = Math.ceil(dt / 0.008);
@@ -154,7 +154,7 @@ function boucle(maintenant) {
     majCamera(dtReel, suivi);
     const mesT = (partie.mesToupies || []).filter(x => x.lancee && !x.tombe);
     ronron(mesT.length ? Math.max(...mesT.map(x => x.rotation / x.rotationMax)) : 0);
-    renderer.render(scene, camera);
+    rendre(scene, camera);
   }
   requestAnimationFrame(boucle);
 }

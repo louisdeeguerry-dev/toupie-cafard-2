@@ -507,3 +507,24 @@ le résultat par un agent.
 (engrenage au sol, poignée au pied). Les décalages s'ajoutent maintenant à cette position. Le ressort sort entièrement
 du manche, avec la poignée juste derrière. La caméra cadre tout le lanceur éclaté et la 3D est centrée dans la zone libre
 entre les deux panneaux. L'agent de contrôle (Sonnet) a signalé la poignée hors écran et le cadrage trop serré : corrigé.
+
+---
+
+## 2026-11-26 — Lanceur mécanique (pignon central sur le pied) + gros travail visuel
+
+**Prompt optimisé** : (rôle : dev 3D / artiste technique Three.js)
+- éloigner un peu plus le ressort dans l'éclaté ;
+- retirer la poignée en T ;
+- rendre le lanceur mécaniquement logique : l'engrenage choisi engrène sur un pignon central monté sur le pied ;
+- puis améliorer nettement les visuels et les graphismes.
+
+L'agent de contrôle n'est plus utilisé.
+**Réalisé** :
+- vraies roues dentées extrudées (dents, ajours, moyeu), avec un pas par modèle d'engrenage ;
+- pignon central sur la colonne du pied, à l'entraxe exact ; il tourne avec le bon rapport de denture, comme les satellites du « double » ;
+- poignée supprimée ;
+- manche rond avec butée, boîtier tourné avec rivets ;
+- ressort sorti à 4 cm du manche ;
+- carte de reflets « studio » pour tous les métaux ;
+- halo lumineux (bloom, Three.js r160 MIT, dans `vendor/jsm`) et vignettage ;
+- vue d'ensemble du lanceur élargie.

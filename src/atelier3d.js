@@ -4,7 +4,7 @@
 import * as THREE from 'three';
 import { vitrine, vitrineCam, supportVitrine } from './scene.js';
 import { creerToupie, libererToupie } from './topMesh.js';
-import { creerLanceur, libererLanceur } from './lanceurMesh.js';
+import { creerLanceur, libererLanceur, tournerEngrenages } from './lanceurMesh.js';
 
 const R = 0.2; // rayon de la mini-arène
 
@@ -124,14 +124,12 @@ const MANCHE = 0.075;
 function eclatementAxeL(choisi) {
   const g = (a, b) => (a === choisi || b === choisi ? ECART_L_CHOISI : ECART_L);
   const yEng = -g('corps', 'engrenage');
-  const zRes = choisi === 'ressort' ? MANCHE + 0.015 : g('corps', 'ressort') * 0.4;
-  const zPoi = choisi === 'ressort' ? zRes + 0.02 : zRes + g('ressort', 'poignee'); // juste derrière le ressort sorti
+  const zRes = choisi === 'ressort' ? MANCHE + 0.04 : g('corps', 'ressort') * 0.4; // il sort entièrement du manche
   return {
     corps: [0, 0, 0],
     engrenage: [0, yEng, 0],
     plot: [0, yEng - g('engrenage', 'plot'), 0],
     ressort: [0, 0, zRes],
-    poignee: [0, 0, zPoi],
   };
 }
 
@@ -245,7 +243,7 @@ export function majAtelier(dt, t) {
   // L'engrenage se redresse pour qu'on voie ses dents ; il tourne toujours un peu
   const eng = L.parts.engrenage;
   eng.rotation.x += (0 - eng.rotation.x) * k; // l'engrenage reste dans l'axe
-  for (const r of eng.children) if (r.userData.roue) r.rotation.y += eclateL ? 0 : dt * 0.4; // éclaté : l'engrenage ne pivote pas
+  if (!eclateL) tournerEngrenages(L, dt * 0.4); // l'engrenage entraîne le pignon du pied ; éclaté, tout s'arrête
   etat.rebond = Math.max(0, etat.rebond - dt * 2.2);
   if (!etat.rebond) etat.slotChange = null;
 
@@ -265,7 +263,7 @@ export function majAtelier(dt, t) {
   // Zoom : la pièce choisie au centre, mais assez de recul pour voir toute la vue éclatée
   else if (eclateT) ({ pos, cible } = cibleDe(T.parts, etat.slot, ECHELLE_T, [0.05, 0.05, 0.32], new THREE.Vector3(0, T.racine.position.y + 0.02, 0)));
   else if (eclateL) ({ pos, cible } = cadrerLanceur(L, etat.slot)); // tout le lanceur éclaté tient entre les panneaux
-  else if (etat.onglet === 'lanceur') { pos = new THREE.Vector3(0.2, 0.3, 0.58); cible = new THREE.Vector3(0, 0.06, 0); }
+  else if (etat.onglet === 'lanceur') { pos = new THREE.Vector3(0.26, 0.36, 0.8); cible = new THREE.Vector3(0, 0.07, 0); }
   else { pos = new THREE.Vector3(0, 0.12, 0.42); cible = new THREE.Vector3(0, 0.045, 0); }
   const kc = 1 - Math.exp(-4 * dt);
   camPos.lerp(pos, kc); camCible.lerp(cible, kc);

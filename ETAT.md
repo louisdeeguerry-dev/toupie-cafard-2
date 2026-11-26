@@ -36,7 +36,7 @@
   - lanceur : vu de profil et surélevé ; le ressort sort entièrement du manche, le long de son axe, et l'engrenage descend sans pivoter ; la 3D est centrée entre les deux panneaux ;
   - la liste des pièces remplace les emplacements jusqu'au bouton « Retour » ;
   - les stats s'affichent en **barres qui se remplissent**, avec la valeur au survol ;
-  - nouveau lanceur 3D inspiré du jeu 1 (engrenage et ressort visibles) ;
+  - lanceur 3D mécanique : l'engrenage choisi (vraie roue dentée) entraîne un pignon central monté sur le pied ; manche rond à voyants entouré du ressort ; plus de poignée en T ;
   - **glisser pour pivoter, molette ou pincement pour zoomer**, avec un zoom serré sur la pièce choisie ;
   - 🔍 sur chaque pièce ouvre l'**écran d'inspection**.
 - **Écran d'inspection** (Collection et atelier) :
@@ -47,6 +47,8 @@
   musique lo-fi générée à la volée (bouton 🔊 dans le menu).
 - **Pièces adoucies** : niveaux ×0,6 (`FORCE_PIECES` dans `src/data/pieces.js`) ; les effets sont affichés en unités réelles
   (« +7 % de chance de critique », « −5 g »).
+
+- **Rendu** : reflets « studio » sur tous les matériaux, halo lumineux (bloom, `vendor/jsm`) et vignettage ; réglages dans `src/scene.js` (`studio()`, `rendre()`).
 
 ## Où est quoi
 | Sujet | Fichier |

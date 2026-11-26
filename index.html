@@ -250,6 +250,9 @@
     #aide { white-space: normal; width: 92vw; text-align: center; top: 58px; }
     #bandeau { font-size: 26px; width: 92vw; }
   }
+/* Vignettage : bords assombris, l'œil va au centre */
+#jeu::after { content: ''; position: fixed; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse 75% 70% at 50% 50%, transparent 55%, rgba(8, 4, 2, 0.5) 100%); }
 </style>
 </head>
 <body>

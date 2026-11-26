@@ -1,6 +1,10 @@
 // La scène 3D : rendu, caméra, bureau de jeu, et la vitrine de l'atelier.
 import * as THREE from 'three';
 import { DESK_X, ARENE_R, RAIL_R, RAIL_ANGLE } from './config.js';
+import { EffectComposer } from '../vendor/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from '../vendor/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from '../vendor/jsm/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from '../vendor/jsm/postprocessing/OutputPass.js';
 
 export const conteneur = document.getElementById('jeu');
 export const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
@@ -11,6 +15,20 @@ renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.05;
 conteneur.appendChild(renderer.domElement);
+
+// Post-traitement : un halo doux (bloom) autour de ce qui brille (voyants, étincelles, néons, lueurs des pièces).
+// Un seul « composeur » pour le bureau et la vitrine : on change juste la scène et la caméra à chaque image.
+const composeur = new EffectComposer(renderer);
+const passeRendu = new RenderPass(new THREE.Scene(), new THREE.PerspectiveCamera());
+const halo = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.45, 0.5, 0.92);
+composeur.addPass(passeRendu); composeur.addPass(halo); composeur.addPass(new OutputPass());
+export function rendre(sc, cam) {
+  passeRendu.scene = sc; passeRendu.camera = cam;
+  // La vitrine est déjà très éclairée (projecteurs) : halo plus discret et réservé aux vraies sources de lumière
+  const vit = sc === vitrine;
+  halo.strength = vit ? 0.22 : 0.45; halo.threshold = vit ? 1.15 : 0.92;
+  composeur.render();
+}
 
 // ---------------------------------------------------------------- Le bureau
 export const scene = new THREE.Scene();
@@ -142,6 +160,8 @@ export function majCamera(dt, suivi) {
 export function cadrer() {
   const w = conteneur.clientWidth || window.innerWidth, h = conteneur.clientHeight || window.innerHeight;
   renderer.setSize(w, h, false);
+  composeur.setPixelRatio(renderer.getPixelRatio()); composeur.setSize(w, h);
+  halo.resolution.set(w / 2, h / 2);
   camera.aspect = w / h;
   const portrait = w / h < 1;
   camera.fov = portrait ? 58 : 40;
@@ -185,3 +205,25 @@ vitrine.add(supportVitrine);
 
 window.addEventListener('resize', cadrer);
 cadrer();
+
+// ---------------------------------------------------------------- Reflets : un « studio » flou (plafonnier, néons chaud et froid)
+// sert de carte d'environnement à tous les matériaux : les métaux (engrenages, ressorts, toupies) brillent enfin
+function studio() {
+  const pm = new THREE.PMREMGenerator(renderer), s = new THREE.Scene(), boite = new THREE.BoxGeometry(1, 1, 1);
+  s.background = new THREE.Color(0x120c09);
+  const panneau = (c, i, pos, taille) => {
+    const m = new THREE.Mesh(boite, new THREE.MeshBasicMaterial({ color: new THREE.Color(c).multiplyScalar(i) }));
+    m.position.set(...pos); m.scale.set(...taille); s.add(m);
+  };
+  panneau(0xfff1dc, 2.2, [0, 5, 0], [5, 0.1, 3]); // plafonnier
+  panneau(0xffa860, 1.6, [-5, 1.5, 1], [0.1, 2, 4]); // néon chaud
+  panneau(0x80aaff, 1.3, [5, 1.5, -1], [0.1, 2, 3]); // néon froid
+  panneau(0xffffff, 0.7, [0, 1, 5], [3, 1.5, 0.1]); // fenêtre devant
+  panneau(0x3a281c, 1, [0, -2, 0], [12, 0.1, 12]); // sol
+  const tex = pm.fromScene(s, 0.035).texture;
+  pm.dispose(); boite.dispose();
+  return tex;
+}
+const reflets = studio();
+scene.environment = reflets;
+vitrine.environment = reflets;

@@ -1,6 +1,6 @@
 // Le lanceur en 3D, inspiré de celui de Toupie contre Cafards (jeu 1) : un plot de départ gradué, un boîtier rond
-// à emblème en spirale, une couronne crantée (= l'ENGRENAGE choisi), un manche à voyants entouré d'un ressort
-// (= le RESSORT choisi) et une poignée en T. Chaque pièce est un groupe à part, pour la vue éclatée de l'atelier.
+// à emblème en spirale, une roue dentée (= l'ENGRENAGE choisi) qui entraîne le pignon central monté sur le pied,
+// et un manche rond à voyants entouré d'un ressort (= le RESSORT choisi). Chaque pièce est un groupe à part, pour la vue éclatée de l'atelier.
 // Repère : le plot (là où part la toupie) est vers −z, la poignée vers +z.
 import * as THREE from 'three';
 import { PIECE } from './data/pieces.js';
@@ -46,35 +46,53 @@ function textureFace() {
 
 const ajouter = (parent, geo, mat, x = 0, y = 0, z = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; parent.add(m); return m; };
 
-// ---------------------------------------------------------------- Engrenage (couronne crantée sous le boîtier)
-function engrenage(p) {
-  const g = new THREE.Group(), mat = M(p.couleur, 0.7, 0.3);
-  const roue = (rayon, dents, epaisseur, x = 0) => {
-    const r = new THREE.Group();
-    r.position.x = x;
-    ajouter(r, new THREE.TorusGeometry(rayon, epaisseur, 8, 48), mat).rotation.x = Math.PI / 2;
-    ajouter(r, new THREE.CylinderGeometry(rayon * 0.35, rayon * 0.35, 0.004, 24), M(0x2b2f36, 0.5, 0.4));
-    for (let i = 0; i < 4; i++) ajouter(r, new THREE.BoxGeometry(rayon * 1.6, 0.0025, 0.003), mat).rotation.y = (i * Math.PI) / 4;
-    for (let i = 0; i < dents; i++) {
-      const a = (i / dents) * Math.PI * 2, w = Math.min(0.006, ((Math.PI * 2 * rayon) / dents) * 0.55);
-      ajouter(r, new THREE.BoxGeometry(0.006, 0.005, w), mat, Math.cos(a) * (rayon + 0.003), 0, Math.sin(a) * (rayon + 0.003)).rotation.y = -a;
-    }
-    r.userData.roue = true;
-    g.add(r);
-    return r;
-  };
-  switch (p.forme) {
-    case 'fin': roue(0.036, 32, 0.0018); break;
-    case 'grand': roue(0.047, 22, 0.0034); break;
-    case 'turbo': {
-      roue(0.04, 18, 0.003);
-      const halo = ajouter(g, new THREE.TorusGeometry(0.044, 0.0022, 8, 48), lueur(0xff5a2a));
-      halo.rotation.x = Math.PI / 2; halo.castShadow = false;
-      break;
-    }
-    case 'double': roue(0.034, 16, 0.0026); roue(0.02, 11, 0.002, 0.058); roue(0.02, 11, 0.002, -0.058); break;
-    default: roue(0.038, 16, 0.0028);
+// ---------------------------------------------------------------- Engrenages (vraies roues dentées, extrudées)
+// Chaque engrenage a un rayon primitif et un pas de denture : le pignon central du pied a le même pas, donc ils engrènent.
+const ROUES = {
+  fin: { r: 0.036, pas: 0.0045 }, grand: { r: 0.047, pas: 0.0085 }, turbo: { r: 0.04, pas: 0.0065 },
+  double: { r: 0.034, pas: 0.006 }, standard: { r: 0.038, pas: 0.006 },
+};
+const geoRoue = (r, pas, ep, { trou = 0.003, ajours = 0 } = {}) => {
+  const n = Math.max(8, Math.round((Math.PI * 2 * r) / pas)), h = pas * 0.36, sh = new THREE.Shape();
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2, d = (Math.PI * 2) / n;
+    const pts = [[a - d * 0.5, r - h], [a - d * 0.22, r - h], [a - d * 0.12, r + h], [a + d * 0.12, r + h], [a + d * 0.22, r - h]];
+    for (const [ang, rr] of pts) (i || ang !== pts[0][0] ? sh.lineTo : sh.moveTo).call(sh, Math.cos(ang) * rr, Math.sin(ang) * rr);
   }
+  sh.closePath();
+  const t = new THREE.Path(); t.absarc(0, 0, trou, 0, Math.PI * 2, true); sh.holes.push(t);
+  for (let i = 0; i < ajours; i++) { // ajours entre les rayons, pour l'allure mécanique
+    const a0 = (i / ajours) * Math.PI * 2 + 0.22, a1 = ((i + 1) / ajours) * Math.PI * 2 - 0.22, r0 = r * 0.36, r1 = r * 0.74;
+    const aj = new THREE.Path(); aj.absarc(0, 0, r1, a0, a1, false); aj.absarc(0, 0, r0, a1, a0, true); aj.closePath(); sh.holes.push(aj);
+  }
+  const g = new THREE.ExtrudeGeometry(sh, { depth: ep, bevelEnabled: true, bevelThickness: ep * 0.18, bevelSize: Math.min(0.0005, h * 0.3), bevelSegments: 2, curveSegments: 10 });
+  g.translate(0, 0, -ep / 2); g.rotateX(-Math.PI / 2);
+  return { g, n };
+};
+export function roueDentee(r, pas, mat, { ep = 0.0035, ajours = 0, moyeu = 0x2b2f36 } = {}) {
+  const grp = new THREE.Group(), { g, n } = geoRoue(r, pas, ep, { ajours, trou: Math.min(0.004, r * 0.3) });
+  ajouter(grp, g, mat);
+  ajouter(grp, new THREE.CylinderGeometry(Math.min(0.007, r * 0.42), Math.min(0.007, r * 0.42), ep * 1.6, 24), M(moyeu, 0.6, 0.35));
+  grp.userData = { roue: true, dents: n };
+  return grp;
+}
+function engrenage(p) {
+  const g = new THREE.Group(), mat = M(p.couleur, 0.85, 0.28), R = ROUES[p.forme] || ROUES.standard;
+  const principale = roueDentee(R.r, R.pas, mat, { ajours: p.forme === 'fin' ? 6 : 5 });
+  principale.userData.rapport = 1;
+  g.add(principale);
+  if (p.forme === 'turbo') {
+    const halo = ajouter(g, new THREE.TorusGeometry(R.r + 0.004, 0.0018, 8, 64), lueur(0xff5a2a));
+    halo.rotation.x = Math.PI / 2; halo.castShadow = false;
+  }
+  if (p.forme === 'double') for (const s of [-1, 1]) { // deux satellites qui engrènent sur la grande roue
+    const rs = 0.02, sat = roueDentee(rs, R.pas, mat, { ajours: 3 });
+    sat.position.x = s * (R.r + rs);
+    sat.userData.rapport = -principale.userData.dents / sat.userData.dents;
+    sat.rotation.y = Math.PI / sat.userData.dents;
+    g.add(sat);
+  }
+  g.userData.R = R;
   return g;
 }
 
@@ -101,10 +119,10 @@ function ressort(p) {
 }
 
 // ---------------------------------------------------------------- Le lanceur complet
-// equipe : { engrenage, ressort } ; renvoie { racine, parts: { plot, corps, engrenage, ressort, poignee }, voyants }
+// equipe : { engrenage, ressort } ; renvoie { racine, parts: { plot, corps, engrenage, ressort }, voyants }
 export function creerLanceur(equipe) {
   const racine = new THREE.Group();
-  const sombre = M(0x23262c, 0.5, 0.4), acier = M(0xc9d1d8, 0.6, 0.25), coque = M(0xd35400, 0.3, 0.4), accent = M(0xffd36b, 0.4, 0.35);
+  const sombre = M(0x23262c, 0.5, 0.4), acier = M(0x8f99a4, 0.9, 0.28), coque = M(0xd35400, 0.3, 0.4), accent = M(0xffd36b, 0.4, 0.35);
 
   // Plot de départ gradué
   const plot = new THREE.Group();
@@ -117,42 +135,54 @@ export function creerLanceur(equipe) {
   }
   racine.add(plot);
 
-  // Corps : pied, boîtier à emblème, manche à voyants
+  // Engrenage choisi : sous le boîtier, sur l'axe de la toupie
+  const eng = engrenage(PIECE[equipe.engrenage] || PIECE['engrenage-standard']);
+  eng.position.set(0, HY - 0.012, LZ);
+  const R = eng.userData.R;
+
+  // Corps : boîtier à emblème, manche rond à voyants, et le PIED, qui porte le pignon central engrené sur l'engrenage
   const corps = new THREE.Group();
-  ajouter(corps, new THREE.CylinderGeometry(0.017, 0.02, 0.006, 24), sombre, 0, 0.003, 0.05);
-  ajouter(corps, new THREE.CylinderGeometry(0.006, 0.007, HY, 12), acier, 0, HY / 2, 0.05);
   const dessus = M(0xffffff, 0.2, 0.4, { map: textureFace() });
-  ajouter(corps, new THREE.CylinderGeometry(0.032, 0.034, 0.016, 48), [coque, dessus, sombre], 0, HY, LZ);
-  ajouter(corps, new THREE.TorusGeometry(0.0325, 0.0022, 8, 48), accent, 0, HY + 0.008, LZ).rotation.x = Math.PI / 2;
-  ajouter(corps, new THREE.CylinderGeometry(0.011, 0.014, 0.022, 20), acier, 0, HY - 0.019, LZ);
+  const profil = [[0, -0.008], [0.03, -0.008], [0.034, -0.005], [0.034, 0.005], [0.031, 0.008], [0, 0.008]].map(([x, y]) => new THREE.Vector2(x, y));
+  ajouter(corps, new THREE.LatheGeometry(profil, 64), coque, 0, HY, LZ);
+  ajouter(corps, new THREE.CircleGeometry(0.0305, 64), dessus, 0, HY + 0.0081, LZ).rotation.x = -Math.PI / 2;
+  ajouter(corps, new THREE.TorusGeometry(0.0325, 0.0018, 10, 64), accent, 0, HY + 0.0065, LZ).rotation.x = Math.PI / 2;
+  for (let i = 0; i < 8; i++) { // rivets sur la tranche
+    const a = (i / 8) * Math.PI * 2;
+    ajouter(corps, new THREE.SphereGeometry(0.0016, 10, 6), acier, Math.cos(a) * 0.0342, HY, LZ + Math.sin(a) * 0.0342);
+  }
+  ajouter(corps, new THREE.CylinderGeometry(0.004, 0.004, 0.014, 16), acier, 0, HY - 0.014, LZ); // axe de la toupie
+  // Pied : colonne verticale juste à côté de l'engrenage, avec le pignon central à la hauteur de l'engrenage
+  const pignon = roueDentee(0.011, R.pas, acier, { ep: 0.0045, moyeu: 0xd35400 });
+  const n = pignon.userData.dents;
+  const rp = (n * R.pas) / (Math.PI * 2); // rayon exact du pignon pour ce pas
+  pignon.position.set(0, HY - 0.012, LZ + R.r + rp);
+  pignon.rotation.y = Math.PI / n; // ses dents tombent entre celles de l'engrenage
+  pignon.userData.rapport = -eng.children[0].userData.dents / n;
+  corps.add(pignon);
+  const pz = pignon.position.z;
+  ajouter(corps, new THREE.CylinderGeometry(0.018, 0.021, 0.005, 32), sombre, 0, 0.0025, pz);
+  ajouter(corps, new THREE.TorusGeometry(0.0195, 0.0014, 8, 32), accent, 0, 0.005, pz).rotation.x = Math.PI / 2;
+  ajouter(corps, new THREE.CylinderGeometry(0.0042, 0.0055, HY, 16), acier, 0, HY / 2, pz);
+  ajouter(corps, new THREE.CylinderGeometry(0.0065, 0.0065, 0.006, 16), sombre, 0, HY, pz); // collier qui tient le manche
+  // Manche : une tige ronde (le ressort l'entoure et peut en glisser), terminée par une butée
   const long = NZ1 - NZ0, NZ = (NZ0 + NZ1) / 2;
-  ajouter(corps, new THREE.BoxGeometry(0.014, 0.01, long), coque, 0, HY, NZ);
+  ajouter(corps, new THREE.CylinderGeometry(0.0055, 0.0055, long, 20), coque, 0, HY, NZ).rotation.x = Math.PI / 2;
+  ajouter(corps, new THREE.CylinderGeometry(0.0072, 0.0072, 0.004, 20), accent, 0, HY, NZ1 - 0.002).rotation.x = Math.PI / 2;
   const voyants = [];
   for (let i = 0; i < 4; i++) {
-    const v = ajouter(corps, new THREE.SphereGeometry(0.0026, 12, 8), M(0x3fcf6e, 0, 0.3, { emissive: 0x3fcf6e, emissiveIntensity: 0.1 }), 0, HY + 0.0065, NZ0 + 0.008 + i * ((long - 0.016) / 3));
-    v.scale.y = 0.55;
+    const v = ajouter(corps, new THREE.SphereGeometry(0.0022, 12, 8), M(0x3fcf6e, 0, 0.3, { emissive: 0x3fcf6e, emissiveIntensity: 0.1 }), 0, HY + 0.0052, NZ0 + 0.012 + i * ((long - 0.024) / 3));
+    v.scale.y = 0.6;
     voyants.push(v.material);
   }
   racine.add(corps);
-
-  // Engrenage : sous le boîtier
-  const eng = engrenage(PIECE[equipe.engrenage] || PIECE['engrenage-standard']);
-  eng.position.set(0, HY - 0.007, LZ);
   racine.add(eng);
 
   // Ressort : autour du manche (il se comprime quand on charge)
   const res = ressort(PIECE[equipe.ressort] || PIECE['ressort-standard']);
   racine.add(res);
 
-  // Poignée en T
-  const poignee = new THREE.Group();
-  poignee.position.set(0, HY, NZ1);
-  ajouter(poignee, new THREE.CylinderGeometry(0.0016, 0.0016, 0.018, 6), sombre, 0, 0, 0.009).rotation.x = Math.PI / 2;
-  ajouter(poignee, new THREE.BoxGeometry(0.05, 0.007, 0.008), accent, 0, 0, 0.02);
-  for (const s of [-1, 1]) ajouter(poignee, new THREE.CylinderGeometry(0.0062, 0.0062, 0.018, 12), sombre, s * 0.02, 0, 0.02).rotation.z = Math.PI / 2;
-  racine.add(poignee);
-
-  return { racine, parts: { plot, corps, engrenage: eng, ressort: res, poignee }, voyants, base: { engrenageZ: LZ, ressortZ0: NZ0 } };
+  return { racine, parts: { plot, corps, engrenage: eng, ressort: res }, voyants, base: { engrenageZ: LZ, ressortZ0: NZ0 } };
 }
 
 export function libererLanceur(l) {
@@ -162,12 +192,17 @@ export function libererLanceur(l) {
 
 // Animation en partie : l'engrenage tourne pendant la charge, le ressort se comprime selon la jauge, les voyants s'allument
 export function animerLanceur(l, dt, charge, actif) {
-  for (const r of l.parts.engrenage.children) if (r.userData.roue) r.rotation.y += dt * (actif ? 2 + charge * 25 : 0.5);
+  tournerEngrenages(l, dt * (actif ? 2 + charge * 25 : 0.5));
   const k = 1 - 0.45 * charge;
   l.parts.ressort.scale.z = k;
-  l.parts.ressort.position.z = NZ1 * (1 - k); // le ressort se tasse vers la poignée
-  l.parts.poignee.position.z = NZ1 + 0.02 * charge;
+  l.parts.ressort.position.z = NZ1 * (1 - k); // le ressort se tasse contre la butée
   l.voyants.forEach((m, i) => { m.emissiveIntensity = charge > i / 4 ? 1.4 : 0.1; });
+}
+
+// L'engrenage choisi entraîne le pignon central du pied (et ses satellites) : rapports de denture exacts
+export function tournerEngrenages(l, da, avecPignon = true) {
+  for (const r of l.parts.engrenage.children) if (r.userData.roue) r.rotation.y += da * r.userData.rapport;
+  if (avecPignon) for (const r of l.parts.corps.children) if (r.userData.roue) r.rotation.y += da * r.userData.rapport;
 }
 
 // Un engrenage ou un ressort seul (écran d'inspection)
