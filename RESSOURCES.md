@@ -123,6 +123,7 @@ et [jwagner/simplex-noise.js](https://github.com/jwagner/simplex-noise.js) (brui
 
 ### Multijoueur en temps réel (ajouté le 27/11)
 - **PeerJS** : https://github.com/peers/peerjs (MIT). WebRTC simplifié, avec un serveur de mise en relation public et gratuit (0.peerjs.com). **Utilisé** pour « Défier un ami » (`vendor/peerjs.min.js`).
+- **MQTT.js** : https://github.com/mqttjs/MQTT.js (MIT). **Utilisé** comme relais par défaut du défi entre amis, avec les serveurs publics gratuits broker.emqx.io, broker.hivemq.com et test.mosquitto.org. Ça passe sur tous les réseaux.
 - **PeerServer** : https://github.com/peers/peerjs-server (MIT). Pour héberger notre propre serveur de mise en relation si le serveur public ne suffit plus.
 
 ## 2. Modélisation 3D & assets graphiques

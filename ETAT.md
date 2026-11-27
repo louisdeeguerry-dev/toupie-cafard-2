@@ -14,7 +14,7 @@
   L'usure ne démarre qu'une fois les deux toupies lancées.
 - **🤝 Défier un ami** (temps réel, `src/enligne.js` et la fin de `src/match.js`) :
   - code à 5 lettres ou lien `?ami=CODE` ;
-  - connexion directe entre navigateurs (PeerJS) ;
+  - par défaut, relais MQTT public (EMQX, puis HiveMQ, puis Mosquitto) : ça passe en 4G/5G et en Wi-Fi ; `?p2p` pour la connexion directe (PeerJS) ;
   - l'hôte calcule la physique, l'invité envoie son lancer et voit tout en miroir ;
   - 3 vies chacun, 1 vie par duel perdu ;
   - test local : `?local` (deux onglets).

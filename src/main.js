@@ -222,7 +222,7 @@ $('pseudo').oninput = e => { save.pseudo = e.target.value.trim().slice(0, 16); s
 const statut = t => { $('statutDefi').textContent = t; };
 function brancher(c, hote) {
   conn = c;
-  statut(hote ? 'Ton ami arrive…' : 'Connexion à ton ami…');
+  statut(hote ? 'En attente de ton ami…' : 'Connexion à ton ami…');
   const moi = { pseudo: save.pseudo || 'Joueur', equipe: { ...save.equipe }, nivPieces: { ...save.niveauxPieces }, terrain: save.terrain };
   let lance = false;
   // On écoute AVANT l'ouverture (sinon le « bonjour » de l'ami peut arriver avant qu'on écoute, et se perdre)
@@ -272,13 +272,13 @@ $('creerDefi').onclick = async () => {
         };
       },
       connecte: c => brancher(c, true),
-      erreur: statut,
+      erreur: statut, statut,
     });
   } catch (e) { statut('Impossible de créer le défi : ' + e.message); }
 };
 async function rejoindre(code) {
   activerAudio(); finirDefi(); statut('Connexion au défi ' + code + '…');
-  try { defi = await rejoindreDefi(code, { connecte: c => brancher(c, false), erreur: statut }); }
+  try { defi = await rejoindreDefi(code, { connecte: c => brancher(c, false), erreur: statut, statut }); }
   catch (e) { statut('Impossible de rejoindre : ' + e.message); }
 }
 $('rejoindreDefi').onclick = () => { const c = $('codeAmi').value.trim(); if (c.length >= 4) rejoindre(c); else statut('Entre le code de ton ami.'); };

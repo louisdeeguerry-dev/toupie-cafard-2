@@ -846,3 +846,16 @@ navigateurs différents, trouver la cause et corriger.
 - Diagnostic affiché à l'écran : connexion en cours, échec à cause du réseau, connexion perdue.
 - Bouton « Envoyer le lien » avec la feuille de partage du téléphone.
 - Le test sur deux navigateurs séparés passe toujours.
+
+---
+
+## 2026-11-27 — « Erreur de connexion » : pouvoir se connecter à tout moment
+
+**Prompt optimisé** : (rôle : dev réseau) le défi entre amis affiche « erreur de connexion » ; il doit fonctionner à tout moment,
+quel que soit le réseau.
+**Réalisé** :
+- Le transport par défaut devient un relais MQTT public sur WebSocket sécurisé (port HTTPS standard, qui passe partout).
+- Trois relais gratuits essayés à la suite.
+- Canal de jeu avec poignée de main, battement de cœur toutes les secondes et détection de coupure au-delà de 12 s.
+- La connexion directe PeerJS reste disponible avec `?p2p`.
+- Testé avec deux navigateurs séparés via un relais local (aedes) : partie lancée, duel joué, vies cohérentes, aucune erreur.
