@@ -1,7 +1,7 @@
 // Le déroulement d'une partie : salon de 8 joueurs (toi + bots), étapes de 3 LANCERS contre les cafards + 1 duel,
 // économie entre les manches, vies, éliminations, classement final.
 // La toupie choisie avant la partie est VERROUILLÉE jusqu'à la fin : en partie, on n'achète que des niveaux.
-import { PARTIE, CAFARDS, ECONOMIE, BOUTIQUE, RAIL_XMAX, railZ, tirerRarete } from './config.js';
+import { PARTIE, CAFARDS, ECONOMIE, BOUTIQUE, RAIL_XMAX, railZ, tirerRarete, ARENE_R } from './config.js';
 import { terrainDuel } from './data/terrains.js';
 import { AMELIO, STAT_ACHATS, NOMS_BOTS, MANCHE_PRIORITE, paquet, tirerOffresPour } from './data/boutique.js';
 import { statsToupie } from './stats.js';
@@ -13,7 +13,7 @@ import { lanceur, lancerDirect, valeurJauge } from './launcher.js';
 import { railAdverse, decorTerrain } from './scene.js';
 import { popup, tache, viderTaches, etincelles, geler, ralentir, pieceVolante } from './fx.js';
 import { secouer } from './scene.js';
-import { son } from './audio.js';
+import { son, sfx, baisserMusique } from './audio.js';
 
 export const partie = { active: false };
 let ui = {}; // rappels vers l'interface (posés par main.js)
@@ -120,8 +120,8 @@ export function lancer({ x, z, dx, dz, puissance: puiss, parfait }) {
   partie.lancers--;
   partie.mesToupies = lancerGroupe(partie.moi, 'joueur', x, z, dx, dz, Math.min(1.08, puiss));
   lanceur.actif = false;
-  son('toc', { hauteur: 0.8 });
-  if (parfait) popup('PARFAIT !', x, z - 0.06, 'parfait');
+  sfx.lancer(puiss);
+  if (parfait) { popup('PARFAIT !', x, z - 0.06, 'parfait'); sfx.parfait(); }
   if (partie.type === 'duel') partie.botLanceDans = 0.25 + Math.random() * 0.3;
   ui.hud?.();
   ui.lance?.();
@@ -156,7 +156,7 @@ const rappels = {
     secouer(c.dore ? 0.012 : 0.005);
     if (crit || c.t.vie >= 2) geler(35);
     popup((crit ? '💥 ' : '') + (gain ? '+' + gain + ' 💰' : '+' + brut.toFixed(1)) + (partie.combo > 2 ? ` · combo ×${partie.combo}` : ''), c.x, c.z, c.dore ? 'dore' : crit ? 'crit' : 'argent');
-    son(c.dore ? 'piece' : 'ecrase', { volume: 0.7, hauteur: 1 + Math.min(0.5, partie.combo * 0.04) });
+    son(c.dore ? 'piece' : c.t.vie >= 2 ? 'gros' : 'ecrase', { volume: 0.7, hauteur: 1 + Math.min(0.5, partie.combo * 0.04), pan: c.x / ARENE_R });
     ui.hud?.();
   },
   touche(c, t, degats, crit) { if (crit) popup('💥 CRITIQUE', c.x, c.z, 'crit'); son('toc', { volume: 0.35, hauteur: 1.3 }); },
@@ -170,8 +170,8 @@ const rappels = {
       etincelles(p.x, p.z, 8 + Math.round(pct), crit ? 0xfff27a : 0xffc46a, 0.8 + pct / 10);
       geler(Math.min(90, 30 + pct * 6));
       secouer(Math.min(0.02, 0.004 + pct * 0.0015));
-      son('toc', { volume: Math.min(1, 0.45 + pct / 12), hauteur: 0.55 + Math.random() * 0.1 });
-      if (pct > 5) son('critique', { volume: 0.3, hauteur: 0.7 });
+      sfx.metal(Math.min(1, pct / 10), p.x / ARENE_R); // métal contre métal, placé à gauche ou à droite
+      if (pct > 5) son('critique', { volume: 0.3, hauteur: 0.7, pan: p.x / ARENE_R });
     }
     popup(bloque ? '🛡️ Bloqué' : `${crit ? '💥 ' : ''}−${Math.max(1, Math.round(pct))} %`, b.x, b.z, b.camp === 'joueur' ? 'degat-moi' : 'degat');
   },
@@ -190,6 +190,7 @@ function minuteurs(dt, lancees) {
     partie.tempsLancer += d;
     const reste = Math.ceil(PARTIE.tempsLancer - partie.tempsLancer);
     ui.minuteur?.(`⏱️ ${Math.max(0, reste)} s pour lancer`, reste <= 5);
+    if (reste <= 3 && reste > 0 && reste !== partie.dernierTic) { partie.dernierTic = reste; sfx.tic(1 - reste / 3); }
     if (partie.tempsLancer >= PARTIE.tempsLancer && lanceur.actif) {
       const puiss = lanceur.etat === 'charge' ? valeurJauge() : 0.55;
       lanceur.etat = 'libre';
@@ -256,7 +257,7 @@ function finDuel() {
   lanceur.actif = false;
   const adv = partie.adversaire, deg = PARTIE.degatsDuel(etape());
   const gagne = partie.resultat.gagne;
-  if (gagne) { adv.vies -= deg; son('critique'); } else { partie.moi.vies -= deg; son('refus'); }
+  if (gagne) adv.vies -= deg; else partie.moi.vies -= deg;
   terminerManche({ type: 'duel', gagne, adversaire: adv.nom, degats: deg, tempsEcoule: !!partie.resultat.tempsEcoule,
     contacts: partie.contacts, duree: partie.chrono });
 }
@@ -368,7 +369,7 @@ export function acheter(id, rarete = 'commune') {
   partie.argent -= prix;
   partie.moi.niveaux[id] = niv(id) + pq.niveaux;
   partie.moi.achats = { ...(partie.moi.achats || {}), [id]: ach(id) + pq.achats };
-  son('achat');
+  sfx.achat();
   if (id !== 'priorite' && partie.offres) tirerOffres();
   return true;
 }

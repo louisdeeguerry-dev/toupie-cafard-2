@@ -9,7 +9,7 @@ import { ECONOMIE, RARETE_OFFRE, PARTIE as REGLES_PARTIE } from './config.js';
 import { PIECE as PIECES_PAR_ID } from './data/pieces.js';
 import { TYPES } from './data/cafards.js';
 import { MODES, MONNAIE, PRIX_BOITE, rangDe, RANGS, xpPourNiveau, acheterBoite } from './progression.js';
-import { son } from './audio.js';
+import { son, sfx } from './audio.js';
 import { inspecter } from './inspecteur.js';
 
 const $ = id => document.getElementById(id);
@@ -387,6 +387,7 @@ export function basculerStats() {
 
 // ---------------------------------------------------------------- Bilan + boutique (épurée)
 // Une ligne de résultat, les 6 offres en grandes cartes, et à côté : argent, intérêts, relance, Prêt.
+let dernieresOffres = null;
 export function afficherBilan(bilan, onPret) {
   let resultat;
   if (bilan.type === 'cafards') {
@@ -420,6 +421,8 @@ export function afficherBilan(bilan, onPret) {
 
   const rendre = () => {
     const offres = partie.offres || STAT_ACHATS.map(a => a.id);
+    if (offres.some(o => o.rarete === 'legendaire') && partie.offres !== dernieresOffres) sfx.legendaire();
+    dernieresOffres = partie.offres;
     const prixR = prixRelance(), interets = interetsPrevus();
     $('bilanContenu').innerHTML = `
       <div class="resume">${resultat}</div>

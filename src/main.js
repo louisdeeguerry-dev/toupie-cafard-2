@@ -7,7 +7,7 @@ import { lancerDansEtape, capacite } from './match.js';
 import { partie, nouvellePartie, commencerManche, majPartie, brancherInterface, lancer, abandonner, acheter, _interne } from './match.js';
 import { majFx, majBarres, majEtincelles, facteurTemps } from './fx.js';
 import { majCamera, rendre } from './scene.js';
-import { activerAudio, ronron, musique, basculerMusique, musiqueActive } from './audio.js';
+import { activerAudio, ronron, musique, basculerMusique, musiqueActive, sfx, baisserMusique } from './audio.js';
 import * as UI from './ui.js';
 import { VERSION } from './config.js';
 import { recompenser } from './progression.js';
@@ -90,6 +90,7 @@ brancherInterface({
   minuteur: UI.minuteur,
   lance() { UI.aide(''); partie.lancesFaits = (partie.lancesFaits || 0) + 1; },
   finDuel(gagne) {
+    baisserMusique(2); (gagne ? sfx.victoire : sfx.defaite)();
     UI.verdict(gagne, gagne ? 'La toupie adverse s\'est arrêtée la première' : 'Ta toupie s\'est arrêtée la première');
   },
   bilan(b) {
@@ -100,6 +101,7 @@ brancherInterface({
   fin(r) {
     UI.majHud();
     const gains = recompenser(save, r.place, r.mode);
+    baisserMusique(3); sfx.finPartie(r.place <= 4);
     sauver(save);
     setTimeout(() => UI.afficherFin(r, gains, retourAtelier), 600);
   },

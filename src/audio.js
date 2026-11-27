@@ -30,14 +30,18 @@ export function activerAudio() {
   if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return; }
   try {
     ctx = new (window.AudioContext || window.webkitAudioContext)();
+    // Bus de sortie : gain maître → compresseur (évite la saturation quand les sons s'empilent) → enceintes
     gain = ctx.createGain();
-    gain.gain.value = 0.5;
-    gain.connect(ctx.destination);
+    gain.gain.value = 0.55;
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -14; comp.knee.value = 10; comp.ratio.value = 4; comp.attack.value = 0.004; comp.release.value = 0.18;
+    gain.connect(comp); comp.connect(ctx.destination);
     Object.keys(FICHIERS).forEach(charger);
   } catch { ctx = null; }
 }
 
-export function son(nom, { volume = 1, hauteur = 1 } = {}) {
+// pan : −1 (gauche) … +1 (droite), d'après la position de l'impact sur le plateau
+export function son(nom, { volume = 1, hauteur = 1, pan = 0 } = {}) {
   if (!ctx || !tampons[nom]?.length) return;
   const t = ctx.currentTime;
   if (dernier[nom] && t - dernier[nom] < 0.035) return; // pas d'empilement
@@ -47,8 +51,72 @@ export function son(nom, { volume = 1, hauteur = 1 } = {}) {
   src.playbackRate.value = hauteur * (0.94 + Math.random() * 0.12);
   const g = ctx.createGain();
   g.gain.value = volume;
-  src.connect(g); g.connect(gain);
+  if (pan && ctx.createStereoPanner) { const p = ctx.createStereoPanner(); p.pan.value = Math.max(-1, Math.min(1, pan)); src.connect(g); g.connect(p); p.connect(gain); }
+  else { src.connect(g); g.connect(gain); }
   src.start();
+}
+
+// ---------------------------------------------------------------- Sons procéduraux (WebAudio, aucun fichier)
+// Chacun colle à la mécanique : le ressort se détend, le métal frappe le métal, l'engrenage cliquette.
+const bruit = (() => { let b = null; return () => { if (!b) { b = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate); const d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; } return b; }; })();
+function sortie(pan = 0) {
+  if (pan && ctx.createStereoPanner) { const p = ctx.createStereoPanner(); p.pan.value = Math.max(-1, Math.min(1, pan)); p.connect(gain); return p; }
+  return gain;
+}
+function ton(f, t, duree, vol, type = 'sine', vers = sortie(), fin = null) {
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t); if (fin) o.frequency.exponentialRampToValueAtTime(fin, t + duree);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + duree);
+  o.connect(g); g.connect(vers); o.start(t); o.stop(t + duree + 0.02);
+}
+function souffle(t, duree, vol, f0, f1, vers = sortie(), q = 1.2) {
+  const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+  s.buffer = bruit(); f.type = 'bandpass'; f.Q.value = q; f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(f1, t + duree);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + duree);
+  s.connect(f); f.connect(g); g.connect(vers); s.start(t); s.stop(t + duree + 0.02);
+}
+const dernierP = {};
+const pret = (nom, ecart = 0.03) => { if (!ctx) return false; const t = ctx.currentTime; if (dernierP[nom] && t - dernierP[nom] < ecart) return false; dernierP[nom] = t; return true; };
+export const sfx = {
+  // Lancer : le ressort se détend (« fwoung » descendant) + le cliquetis de l'engrenage
+  lancer(force = 0.7) {
+    if (!pret('lancer')) return;
+    const t = ctx.currentTime;
+    souffle(t, 0.28, 0.35 + 0.3 * force, 2400, 300);
+    ton(420 + 300 * force, t, 0.3, 0.12, 'triangle', sortie(), 90);
+    for (let i = 0; i < 5; i++) souffle(t + i * 0.025, 0.02, 0.18, 5000, 4000, sortie(), 8);
+  },
+  // PARFAIT : « ding » métallique clair (deux partiels inharmoniques)
+  parfait() {
+    if (!pret('parfait')) return;
+    const t = ctx.currentTime;
+    ton(1568, t, 0.9, 0.16); ton(1568 * 2.76, t, 0.5, 0.05); ton(2349, t + 0.06, 0.7, 0.08);
+  },
+  // Choc de toupies : métal contre métal (partiels inharmoniques + claquement), plus grave et fort si le choc est violent
+  metal(force = 0.5, pan = 0) {
+    if (!pret('metal', 0.04)) return;
+    const t = ctx.currentTime, f = 520 + Math.random() * 120 - force * 160, v = Math.min(0.5, 0.12 + force * 0.35), o = sortie(pan);
+    for (const [k, a, d] of [[1, 1, 0.35], [2.32, 0.55, 0.22], [4.1, 0.35, 0.12], [6.8, 0.2, 0.07]]) ton(f * k, t, d + force * 0.2, v * a, 'sine', o);
+    souffle(t, 0.05, v * 0.8, 6000, 2500, o, 0.8);
+  },
+  // Dernières secondes du minuteur : tic d'horloge, plus aigu à la fin
+  tic(urgence = 0) { if (!pret('tic', 0.2)) return; const t = ctx.currentTime; souffle(t, 0.03, 0.25, 3000 + urgence * 1500, 2500, sortie(), 6); ton(1200 + urgence * 500, t, 0.05, 0.05, 'square'); },
+  // Achat : petit « ding » + caisse
+  achat() { if (!pret('achat')) return; const t = ctx.currentTime; ton(1046, t, 0.25, 0.12); ton(1568, t + 0.07, 0.35, 0.12); },
+  // Offre légendaire qui apparaît : carillon scintillant
+  legendaire() { if (!pret('legendaire', 0.5)) return; const t = ctx.currentTime; [1318, 1568, 1976, 2637].forEach((f, i) => ton(f, t + i * 0.07, 0.8, 0.07)); },
+  // Jingles (accords de la musique d'ambiance) : victoire montante, défaite descendante, fin de partie
+  victoire() { const t = ctx.currentTime; [523, 659, 784, 1046].forEach((f, i) => { ton(f, t + i * 0.09, 0.5, 0.13, 'triangle'); ton(f * 2, t + i * 0.09, 0.3, 0.03); }); ton(1046, t + 0.4, 1.1, 0.12, 'triangle'); },
+  defaite() { const t = ctx.currentTime; [392, 349, 311, 262].forEach((f, i) => ton(f, t + i * 0.14, 0.5, 0.12, 'triangle')); ton(131, t + 0.56, 0.9, 0.15, 'sine'); },
+  finPartie(bien = true) { const t = ctx.currentTime; (bien ? [523, 659, 784, 988, 1046, 1318] : [440, 392, 349, 330, 294, 262]).forEach((f, i) => ton(f, t + i * 0.12, 0.6, 0.11, 'triangle')); },
+};
+// Sans audio activé (avant le premier clic) ou en cas d'erreur WebAudio : silence, jamais de plantage
+for (const k of Object.keys(sfx)) { const f = sfx[k]; sfx[k] = (...args) => { if (!ctx) return; try { f(...args); } catch { /* silence */ } }; }
+// La musique s'efface un instant pendant un jingle
+export function baisserMusique(duree = 1.5) {
+  if (!ctx || !musGain || !musiqueActive) return;
+  const t = ctx.currentTime;
+  musGain.gain.cancelScheduledValues(t); musGain.gain.setTargetAtTime(0.25, t, 0.05); musGain.gain.setTargetAtTime(0.9, t + duree, 0.5);
 }
 
 // Ronronnement de ta toupie : sa hauteur suit la rotation (on « entend » la toupie faiblir)

@@ -749,3 +749,9 @@ Résultats (5 parties par stratégie) : sacrifice 6,6, économie 4,8, mixte 5,8,
 Un commit et une publication par point.
 **Réalisé** :
 - Point 1 : verdict plein écran (VICTOIRE ou DÉFAITE) et passage à la boutique 2,5 s après, en temps réel ; durée maximale d'un duel 25 s.
+- Point 2 : vue plongeante sur téléphone (plateau sur toute la largeur), aide sur une ligne et masquée après 2 lancers.
+- Point 3 : pièces qui volent vers le compteur, compteur qui défile, confirmation d'achat, « il manque X 💰 », « pas encore ».
+- Point 4 : sons :
+  - compresseur de sortie et panoramique ;
+  - sons procéduraux : ressort au lancer, ding PARFAIT, choc de métal, tic-tac du minuteur, achat, carillon légendaire ;
+  - jingles victoire, défaite et fin de partie, avec la musique baissée pendant le jingle.
