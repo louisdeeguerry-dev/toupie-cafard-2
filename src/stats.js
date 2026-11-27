@@ -84,8 +84,8 @@ export function calculer(niv) {
     seuilChute: Math.min(0.6, 0.25 / f(0.06, L('equilibre'))),
     rebond: Math.max(0.2, Math.min(0.95, 0.6 + 0.04 * L('rebond'))),
     attraction: 0.12 * P('agressivite'),
-    crit: 1 - Math.exp(-0.041 * P('critique')), // probabilité : se rapproche de 100 % sans l'atteindre
-    critMult: 3 * Math.max(1, 0.04 * P('critique')),
+    crit: Math.min(1, 0.04 * P('critique')), // 4 % par niveau, jusqu'à 100 %…
+    critMult: 3 * Math.max(1, 0.04 * P('critique')), // …et tout ce qui dépasse 100 % rend les critiques plus forts (125 % → coups ×3,75)
     feu: P('feu') ? 0.25 + 0.08 * P('feu') : 0,
     feuDuree: 1 + 0.08 * P('feu'),
     souffle: P('souffle') ? 0.03 + 0.012 * P('souffle') : 0,

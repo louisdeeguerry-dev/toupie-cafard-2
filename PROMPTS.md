@@ -935,3 +935,10 @@ apporte de moins en moins.
   - Tourbillon : plus de 60 % ;
   - combo : dégressif au-delà de ×2 ;
   - critique et Trèfle doré : se rapprochent de 100 % sans l'atteindre.
+
+---
+
+## 2026-11-27 — Coup critique jusqu'à 100 %, surplus en dégâts critiques
+
+**Prompt optimisé** : le coup critique doit pouvoir atteindre 100 % ; tout ce qui dépasse 100 % augmente les dégâts critiques.
+**Réalisé** : 4 % par niveau (niveaux dégressifs au-delà de 10) jusqu'à 100 % ; le surplus multiplie le coup critique (×3 de base, 125 % → ×3,75).
