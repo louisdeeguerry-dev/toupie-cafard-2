@@ -103,6 +103,14 @@
   Économie et puissance sont à égalité, le sacrifice est puni ; le robot plafonne vers la 4e place (sa visée reste simple).
 
 ## Prochaines étapes possibles
+- **Plan issu des agents critiques (27/11)**, par ordre de priorité :
+  1. Fin de duel en 2,5 s au plus, avec un verdict plein écran.
+  2. Téléphone : plateau plus grand, aide sur une ligne, rareté sous le titre.
+  3. Gains : pièces qui volent jusqu'au compteur et compteur qui défile ; achat avec un pop et un « ding » ; boutique avec « il manque X 💰 » et « 0 % → 18 % », bouton Priorité masqué s'il ne sert à rien.
+  4. Sons : compresseur et panoramique ; ressort au lancer, « ding » PARFAIT, tic-tac du minuteur ; chocs de métal Kenney Impact (CC0) ; jingles victoire, défaite et fin.
+  5. Toupie plus grande et plus lisible en partie, avec un halo au sol.
+  6. Cafards : élytres, antennes, carapace brillante, pattes animées.
+  7. Atelier : masquer les stats grisées.
 - Faire jouer Louis à l'atelier refait, puis affiner la vitesse et les zooms.
 - Relire l'équilibrage avec les résultats ci-dessus (sacrifice, économie, mixte, puissance).
 - Questions ouvertes :

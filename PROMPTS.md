@@ -724,3 +724,11 @@ Résultats (5 parties par stratégie) : sacrifice 6,6, économie 4,8, mixte 5,8,
 - stries de tour sur les bases et le disque ;
 - métal martelé sur la base lourde ;
 - métal brossé sur les pointes, les lames et le bouclier.
+**Synthèse des 3 agents** (environ 230 000 jetons au total), priorités retenues :
+1. Fin de duel plus rapide, avec un verdict plein écran.
+2. Lisibilité sur téléphone.
+3. Récompense visible des gains et des achats ; boutique plus claire (prix manquant, « 0 % → 18 % »).
+4. Sons : mixage, lancer, jauge PARFAIT, minuteur, vrais chocs de métal, jingles.
+5. Toupie plus lisible en partie.
+6. Cafards plus détaillés et animés.
+7. Stats de l'atelier allégées.
