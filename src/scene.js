@@ -95,12 +95,29 @@ scene.add(plateau);
 // Rebords (la toupie rebondit dessus)
 const rebordMat = new THREE.MeshStandardMaterial({ color: 0x3b2516, roughness: 0.6 });
 const REBORD_NEUTRE = { color: 0x3b2516, emissive: 0x000000, roughness: 0.6 };
-{ // rebord rond
-  const m = new THREE.Mesh(new THREE.TorusGeometry(ARENE_R + 0.014, 0.018, 16, 128), rebordMat);
-  m.rotation.x = Math.PI / 2;
-  m.position.y = 0.012;
-  m.castShadow = m.receiveShadow = true;
-  scene.add(m);
+const rebordRond = new THREE.Mesh(new THREE.TorusGeometry(ARENE_R + 0.014, 0.018, 16, 128), rebordMat);
+rebordRond.rotation.x = Math.PI / 2;
+rebordRond.position.y = 0.012;
+rebordRond.castShadow = rebordRond.receiveShadow = true;
+scene.add(rebordRond);
+// Terrain rebondissant : plateau hexagonal (côtés plats face aux lanceurs, distance au centre = ARENE_R),
+// avec 6 bandes rebondissantes droites (comme des bandes de billard) ; voir les rebonds dans physics.js
+const HEX_R = ARENE_R / Math.cos(Math.PI / 6); // rayon aux coins
+const hexagone = new THREE.Group();
+{
+  const p = new THREE.Mesh(new THREE.CylinderGeometry(HEX_R, HEX_R, 0.04, 6), bois);
+  p.rotation.y = Math.PI / 6; p.position.y = -0.019; p.receiveShadow = true;
+  hexagone.add(p);
+  for (let k = 0; k < 6; k++) {
+    const a = Math.PI / 2 + (k * Math.PI) / 3;
+    const b = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, HEX_R + 0.02, 16), rebordMat);
+    b.rotation.z = Math.PI / 2; b.rotation.y = -a + Math.PI / 2; // bande couchée, parallèle au côté
+    b.position.set(Math.cos(a) * (ARENE_R + 0.014), 0.012, Math.sin(a) * (ARENE_R + 0.014));
+    b.castShadow = b.receiveShadow = true;
+    hexagone.add(b);
+  }
+  hexagone.visible = false;
+  scene.add(hexagone);
 }
 
 // Table et sol autour
@@ -142,6 +159,7 @@ export function decorTerrain(id) {
     : REBORD_NEUTRE;
   rebordMat.color.setHex(c.color); rebordMat.emissive.setHex(c.emissive); rebordMat.roughness = c.roughness;
   cuve.visible = id === 'cuve';
+  hexagone.visible = id === 'rebond'; plateau.visible = rebordRond.visible = id !== 'rebond';
 }
 
 // ---------------------------------------------------------------- Caméra adaptée à l'écran

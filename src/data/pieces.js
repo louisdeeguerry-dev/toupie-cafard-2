@@ -155,7 +155,7 @@ export const PIECES = [
   { id: 'ame-avare', slot: 'ame', nom: 'Âme avare', rarete: 'rare', forme: 'vide', couleur: 0xf9ca24,
     niveaux: { prime: 4, tirelire: 2, inertie: -3, elan: -3 }, desc: 'Économise tout : plus d\'argent et plus d\'intérêts, mais encaisse mal les chocs.' },
   { id: 'ame-miel', slot: 'ame', nom: 'Âme de miel', rarete: 'rare', forme: 'sangsue', couleur: 0xe1b12c,
-    niveaux: { nid: 6, endurance: -3, elan: -3 }, desc: 'Attire les cafards : beaucoup plus de cafards sur le bureau à chaque lancer… s\'il arrive à les tuer.' },
+    niveaux: { nid: 2.8, endurance: -1.4, elan: -1.4 }, desc: 'Attire les cafards : 1 cafard de plus sur le bureau à chaque lancer… s\'il arrive à les tuer.' },
   { id: 'ame-trefle', slot: 'ame', nom: 'Âme trèfle', rarete: 'epique', forme: 'oeil', couleur: 0x2ecc71,
     niveaux: { chance: 5, critique: 2, poids: -4, inertie: -3 }, desc: 'Porte-bonheur : cafards dorés et coups chanceux, mais toupie frêle.' },
   { id: 'ame-meute', slot: 'ame', nom: 'Âme de meute', rarete: 'epique', forme: 'aimant', couleur: 0x8e44ad,

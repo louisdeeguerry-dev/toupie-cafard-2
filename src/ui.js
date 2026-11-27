@@ -4,7 +4,7 @@ import { TERRAINS, TERRAIN } from './data/terrains.js';
 import { STAT_ACHATS, PRIORITE, MANCHE_PRIORITE } from './data/boutique.js';
 import { PARTIE } from './config.js';
 import { STATS, STAT, GROUPES, niveauxToupie, calculer as calcul, tempsRotation, effet, BORNES } from './stats.js';
-import { partie, etape, prixAmelio, acheter, prioriteDispo, lancerDansEtape, relancerOffres, prixRelance, interetsPrevus, niveauxAchat, mesStats as mesStatsUI } from './match.js';
+import { partie, etape, prixAmelio, acheter, prioriteDispo, lancerDansEtape, relancerOffres, prixRelance, bannir, peutBannir, interetsPrevus, niveauxAchat, mesStats as mesStatsUI } from './match.js';
 import { ECONOMIE, RARETE_OFFRE, PARTIE as REGLES_PARTIE } from './config.js';
 import { PIECE as PIECES_PAR_ID } from './data/pieces.js';
 import { TYPES } from './data/cafards.js';
@@ -15,7 +15,10 @@ import { inspecter } from './inspecteur.js';
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-export function montrer(id, oui = true) { $(id).classList.toggle('cache', !oui); }
+export function montrer(id, oui = true) {
+  $(id).classList.toggle('cache', !oui);
+  if (id === 'hud') $('quitter').classList.toggle('cache', !oui); // le bouton Abandonner / Quitter suit le HUD
+}
 export { son };
 
 // Effets d'une pièce en unités réelles (« 💥 +7 % de chance de critique »)
@@ -23,6 +26,7 @@ function modsHtml(niveaux) {
   return Object.entries(niveaux).map(([k, v]) => `<span class="mod ${v > 0 ? 'plus' : 'moins'}" title="${STAT[k].nom}">${STAT[k].icone} ${esc(effet(k, v))}</span>`).join('');
 }
 
+let aBannir = null; // bannissement en attente de confirmation (2e clic), hors de la boutique qui se redessine
 function carteHtml(p, k = 1) {
   const r = RARETES[p.rarete];
   return `<div class="rar" style="color:${r.couleur}">${r.nom}</div><div class="nom"><b>${esc(p.nom)}</b>${k > 1 ? ` <span class="niv-badge">niv ${k}</span>` : ''}</div>
@@ -435,12 +439,12 @@ export function afficherBilan(bilan, onPret) {
     const manque = prix != null && prix > partie.argent ? prix - partie.argent : 0;
     const conseil = (partie.conseils || []).includes(id);
     const fmtK = String(k).replace('.', ',');
-    return `<button class="offre rarete-${rarete} ${conseil ? 'conseil' : ''}" style="--rar:${R.couleur}" data-a="${id}" data-r="${rarete}" ${prix == null || prix > partie.argent ? 'disabled' : ''} title="${esc(a.desc)}">
+    return `<div class="offre-bloc"><button class="offre rarete-${rarete} ${conseil ? 'conseil' : ''}" style="--rar:${R.couleur}" data-a="${id}" data-r="${rarete}" ${prix == null || prix > partie.argent ? 'disabled' : ''} title="${esc(a.desc)}">
       <span class="badge-rarete">${R.nom}${id === 'nid' ? ` · +${k} cafard${k > 1 ? 's' : ''}` : R.mult > 1 ? ` · effet ×${String(R.mult).replace('.', ',')}` : ''}</span>
       ${conseil ? '<span class="badge-conseil">conseillé</span>' : ''}
       <span class="ic">${a.icone}</span><b>${esc(a.nom)}</b>${k > 1 ? `<span class="paquet">+${fmtK} niveaux</span>` : ''}
       <span class="effet">${esc(avant)}<br>→ <span class="plus">${esc(apres)}</span></span>
-      <span class="px">${prix == null ? 'MAX' : prix + ' 💰'}</span>${manque ? `<span class="manque">il manque ${manque} 💰</span>` : ''}</button>`;
+      <span class="px">${prix == null ? 'MAX' : prix + ' 💰'}</span>${manque ? `<span class="manque">il manque ${manque} 💰</span>` : ''}</button>${peutBannir() && partie.offres ? `<span class="bannir" data-bannir="${id}" role="button" title="Bannir ${esc(a.nom)} : cette amélioration ne sortira plus de toute la partie (1 seul bannissement par partie)">🚫</span>` : ''}</div>`;
   };
 
   const rendre = () => {
@@ -459,6 +463,7 @@ export function afficherBilan(bilan, onPret) {
           <button class="btn second" id="relancer" ${partie.argent < prixR ? 'disabled' : ''}>🎲 Relancer · ${prixR} 💰</button>
           <button class="btn" id="pret">Prêt ▶ <span id="chronoBoutique"></span></button>
           <div class="barre-temps"><i id="barreTempsBoutique"></i></div>
+          ${partie.bannies?.length ? `<div class="petit">🚫 Banni pour la partie : ${partie.bannies.map(id => STAT_ACHATS.find(x => x.id === id)?.nom || id).join(', ')}</div>` : partie.offres ? '<div class="petit">🚫 sur une offre : la bannir pour toute la partie (1 fois)</div>' : ''}
           ${prioriteHtml()}
           <div class="petit">${suite}</div>
         </div>
@@ -479,6 +484,21 @@ export function afficherBilan(bilan, onPret) {
       🏟️ Priorité de terrain · ${prix == null ? 'MAX' : prix + ' 💰'}<br><span class="petit">${sansTerrain ? 'pas de terrain choisi' : PRIORITE.fmt(n)}</span></button>`;
   };
   $('bilanContenu').onclick = e => {
+    // Bannir : 1er clic = demande de confirmation, 2e clic = banni pour toute la partie
+    const ban = e.target.closest('[data-bannir]');
+    if (ban) {
+      // (état gardé en mémoire et pas dans le DOM : la boutique peut se redessiner entre les deux clics)
+      const id = ban.dataset.bannir;
+      if (aBannir?.id !== id || Date.now() - aBannir.t > 3000) {
+        aBannir = { id, t: Date.now() };
+        ban.classList.add('confirmer'); ban.textContent = '🚫 Bannir ?';
+        setTimeout(() => { if (ban.isConnected) { ban.classList.remove('confirmer'); ban.textContent = '🚫'; } }, 3000);
+        return;
+      }
+      aBannir = null;
+      if (bannir(id)) rendre();
+      return;
+    }
     const b = e.target.closest('[data-a]');
     // Acheter relance automatiquement les offres (gratuit)
     if (b && acheter(b.dataset.a, b.dataset.r)) {

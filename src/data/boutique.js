@@ -53,8 +53,9 @@ export function paquet(a, n, rarete = 'commune') {
 
 // Les offres de la boutique (joueur ET bots, mêmes règles) : 4 stats au hasard parmi celles pas encore au plafond,
 // chacune avec une rareté tirée selon la Chance.
-export function tirerOffresPour(achats = {}, veine = 0) {
-  const dispo = STAT_ACHATS.filter(a => (achats[a.id] || 0) < a.max);
+// bannies : stats exilées par le joueur pour toute la partie (elles ne sortent plus jamais en offre)
+export function tirerOffresPour(achats = {}, veine = 0, bannies = []) {
+  const dispo = STAT_ACHATS.filter(a => (achats[a.id] || 0) < a.max && !bannies.includes(a.id));
   const poids = a => (a.id === 'multi' ? 0.3 : a.prix(0) >= 6 ? 0.6 : 1);
   const offres = [];
   while (offres.length < BOUTIQUE.offres && offres.length < dispo.length) {

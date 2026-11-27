@@ -21,9 +21,13 @@
   - l'hôte calcule la physique, l'invité envoie son lancer et voit tout en miroir ;
   - vraie partie à 2 : chacun ses cafards et sa boutique, on s'attend avant chaque duel ; 5 vies, 1 vie par duel perdu ;
   - test local : `?local` (deux onglets).
+- **Quitter** : bouton 🏳️ Abandonner (partie), 🚪 Quitter (entraînement, sans confirmation) ou 🚪 Quitter le défi, en bas à gauche, toujours visible (même sur la boutique) ; Échap l'ouvre aussi.
+- **Bannir** : 🚫 sur une offre de la boutique (2 clics) : la stat ne sort plus de la partie ; 1 bannissement par partie (`BANNISSEMENTS_MAX`, `src/match.js`).
+- **Duel sans attraction forcée** : seule l'Agressivité attire vers l'adversaire (`CHOC.parAgressivite`) ; sans elle, la toupie suit son élan.
+- **Terrain rebondissant = plateau hexagonal** (côtés plats face aux lanceurs). Simulation de billard (`2 toupies tout droit`) : rond 27 % de duels sans contact, hexagone 6 %, triangle 2 %.
 - **Paramètres** (menu ⚙️) : qualité d'image, ombres, halo, secousses, plein écran, volumes ; `src/parametres.js`.
 - **Aucun plafond, rendements dégressifs** : au-delà de 10 niveaux, chaque niveau compte de moins en moins (`degressif` dans `src/stats.js`). Le Nid (rare +1, épique +2, légendaire +3 cafards) et le combo (au-delà de ×2) sont dégressifs eux aussi.
-- **Améliorations sans plafond** (sauf Multi-lancer) ; une offre rare coûte plus cher, mais pas au prorata (rare ×1,25, épique ×1,5, légendaire ×2). Pondeuse et Éclairs en chaîne supprimés.
+- **Améliorations sans plafond** (sauf Multi-lancer) ; une offre rare coûte plus cher, mais pas au prorata (rare ×1,25, épique ×1,5, légendaire ×2). Pondeuse et Éclairs en chaîne supprimés. Âme de miel : +1 cafard par niveau de pièce (1 à 5).
 - **Cafards** : ils **évoluent après chaque duel** (vie plus haute, nouvelles espèces contrées par des stats précises).
 - **Toupie choisie avant la partie, verrouillée pendant** : 4 pièces (base, couronne, pointe, âme) et 2 pièces de lanceur
   (engrenage, ressort).
@@ -118,6 +122,7 @@
   Les stratégies sont groupées (écart de 0,8), l'argent ne s'emballe plus (10 à 18 💰 au maximum) ; le robot reste un peu sous les bots.
 
 ## Prochaines étapes possibles
+- **À mesurer** : durée et nombre de contacts des duels depuis la fin de l'attraction forcée (bureau rond neutre surtout) ; si trop peu de contacts, passer aussi le bureau neutre en hexagone.
 - **Plan des agents critiques (27/11) : les 7 points sont faits** (fin de duel, téléphone, gains, sons, toupie lisible, cafards, atelier).
   Suite possible : vrais échantillons de chocs de métal (Kenney Impact, CC0) ; musique différente en partie ; décor autour du plateau.
 - Faire jouer Louis à l'atelier refait, puis affiner la vitesse et les zooms.

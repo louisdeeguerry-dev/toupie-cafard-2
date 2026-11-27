@@ -1041,3 +1041,11 @@ pour faire pivoter les pièces ». Explication des sessions donnée à Louis.
 
 **Prompt optimisé** : ouvrir une nouvelle session sur le dépôt, configurée avec les règles du projet (CLAUDE.md, ETAT.md).
 **Réalisé** : session « Toupie Cafard 2 — suite » créée. Elle doit appliquer la règle 0, lire CLAUDE.md et ETAT.md, résumer l'état du jeu et demander à Louis la suite.
+## 2026-11-27 — Quitter la partie, Âme de miel, agressivité, bannir, plateau hexagonal
+**Prompt optimisé** (dev gameplay Three.js) : 1) bouton clair et toujours visible pour abandonner une partie, quitter
+l'entraînement ou un défi ; 2) Âme de miel limitée à +1 cafard par niveau (niv 1 = 1, niv 5 = 5) ; 3) expliquer les formules
+rareté → effet et rareté → prix ; 4) en duel, seules les toupies avec Agressivité cherchent l'adversaire ; 5) bannir une
+amélioration pour toute la partie (1 seule fois) ; 6) trouver une forme de terrain rebondissant qui favorise les contacts.
+**Réalisé** : bouton 🏳️ Abandonner / 🚪 Quitter (bas gauche, au-dessus de la boutique, confirmation, Échap) ; Âme de miel
+nid 2,8 (= 1 à 5 cafards) ; attraction de duel = Agressivité × 1,2 (0 sans Agressivité) ; 🚫 Bannir sur les offres
+(2 clics, 1 par partie) ; simulation des formes → terrain rebondissant hexagonal (27 % de duels sans contact en rond, 6 %).

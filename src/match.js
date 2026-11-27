@@ -28,6 +28,7 @@ export function nouvellePartie(equipe, { pseudo = 'Toi', mode = 'normale', nivPi
   const nivEquipe = Object.fromEntries(Object.values(equipe).map(id => [id, nivPieces[id] || 1]));
   const joueurs = [{ nom: pseudo, bot: false, vies: PARTIE.vies, equipe: Object.freeze({ ...equipe }), nivPieces: Object.freeze(nivEquipe),
     terrain, niveaux: {}, achats: {}, elimine: false, place: 0 }];
+  partie.bannies = [];
   for (let i = 1; i < PARTIE.joueurs; i++) joueurs.push(creerBot(noms[i]));
   const avecTerrain = terrain && terrain !== 'aucun';
   Object.assign(partie, {
@@ -388,7 +389,19 @@ function finPartie(place) {
 // La priorité de terrain n'est pas une offre : elle a son bouton à part.
 export function tirerOffres() {
   if (!BOUTIQUE.offres) { partie.offres = null; return; }
-  partie.offres = tirerOffresPour(partie.moi.achats, mesStats().veine);
+  partie.offres = tirerOffresPour(partie.moi.achats, mesStats().veine, partie.bannies);
+}
+// Bannir une amélioration : elle ne sortira plus jamais en offre de toute la partie (gratuit, mais sa case reste
+// vide jusqu'au prochain tirage : ce n'est pas une relance gratuite). Un seul bannissement par partie.
+export const BANNISSEMENTS_MAX = 1;
+export const peutBannir = () => (partie.bannies?.length || 0) < BANNISSEMENTS_MAX;
+export function bannir(id) {
+  partie.bannies ||= [];
+  if (!partie.offres || !peutBannir() || partie.bannies.includes(id)) return false;
+  partie.bannies.push(id);
+  partie.offres = partie.offres.filter(o => o.id !== id);
+  son('choix');
+  return true;
 }
 
 export const prixRelance = () => BOUTIQUE.relance(partie.relances || 0);

@@ -21,7 +21,7 @@ export function modeDuel(oui) { duel = !!oui; }
 // Pertes en tr/min ABSOLUS (référence : 600 tr/min) : une toupie qui tourne plus vite (Puissance) encaisse plus de chocs.
 // parVitesse porte sur la vitesse d'approche de l'ATTAQUANT : celui qui charge fait plus mal.
 // Mesures visées : ~4-6 % de barre par choc, plus de la moitié de la chute due aux chocs, 10-15 contacts, 10-20 s.
-export const CHOC = { ref: 600, base: 0.01, parLames: 0.03, parVitesse: 0.12, attraction: 0.7, poussee: 0.12, delai: 0.2, rebond: 0.5, usureDuel: 0.3 };
+export const CHOC = { ref: 600, base: 0.01, parLames: 0.03, parVitesse: 0.12, attraction: 0.7, parAgressivite: 1.2, poussee: 0.12, delai: 0.2, rebond: 0.5, usureDuel: 0.3 };
 
 // Les toupies sont un peu étirées en hauteur pour être lisibles vues de haut (la hauteur ne compte pas dans la physique)
 const HAUTEUR_VUE = 1.35;
@@ -163,11 +163,12 @@ export function majToupies(dt, cb) {
       const att = s.attraction + (duel ? 0 : 0.06);
       if (best) { ax += ((best.x - t.x) / bd) * att * ratio; az += ((best.z - t.z) / bd) * att * ratio; }
     }
-    // Duel : légère attraction vers la toupie adverse la plus proche
-    if (duel) {
+    // Duel : attraction vers la toupie adverse la plus proche, SEULEMENT si la toupie a de l'Agressivité
+    // (sans Agressivité, elle part tout droit et suit son élan : les toupies d'élan ne sont plus désavantagées)
+    if (duel && s.attraction > 0) {
       let best = null, bd = 9;
       for (const o of toupies) if (o.camp !== t.camp && enJeu(o)) { const d = Math.hypot(o.x - t.x, o.z - t.z); if (d < bd) { bd = d; best = o; } }
-      if (best && bd > 0.001) { ax += ((best.x - t.x) / bd) * CHOC.attraction * ratio; az += ((best.z - t.z) / bd) * CHOC.attraction * ratio; }
+      if (best && bd > 0.001) { const att = Math.min(CHOC.attraction, s.attraction * CHOC.parAgressivite); ax += ((best.x - t.x) / bd) * att * ratio; az += ((best.z - t.z) / bd) * att * ratio; }
     }
     // Terrain « cuve » : le plateau est creusé, les toupies glissent vers le centre
     if (terrain === 'cuve') { ax -= t.x * 1.1; az -= t.z * 1.1; }
@@ -187,9 +188,23 @@ export function majToupies(dt, cb) {
       } else { t.vx *= s.rebond; t.vz *= s.rebond; t.rotation *= 0.985; }
       cb.mur?.(t);
     };
+    // Terrain rebondissant : plateau HEXAGONAL (côtés plats face aux lanceurs, même distance au rail que le rond).
+    // Dans un rond, une toupie qui va tout droit garde le même angle à chaque rebond et « orbite » sans jamais passer
+    // au centre (27 % de duels sans contact en simulation) ; les coins de l'hexagone cassent ces orbites (6 %).
+    if (duel && terrain === 'rebond') {
+      for (let k = 0; k < 6; k++) {
+        const nx = Math.cos(Math.PI / 2 + (k * Math.PI) / 3), nz = Math.sin(Math.PI / 2 + (k * Math.PI) / 3);
+        const d = t.x * nx + t.z * nz, lim = ARENE_R - r;
+        if (d > lim) {
+          t.x -= (d - lim) * nx; t.z -= (d - lim) * nz;
+          const vn = t.vx * nx + t.vz * nz;
+          if (vn > 0) { t.vx -= 2 * vn * nx; t.vz -= 2 * vn * nz; mur(); }
+        }
+      }
+    }
     // Bord rond : on ramène la toupie dans le cercle et on la réfléchit sur la normale
     const dc = Math.hypot(t.x, t.z), lim = ARENE_R - r;
-    if (dc > lim) {
+    if (dc > lim && !(duel && terrain === 'rebond')) {
       const nx = t.x / dc, nz = t.z / dc;
       t.x = nx * lim; t.z = nz * lim;
       const vn = t.vx * nx + t.vz * nz;

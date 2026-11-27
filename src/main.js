@@ -172,12 +172,14 @@ brancherInterface({
       ronron(0);
       const gagne = r.place === 1, nom = partie.ami.joueur.nom;
       setTimeout(() => { baisserMusique(3); sfx.finPartie(gagne); UI.bandeau(gagne ? '🏆 Tu as gagné le défi !' : `💥 ${nom} a gagné le défi`, '', 4000); }, 1400);
+      UI.montrer('quitter', false); UI.montrer('pause', false);
       setTimeout(retourAtelier, 5000);
       return;
     }
     const gains = recompenser(save, r.place, r.mode);
     ronron(0); setTimeout(() => { baisserMusique(3); sfx.finPartie(r.place <= 4); }, 1400); // après le jingle du duel, pas en même temps
     sauver(save);
+    UI.montrer('quitter', false); UI.montrer('pause', false);
     setTimeout(() => UI.afficherFin(r, gains, retourAtelier), 600);
   },
 });
@@ -189,7 +191,7 @@ function retourAtelier() {
   ronron(0); // le ronronnement de la toupie s'arrête
   UI.aide('');
   mode = 'atelier';
-  UI.montrer('hud', false);
+  UI.montrer('hud', false); UI.montrer('pause', false);
   UI.montrer('panneauStats', false);
   UI.minuteur('');
   allerA('menu');
@@ -198,10 +200,27 @@ function retourAtelier() {
 
 lanceur.onLancer = lancer;
 document.getElementById('btnStats').addEventListener('click', UI.basculerStats);
+// Bouton Abandonner / Quitter (toujours visible en partie, même sur la boutique) : son texte dépend du mode
+const TEXTES_QUITTER = {
+  entrainement: { bouton: '🚪 Quitter', titre: '' },
+  ami: { bouton: '🚪 Quitter le défi', titre: 'Quitter le défi ?', texte: 'Ton ami sera prévenu et la partie s\'arrêtera pour vous deux.', ok: '🚪 Quitter' },
+  partie: { bouton: '🏳️ Abandonner', titre: 'Abandonner la partie ?', texte: 'Elle sera perdue, sans récompense.', ok: '🏳️ Abandonner' },
+};
+const texteQuitter = () => TEXTES_QUITTER[partie.mode === 'ami' || partie.mode === 'entrainement' ? partie.mode : 'partie'];
+const majBoutonQuitter = () => { document.getElementById('quitter').textContent = texteQuitter().bouton; };
+new MutationObserver(majBoutonQuitter).observe(document.getElementById('quitter'), { attributes: true, attributeFilter: ['class'] });
 document.getElementById('quitter').addEventListener('click', () => {
-  if (confirmerQuitter()) retourAtelier();
+  const t = texteQuitter();
+  if (partie.mode === 'entrainement' || window.__tc2?.sansConfirmation) return retourAtelier(); // l'entraînement ne perd rien : on sort direct
+  document.getElementById('pauseTitre').textContent = t.titre;
+  document.getElementById('pauseTexte').textContent = t.texte;
+  document.getElementById('pauseQuitter').textContent = t.ok;
+  UI.montrer('pause');
 });
-function confirmerQuitter() { return window.__tc2?.sansConfirmation || window.confirm('Quitter la partie ? Elle sera perdue.'); }
+document.getElementById('pauseReprendre').addEventListener('click', () => UI.montrer('pause', false));
+document.getElementById('pause').addEventListener('click', e => { if (e.target.id === 'pause') UI.montrer('pause', false); });
+document.getElementById('pauseQuitter').addEventListener('click', () => { UI.montrer('pause', false); retourAtelier(); });
+addEventListener('keydown', e => { if (e.key === 'Escape' && mode === 'partie' && !document.getElementById('quitter').classList.contains('cache')) document.getElementById(document.getElementById('pause').classList.contains('cache') ? 'quitter' : 'pauseReprendre').click(); });
 document.addEventListener('pointerdown', () => { activerAudio(); musique(); }, { once: true });
 // Mode test : toutes les pièces et tous les terrains au niveau max. La vraie sauvegarde est mise de côté et revient
 // quand on quitte le mode test.
