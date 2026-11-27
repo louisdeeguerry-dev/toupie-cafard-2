@@ -159,7 +159,9 @@ const CLE_AVANT_TEST = 'toupie-cafard-2-avant-test';
 const btnTest = document.getElementById('btnTest');
 const enTest = () => { try { return !!localStorage.getItem(CLE_AVANT_TEST); } catch { return false; } };
 btnTest.textContent = enTest() ? '🧪 Quitter le mode test' : '🧪 Mode test (tout débloqué)';
-if (enTest() && save.ecrous < 100000) { save.ecrous = 100000; sauver(save); } // mode test : écrous toujours rechargés
+if (enTest() && save.ecrous < 100000) { save.ecrous = 100000; sauver(save); atelier.rendre(); } // mode test : écrous toujours rechargés
+// Bouton de test dans la boutique : des écrous à volonté (toujours disponible pendant le prototype)
+document.getElementById('ecrousTest').addEventListener('click', () => { save.ecrous += 10000; sauver(save); atelier.rendre(); UI.son?.('piece'); });
 btnTest.addEventListener('click', async e => {
   e.stopPropagation();
   try {

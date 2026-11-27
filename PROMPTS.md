@@ -985,3 +985,13 @@ produit propose l'achat.
 - `.retour-menu` en cyan vif avec bordure claire, et un halo au survol (atelier, boutique, collection, paramètres, défi, inspection).
 - Surbrillance au survol sur tous les boutons, les cartes d'offre, les onglets et les emplacements ; ✖ Quitter en rouge.
 - Mode test : 100 000 écrous, rechargés à chaque chargement tant que le mode test est actif.
+
+---
+
+## 2026-11-27 — Écrous du mode test, visuels des boîtes de la boutique refaits
+
+**Prompt optimisé** : les écrous du mode test ne fonctionnent pas ; les boîtes de la boutique sont mal cadrées ; refaire leurs visuels.
+**Réalisé** :
+- Bouton « 🧪 +10 000 🔩 (test) » dans la boutique ; en mode test, les écrous sont rechargés et le solde est rafraîchi au chargement.
+- Emballages redessinés : une texture par face aux bonnes proportions, marges et liseré blanc, texte ajusté à la largeur
+  (« TOUPIE » / « CAFARD 2 » sur deux lignes), pastille « 100 / ÉCROUS », côtés illustrés, carte de présentation trouée au-dessus.
