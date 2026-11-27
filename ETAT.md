@@ -81,7 +81,7 @@
 - Dans la console du jeu : `__tc2.demarrerTest(3)` lance directement un duel, `__tc2.demarrerTest(0)` un lancer contre les cafards,
   `__tc2.acceleration = 4` accélère le jeu.
 - Menu → **🧪 Mode test** : toutes les pièces au niv 5 et tous les terrains ; la vraie sauvegarde est mise de côté et revient avec « Quitter le mode test ».
-- Publication : `git push origin main` **puis** `git push origin main:gh-pages`. Le jeu est sur https://louisdeeguerry-dev.github.io/toupie-cafard-2/
+- Publication : `node outils/versionner.mjs` (anti-cache), puis `git push origin main` **et** `git push origin main:gh-pages`. Le numéro de version s'affiche au menu. Le jeu est sur https://louisdeeguerry-dev.github.io/toupie-cafard-2/
 
 ## Dernières mesures
 - **Duels** : environ 13 contacts et 13 s ; à toupies identiques, 7 victoires sur 12 (équitable).

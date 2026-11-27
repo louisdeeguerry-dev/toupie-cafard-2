@@ -347,3 +347,6 @@ renderer.domElement.addEventListener('click', e => {
     aOuvrir = p.pieces - 1; boite();
   };
 });
+
+// Numéro de version affiché au menu (empreinte de main.js) : permet de vérifier qu'on a bien la dernière version en ligne
+document.getElementById('versionJeu').textContent = 'Version ' + (new URL(import.meta.url).searchParams.get('v') || 'locale');

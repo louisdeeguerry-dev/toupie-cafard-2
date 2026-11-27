@@ -995,3 +995,16 @@ produit propose l'achat.
 - Bouton « 🧪 +10 000 🔩 (test) » dans la boutique ; en mode test, les écrous sont rechargés et le solde est rafraîchi au chargement.
 - Emballages redessinés : une texture par face aux bonnes proportions, marges et liseré blanc, texte ajusté à la largeur
   (« TOUPIE » / « CAFARD 2 » sur deux lignes), pastille « 100 / ÉCROUS », côtés illustrés, carte de présentation trouée au-dessus.
+
+---
+
+## 2026-11-27 — Boîtes toujours mal centrées, bouton d'écrous qui ne marche pas : version en cache
+
+**Prompt optimisé** : les boîtes sont toujours mal centrées et le bouton d'écrous de test ne marche pas ; Louis se demande
+s'il s'exprime mal.
+**Réalisé** :
+- Diagnostic : la capture de Louis montre l'ANCIENNE version. Son navigateur gardait les anciens modules JS en cache ; Ctrl+F5
+  ne recharge que la page, pas les modules importés.
+- Correctif durable : `outils/versionner.mjs` ajoute une empreinte `?v=` à chaque module via la carte d'imports, et un numéro de version s'affiche au menu.
+- La règle de publication est ajoutée à CLAUDE.md.
+- Testé : tous les modules sont versionnés ; le bouton +10 000 🔩 fonctionne (0 → 10 000).

@@ -16,6 +16,8 @@ Projet : **Toupie Cafard 2**, suite du jeu « Toupie contre Cafards »
 
 ## Règle 0 bis — Le jeu publié reste à jour
 - Le jeu est publié sur GitHub Pages depuis la branche `gh-pages` : https://louisdeeguerry-dev.github.io/toupie-cafard-2/
+- **Avant** de publier : `node outils/versionner.mjs` (anti-cache : chaque module reçoit une empreinte `?v=` dans index.html,
+  sinon les navigateurs gardent les anciens fichiers et Louis voit une vieille version). Le numéro s'affiche au menu.
 - Après chaque `git push origin main` qui touche le jeu, pousser aussi `git push origin main:gh-pages`
   (sinon la version en ligne reste l'ancienne).
 
