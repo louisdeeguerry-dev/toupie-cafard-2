@@ -4,10 +4,10 @@
 set -u
 N=${1:-5}; P=${2:-3}; OUT=${3:-./resultats-strategies}
 ICI="$(cd "$(dirname "$0")" && pwd)"
-mkdir -p "$OUT"; OUT="$(cd "$OUT" && pwd)"; export ICI OUT
+mkdir -p "$OUT"; OUT="$(cd "$OUT" && pwd)"; export ICI OUT SCRIPT
 ( cd "$ICI/.." && python3 -m http.server 8123 >/dev/null 2>&1 & echo $! > "$OUT/serveur.pid" )
 sleep 1
 for s in ${STRATS:-sacrifice eco mixte force}; do for i in $(seq 1 "$N"); do echo "$s $i"; done; done |
-  xargs -P "$P" -n 2 sh -c 'node "$ICI/strategies.js" "$0" > "$OUT/$0-$1.log" 2>&1'
+  xargs -P "$P" -n 2 sh -c 'node "$ICI/${SCRIPT:-strategies.js}" "$0" > "$OUT/$0-$1.log" 2>&1'
 kill "$(cat "$OUT/serveur.pid")" 2>/dev/null
 node "$ICI/synthese-strategies.mjs" "$OUT"

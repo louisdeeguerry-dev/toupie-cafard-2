@@ -12,7 +12,7 @@ for (const f of fs.readdirSync(dir).filter(f => f.endsWith('.log'))) {
 const moy = a => a.reduce((x, y) => x + y, 0) / a.length;
 console.log('| Stratégie | Parties | Places | Place moyenne | Top 4 | Manches jouées (moy.) | Cafards / lancer | Cafards / lancer, étapes 1 / 2 / 3 / 4+ | Duels gagnés | Argent max (moy.) | Erreurs |');
 console.log('|---|---|---|---|---|---|---|---|---|---|---|');
-for (const s of ['sacrifice', 'eco', 'mixte', 'force']) {
+for (const s of Object.keys(res)) {
   const a = res[s]; if (!a) continue;
   const fini = a.filter(r => r.place);
   const parEtape = e => {
