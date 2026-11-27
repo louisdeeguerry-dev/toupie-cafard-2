@@ -4,6 +4,12 @@ import { camera, renderer, scene } from './scene.js';
 
 const calque = document.getElementById('popups');
 const v = new THREE.Vector3();
+// Taille du canvas mise en cache (relue seulement au redimensionnement) : la relire pour chaque barre de vie, entre deux
+// écritures de style, forçait le navigateur à recalculer la mise en page des dizaines de fois par image (saccades)
+let rectCache = null;
+const rectToile = () => (rectCache ||= renderer.domElement.getBoundingClientRect());
+addEventListener('resize', () => { rectCache = null; });
+addEventListener('orientationchange', () => { rectCache = null; });
 const textes = [];
 
 export function popup(texte, x, z, classe = '') {
@@ -18,7 +24,7 @@ export function popup(texte, x, z, classe = '') {
 export function pieceVolante(x, z, n = 1) {
   const cible = document.getElementById('argent');
   if (!cible || document.hidden) return;
-  const rect = renderer.domElement.getBoundingClientRect(), r = cible.getBoundingClientRect();
+  const rect = rectToile(), r = cible.getBoundingClientRect();
   v.set(x, 0.05, z).project(camera);
   const x0 = (v.x * 0.5 + 0.5) * rect.width, y0 = (-v.y * 0.5 + 0.5) * rect.height;
   for (let i = 0; i < Math.min(4, n); i++) {
@@ -52,7 +58,7 @@ export function viderTaches() {
 }
 
 export function majFx(dt) {
-  const rect = renderer.domElement.getBoundingClientRect();
+  const rect = rectToile();
   for (let i = textes.length - 1; i >= 0; i--) {
     const p = textes[i];
     p.t += dt;
@@ -87,12 +93,14 @@ function barre() {
   return b;
 }
 function placer(b, x, y, z, frac, classe, texte = '') {
-  const rect = renderer.domElement.getBoundingClientRect();
+  const rect = rectToile();
   v.set(x, y, z).project(camera);
-  b.className = 'barre-vie ' + classe;
-  b.style.transform = `translate(${(v.x * 0.5 + 0.5) * rect.width}px, ${(-v.y * 0.5 + 0.5) * rect.height}px) translate(-50%, -100%)`;
-  b.firstChild.style.width = Math.max(0, Math.min(100, frac * 100)).toFixed(0) + '%';
-  b.lastChild.textContent = texte;
+  // On n'écrit dans la page que ce qui a changé (moins de recalculs de style)
+  const cl = 'barre-vie ' + classe, l = Math.max(0, Math.min(100, frac * 100)).toFixed(0) + '%';
+  if (b.className !== cl) b.className = cl;
+  b.style.transform = `translate(${((v.x * 0.5 + 0.5) * rect.width).toFixed(1)}px, ${((-v.y * 0.5 + 0.5) * rect.height).toFixed(1)}px) translate(-50%, -100%)`;
+  if (b.firstChild.style.width !== l) b.firstChild.style.width = l;
+  if (b.lastChild.textContent !== texte) b.lastChild.textContent = texte;
 }
 // cafards : barre seulement s'ils sont blessés ; toupies : barre de rotation (la toupie s'arrête quand elle tombe sous son seuil)
 // Sans argument (retour au menu) : toutes les barres sont cachées
@@ -113,10 +121,12 @@ export function majBarres(cafards = [], toupies = []) {
 
 // ---------------------------------------------------------------- Étincelles (chocs entre toupies, cafards écrasés)
 const etincelleGeo = new THREE.SphereGeometry(1, 6, 4);
-const etincelles = [];
+const etincelles = [], reserveEtincelles = [];
 export function etincelles_(x, z, n = 10, couleur = 0xffd27a, force = 1) {
   for (let i = 0; i < n; i++) {
-    const m = new THREE.Mesh(etincelleGeo, new THREE.MeshBasicMaterial({ color: couleur, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+    // réserve : les étincelles éteintes sont réutilisées (créer/détruire des matériaux à chaque choc coûte cher)
+    const m = reserveEtincelles.pop() || new THREE.Mesh(etincelleGeo, new THREE.MeshBasicMaterial({ transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+    m.material.color.setHex(couleur); m.material.opacity = 1; m.visible = true;
     m.scale.setScalar(0.0025 + Math.random() * 0.002);
     m.position.set(x, 0.02, z);
     scene.add(m);
@@ -131,7 +141,7 @@ export function majEtincelles(dt) {
     e.t += dt; e.vy -= 2.5 * dt;
     e.m.position.x += e.vx * dt; e.m.position.y = Math.max(0.002, e.m.position.y + e.vy * dt); e.m.position.z += e.vz * dt;
     e.m.material.opacity = 1 - e.t / e.vie;
-    if (e.t > e.vie) { e.m.material.dispose(); e.m.removeFromParent(); etincelles.splice(i, 1); }
+    if (e.t > e.vie) { e.m.visible = false; e.m.removeFromParent(); reserveEtincelles.push(e.m); etincelles.splice(i, 1); }
   }
 }
 

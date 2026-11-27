@@ -7,6 +7,7 @@ import { lancerDansEtape, capacite } from './match.js';
 import { partie, nouvellePartie, commencerManche, majPartie, brancherInterface, lancer, abandonner, acheter, _interne } from './match.js';
 import { majFx, majBarres, majEtincelles, facteurTemps } from './fx.js';
 import { majCamera, rendre } from './scene.js';
+import { creerToupie, libererToupie } from './topMesh.js';
 import { activerAudio, ronron, musique, basculerMusique, musiqueActive, sfx, baisserMusique } from './audio.js';
 import * as UI from './ui.js';
 import { VERSION } from './config.js';
@@ -114,10 +115,18 @@ function recapLots() {
   };
 }
 
+// Compile à l'avance (en arrière-plan) les shaders de la partie et de la toupie : sinon le 1er lancer fige l'image
+function precompiler(equipe, niv) {
+  const t = creerToupie(equipe, niv);
+  scene.add(t.racine);
+  renderer.compileAsync?.(scene, camera).catch(() => {}).finally(() => { t.racine.removeFromParent(); libererToupie(t); });
+  if (!renderer.compileAsync) { t.racine.removeFromParent(); libererToupie(t); }
+}
 function demarrer() {
   activerAudio();
   nouvellePartie({ ...save.equipe }, { mode: save.mode, nivPieces: { ...save.niveauxPieces }, terrain: save.terrain });
   modeleLanceur(save.equipe);
+  precompiler(save.equipe, save.niveauxPieces);
   for (const e of ECRANS) UI.montrer(e, false);
   controlesActifs(false);
   partie.lancesFaits = 0;

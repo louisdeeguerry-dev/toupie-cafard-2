@@ -9,6 +9,7 @@ import { OutputPass } from '../vendor/jsm/postprocessing/OutputPass.js';
 export const conteneur = document.getElementById('jeu');
 export const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+renderer.debug.checkShaderErrors = false; // la vérification synchrone des shaders fige l'image à chaque compilation (saccades)
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
