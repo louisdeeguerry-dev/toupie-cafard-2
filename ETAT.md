@@ -104,6 +104,8 @@
   Les bots écrasent encore plus de cafards que le robot (4 à 6 contre 2 à 4,6 par lancer) : plafond à caler sur environ 3,5.
 - **26/11, bots calés sur environ 3,5 cafards par lancer** : sacrifice 6,6, économie 4,8, mixte 5,8, puissance 4,8 ; parties de 22 à 33 manches.
   Économie et puissance sont à égalité, le sacrifice est puni ; le robot plafonne vers la 4e place (sa visée reste simple).
+- **27/11, nouvelle économie** (sans pondeuse ni plafonds, rareté plus chère) : sacrifice 6,2, économie 5,6, mixte 5,4, puissance 6,0.
+  Les stratégies sont groupées (écart de 0,8), l'argent ne s'emballe plus (10 à 18 💰 au maximum) ; le robot reste un peu sous les bots.
 
 ## Prochaines étapes possibles
 - **Plan des agents critiques (27/11) : les 7 points sont faits** (fin de duel, téléphone, gains, sons, toupie lisible, cafards, atelier).

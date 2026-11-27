@@ -800,3 +800,4 @@ Un commit et une publication par point.
 ## 2026-11-27 — Tests après la nouvelle économie
 
 **Prompt optimisé** : jouer 5 parties robot par stratégie (×100) après le retrait de la pondeuse, la fin des plafonds et le surcoût de rareté.
+**Réalisé** : sacrifice 6,2, économie 5,6, mixte 5,4, puissance 6,0 ; argent max moyen 10 à 18 💰 (plus d'argent démesuré) ; parties de 25 à 30 manches ; aucune erreur.
