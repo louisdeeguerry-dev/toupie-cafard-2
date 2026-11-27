@@ -9,7 +9,7 @@ import { RARETE_OFFRE, BOUTIQUE, tirerRarete } from '../config.js';
 // Les prix montent de plus en plus vite (n² ) : impossible de tout acheter d'un coup en fin de partie.
 const REGLES = {
   multi: { max: 2, prix: n => 60 + n * 50 }, // très cher : une toupie de plus, c'est énorme
-  nid: { prix: n => 4 + n * 3 + n * n }, prime: { prix: n => 4 + n * 3 + n * n }, chance: { prix: n => 6 + n * 4 + n * n },
+  nid: { prix: n => 5 + n * 4 + n * n }, // 5, 10, 17, 26, 37… : chaque cafard de plus coûte plus cher prime: { prix: n => 4 + n * 3 + n * n }, chance: { prix: n => 6 + n * 4 + n * n },
   combo: { prix: n => 4 + n * 3 + n * n },
   tirelire: { prix: n => 6 + n * 5 + n * n },
   veine: { prix: n => 4 + n * 3 + n * n }, // Chance : un investissement, rentable si on achète beaucoup ensuite
@@ -37,8 +37,10 @@ export const AMELIO = Object.fromEntries(AMELIORATIONS.map(a => [a.id, a]));
 export const PAQUET = 3;
 // n = nombre d'achats déjà faits (le prix et le plafond portent sur les ACHATS) ; la rareté multiplie les niveaux gagnés.
 export const SANS_RARETE = id => id === 'multi' || id === 'priorite';
+// Le Nid s'achète cafard par cafard : commune +1, rare +1,5, épique +2, légendaire +3 cafards
+const UNITAIRE = ['nid'];
 export function paquet(a, n, rarete = 'commune') {
-  const k = SANS_RARETE(a.id) ? 1 : Math.min(PAQUET, a.max - n);
+  const k = SANS_RARETE(a.id) || UNITAIRE.includes(a.id) ? 1 : Math.min(PAQUET, a.max - n);
   if (k <= 0) return null;
   let prix = 0;
   for (let i = 0; i < k; i++) prix += a.prix(n + i);

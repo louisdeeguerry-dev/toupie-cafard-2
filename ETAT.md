@@ -18,9 +18,10 @@
   - code à 5 lettres ou lien `?ami=CODE` ;
   - par défaut, relais MQTT public (EMQX, puis HiveMQ, puis Mosquitto) : ça passe en 4G/5G et en Wi-Fi ; `?p2p` pour la connexion directe (PeerJS) ;
   - l'hôte calcule la physique, l'invité envoie son lancer et voit tout en miroir ;
-  - 3 vies chacun, 1 vie par duel perdu ;
+  - vraie partie à 2 : chacun ses cafards et sa boutique, on s'attend avant chaque duel ; 5 vies, 1 vie par duel perdu ;
   - test local : `?local` (deux onglets).
 - **Paramètres** (menu ⚙️) : qualité d'image, ombres, halo, secousses, plein écran, volumes ; `src/parametres.js`.
+- **Nid** : 1 cafard par niveau (plafond +15), acheté cafard par cafard ; **combo** plafonné à ×3.
 - **Améliorations sans plafond** (sauf Multi-lancer) ; une offre rare coûte plus cher, mais pas au prorata (rare ×1,25, épique ×1,5, légendaire ×2). Pondeuse et Éclairs en chaîne supprimés.
 - **Cafards** : ils **évoluent après chaque duel** (vie plus haute, nouvelles espèces contrées par des stats précises).
 - **Toupie choisie avant la partie, verrouillée pendant** : 4 pièces (base, couronne, pointe, âme) et 2 pièces de lanceur

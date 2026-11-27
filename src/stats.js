@@ -91,9 +91,10 @@ export function calculer(niv) {
     tours: 600 * f(0.18, L('puissance')),
     vitesse: 0.95 * f(0.1, L('elan')),
     parfait: Math.max(0.03, Math.min(0.4, 0.1 + 0.02 * L('precision'))),
-    toupies: 1 + P('multi'),
+    toupies: 1 + Math.round(P('multi')), // nombre entier de toupies : pièce (≤ 1) + achats (1 par achat)
     // Bureau
-    nid: Math.max(-4, Math.round(2 * L('nid'))),
+    // Nid : 1 cafard de plus par niveau (arrondi en dessous), 15 au maximum : un bureau plein reste jouable et l'argent ne s'emballe pas
+    nid: Math.max(-4, Math.min(15, Math.floor(L('nid') + 1e-6))),
     prime: f(0.12, L('prime')),
     chanceDore: P('chance') ? Math.min(0.6, 0.02 + 0.02 * P('chance')) : 0, // plafonnés : sans maximum d'achats, on ne dépasse pas 60 %
     comboFenetre: Math.max(0.6, 1.0 + 0.15 * L('combo')),

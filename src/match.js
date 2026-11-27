@@ -41,7 +41,7 @@ export function nouvellePartie(equipe, { pseudo = 'Toi', mode = 'normale', nivPi
 }
 
 export const etape = () => Math.floor(partie.manche / PARTIE.cycle.length) + 1;
-export const typeManche = (m = partie.manche) => partie.entrainement ? 'cafards' : partie.ami ? 'duel' : PARTIE.cycle[m % PARTIE.cycle.length];
+export const typeManche = (m = partie.manche) => partie.entrainement ? 'cafards' : PARTIE.cycle[m % PARTIE.cycle.length];
 // Numéro du lancer dans l'étape (1 à 3) pour une manche de cafards
 export const lancerDansEtape = (m = partie.manche) => (m % PARTIE.cycle.length) + 1;
 export const vivants = () => partie.joueurs.filter(j => !j.elimine);
@@ -62,6 +62,9 @@ export function commencerManche() {
   partie.mancheAffichee = null;
   partie.type = typeManche();
   if (partie.entrainement) return mancheEntrainement();
+  // Défi entre amis : chacun joue ses cafards de son côté ; au duel, on s'attend (les deux doivent être prêts)
+  if (partie.ami && partie.type === 'duel' && !partie.ami.go) return attendreDuelAmi();
+  if (partie.ami) partie.ami.go = false;
   Object.assign(partie, { gainsManche: 0, resultat: null, chrono: 0, combo: 0, renfortT: 0, tues: 0, contacts: 0, attenteRelance: 0,
     tempsLancer: 0, depuisLancer: 0, acceleration: 1, horloge: null, lanceEnvoye: false,
     monLancer: null, sonLancer: null, lachees: false });
@@ -160,6 +163,8 @@ function lancerBot() {
   tenterLacher();
 }
 
+// Le combo multiplie la prime, mais au plus par 3 (sans plafond, 60 cafards en chaîne rapportaient des fortunes)
+const MULT_COMBO_MAX = 3;
 const rappels = {
   tue(c, t, crit) {
     if (t.camp !== 'joueur' || partie.type !== 'cafards') return;
@@ -167,7 +172,7 @@ const rappels = {
     const st = mesStats(), fenetre = st.comboFenetre, bonusCombo = st.comboBonus;
     partie.combo = partie.tempsJeu - partie.dernierKill < fenetre ? partie.combo + 1 : 1;
     partie.dernierKill = partie.tempsJeu;
-    const brut = CAFARDS.prime * CAFARDS.primeEtape(etape()) * (c.t?.prime || 1) * st.prime * (c.dore ? 4 : 1) * (1 + bonusCombo * (partie.combo - 1));
+    const brut = CAFARDS.prime * CAFARDS.primeEtape(etape()) * (c.t?.prime || 1) * st.prime * (c.dore ? 4 : 1) * Math.min(MULT_COMBO_MAX, 1 + bonusCombo * (partie.combo - 1));
     // On garde les centimes : une Prime ×1,2 finit vraiment par rapporter plus
     partie.reste = (partie.reste || 0) + brut;
     const gain = Math.floor(partie.reste);
@@ -252,14 +257,14 @@ export function majPartie(dt, t) {
   if (!partie.active) return;
   partie.tempsJeu += dt;
   majCafards(dt, t, partie.mesToupies.filter(enJeu));
-  if (partie.ami && !partie.ami.hote) { majInvite(dt); return; }
+  if (partie.ami && !partie.ami.hote && partie.type === 'duel') { majInvite(dt); return; }
   if (partie.phase !== 'jeu') { majToupies(dt, rappels); return; }
   if (partie.type === 'duel' && partie.botLanceDans > 0 && !partie.botLance) {
     partie.botLanceDans -= dt;
     if (partie.botLanceDans <= 0) lancerBot();
   }
   majToupies(dt, rappels);
-  if (partie.ami) envoyerEtat();
+  if (partie.ami && partie.type === 'duel') envoyerEtat();
   const mes = partie.mesToupies, lancees = mes.length > 0, toutesTombees = lancees && !mes.some(enJeu);
   minuteurs(dt, lancees);
 
@@ -350,7 +355,7 @@ function terminerManche(bilan) {
     };
   }
   if (bilan.prochaine === 'duel') {
-    partie.prochainAdversaire = choisirAdversaire();
+    partie.prochainAdversaire = partie.ami ? partie.ami.joueur : choisirAdversaire();
     bilan.adversaireSuivant = partie.prochainAdversaire;
   }
   // Conseils : les stats qui contrent les espèces du prochain lancer
@@ -438,15 +443,13 @@ export { TYPES };
 // ---------------------------------------------------------------- Défi entre amis (temps réel, pair à pair)
 // L'HÔTE calcule toute la physique et envoie l'état ~20 fois par seconde ; l'INVITÉ envoie seulement son lancer et
 // affiche des « fantômes » des toupies. Chacun se voit EN BAS du plateau : l'invité voit tout en miroir (x → −x, z → −z).
-// Partie : une suite de duels, chacun a 3 vies, un duel perdu coûte 1 vie.
-const VIES_AMI = 3;
+// Partie : comme une vraie partie à 2 (3 lancers contre ses cafards, boutique, puis duel), 5 vies, 1 vie par duel perdu.
 export function demarrerAmi({ hote, envoyer, moi, ami }) {
   nouvellePartie(moi.equipe, { pseudo: moi.pseudo || 'Toi', nivPieces: moi.nivPieces, terrain: moi.terrain });
-  const joueurAmi = { nom: ami.pseudo || 'Ton ami', bot: false, vies: VIES_AMI, equipe: ami.equipe, nivPieces: ami.nivPieces,
+  const joueurAmi = { nom: ami.pseudo || 'Ton ami', bot: false, vies: PARTIE.vies, equipe: ami.equipe, nivPieces: ami.nivPieces,
     terrain: ami.terrain || 'aucun', niveaux: {}, achats: {}, elimine: false, place: 0 };
-  partie.moi.vies = VIES_AMI;
   partie.joueurs = [partie.moi, joueurAmi];
-  partie.ami = { hote, envoyer, joueur: joueurAmi, dernierEnvoi: 0, fantomes: new Map(), etat: null };
+  partie.ami = { hote, envoyer, joueur: joueurAmi, dernierEnvoi: 0, fantomes: new Map(), etat: null, moiPret: false, luiPret: false, go: false };
   partie.mode = 'ami';
 }
 export function quitterAmi() { partie.ami = null; }
@@ -472,8 +475,10 @@ export function messageAmi(m) {
     // Le lancer de l'invité arrive dans SON repère : on le retourne (il est en face de nous), et on attend le nôtre
     partie.sonLancer = { x: -m.x, z: -m.z, dx: -m.dx, dz: -m.dz, puiss: m.puiss };
     tenterLacher();
-  } else if (!A.hote && m.type === 'manche') {
-    partie.manche = m.manche; commencerManche();
+  } else if (A.hote && m.type === 'pret-duel') {
+    A.joueur.niveaux = m.niveaux || {}; A.luiPret = true; tenterDuelAmi();
+  } else if (!A.hote && m.type === 'go-duel') {
+    A.joueur.niveaux = m.niveaux || {}; A.go = true; A.moiPret = false; commencerManche();
   } else if (!A.hote && m.type === 'etat') {
     A.etat = m;
   } else if (!A.hote && m.type === 'choc') {
@@ -517,16 +522,35 @@ function majInvite(dt) {
   }
 }
 
-// Fin d'un duel entre amis (gagne : vu de CE joueur)
+// Duel entre amis : on attend que les deux aient fini leurs lancers et leur boutique (les améliorations achetées
+// sont échangées pour que chacun voie la vraie toupie de l'autre), puis l'hôte donne le départ
+function attendreDuelAmi() {
+  const A = partie.ami;
+  partie.phase = 'attente'; lanceur.actif = false;
+  viderToupies(); partie.mesToupies = []; partie.sesToupies = [];
+  A.moiPret = true;
+  A.envoyer({ type: 'pret-duel', niveaux: partie.moi.niveaux });
+  ui.minuteur?.(`⏳ En attente de ${A.joueur.nom} (il finit ses lancers)…`, false);
+  if (A.hote) tenterDuelAmi();
+}
+function tenterDuelAmi() {
+  const A = partie.ami;
+  if (!A?.hote || !A.moiPret || !A.luiPret || partie.phase !== 'attente') return;
+  A.moiPret = A.luiPret = false; A.go = true;
+  A.envoyer({ type: 'go-duel', niveaux: partie.moi.niveaux });
+  commencerManche();
+}
+
+// Fin d'un duel entre amis (gagne : vu de CE joueur) : vies, puis bilan et boutique comme d'habitude
 function finDuelAmi(gagne) {
   const A = partie.ami;
+  if (partie.phase === 'bilan' && !A.hote) return;
   partie.phase = 'bilan'; lanceur.actif = false;
   if (A.hote) A.envoyer({ type: 'fin', gagneHote: gagne });
-  if (gagne) A.joueur.vies--; else partie.moi.vies--;
-  ui.hud?.();
-  const fini = partie.moi.vies <= 0 || A.joueur.vies <= 0;
-  ui.finAmi?.({ gagne, fini, score: [VIES_AMI - A.joueur.vies, VIES_AMI - partie.moi.vies], adversaire: A.joueur.nom });
-  if (!fini && A.hote) setTimeout(() => { if (partie.ami) { partie.manche++; A.envoyer({ type: 'manche', manche: partie.manche }); commencerManche(); } }, 3200);
+  else ui.finDuel?.(gagne);
+  const deg = PARTIE.degatsDuel(etape());
+  if (gagne) A.joueur.vies -= deg; else partie.moi.vies -= deg;
+  terminerManche({ type: 'duel', gagne, adversaire: A.joueur.nom, degats: deg, contacts: partie.contacts, duree: partie.chrono });
 }
 
 // ---------------------------------------------------------------- Entraînement : un mannequin immobile à vie infinie

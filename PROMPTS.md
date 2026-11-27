@@ -893,3 +893,23 @@ Testé : contre un bot (départ ensemble, lancer automatique à 7 s) et entre de
   - dégâts de chaque coup affichés, avec le total du lancer, le meilleur coup et le meilleur lancer ;
   - lancers illimités, sans chrono ni boutique.
 - Diamètre vérifié dans le code : il ne change que la taille (zone de contact), ni l'inertie ni les dégâts d'un coup ; une toupie plus large touche simplement plus souvent.
+
+---
+
+## 2026-11-27 — Défi entre amis avec les vagues de cafards ; Nid et combo rééquilibrés ; engrenage double = 2 toupies
+
+**Prompt optimisé** : (rôle : game designer et dev réseau)
+- En 1 contre 1, garder les vagues de cafards : chacun joue ses 3 lancers et sa boutique, puis duel contre l'ami.
+- Rendre le Nid bien moins efficace : environ +1 cafard en commune, +2 en rare et +3 au maximum en légendaire ; rentable en fin de partie, sans abus (on générait près d'un million par manche).
+- L'engrenage double doit lancer 2 toupies, pas 3.
+
+**Réalisé** :
+- Défi = vraie partie à 2, 5 vies, 1 vie par duel perdu.
+- Avant chaque duel, attente mutuelle (`pret-duel` puis `go-duel`), avec échange des améliorations achetées. Pas de récompense de fin.
+- Nid : 1 cafard par niveau (plafond +15), acheté cafard par cafard (commune +1, rare +1,5, épique +2, légendaire +3), prix 5, 10, 17, 26, 37…
+- Combo : multiplicateur plafonné à ×3, la vraie cause des sommes énormes.
+- Calcul : +1 cafard rapporte environ 1,6 💰 par étape au début et 3,5 💰 vers l'étape 7 ; le 1er Nid est remboursé en 2 à 3 étapes, le 5e n'est plus rentable.
+- Engrenage double : son effet est plafonné à exactement +1 toupie (bonus et malus ensemble) ; nombre de toupies arrondi.
+- Code d'entraînement effacé par erreur pendant ce chantier, restauré.
+
+Testé : défi complet entre deux navigateurs (3 lancers et boutique chacun, puis duel synchronisé, vies cohérentes), aucune erreur.

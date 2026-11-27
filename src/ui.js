@@ -337,19 +337,15 @@ function compteurArgent(cible) {
 export function majHud() {
   if (!partie.joueurs) return;
   const moi = partie.moi, etroit = window.innerWidth < 720;
-  const viesMax = partie.ami ? 3 : PARTIE.vies; // défi entre amis : 3 vies chacun
+  const viesMax = PARTIE.vies;
   $('vies').textContent = etroit ? `❤️ ${Math.max(0, moi.vies)}` : '❤️'.repeat(Math.max(0, moi.vies)) + '🖤'.repeat(Math.max(0, viesMax - moi.vies));
-  $('argent').style.display = partie.ami || partie.entrainement ? 'none' : '';
+  $('argent').style.display = partie.entrainement ? 'none' : '';
   $('vies').style.display = partie.entrainement ? 'none' : '';
   $('salon').style.display = partie.entrainement ? 'none' : '';
   if (partie.entrainement) $('manches').innerHTML = `<span>🎯 Entraînement · ${partie.entrainement.lancers} lancer${partie.entrainement.lancers > 1 ? 's' : ''}</span>`;
-  if (partie.ami) { // pas d'étapes ni d'argent en défi : juste le score
-    const a = partie.ami.joueur;
-    $('manches').innerHTML = `<span>🤝 Défi · <b>${3 - a.vies}</b> – <b>${3 - moi.vies}</b> contre ${esc(a.nom)}</span>`;
-  }
   compteurArgent(partie.argent);
   const n = PARTIE.cycle.length, mm = partie.mancheAffichee ?? partie.manche, et = Math.floor(mm / n) + 1, debut = (et - 1) * n;
-  if (!partie.ami && !partie.entrainement) $('manches').innerHTML = `<span class="petit">${etroit ? 'É' : 'Étape '}${et}</span>` + PARTIE.cycle.map((t, i) => {
+  if (!partie.entrainement) $('manches').innerHTML = `<span class="petit">${etroit ? 'É' : 'Étape '}${et}</span>` + PARTIE.cycle.map((t, i) => {
     const m = debut + i, cls = m < mm ? 'fait' : m === mm ? 'cours' : '';
     return `<i class="${cls}" title="${t === 'duel' ? 'Duel' : 'Cafards'}">${t === 'duel' ? '⚔️' : '🪳'}</i>`;
   }).join('');

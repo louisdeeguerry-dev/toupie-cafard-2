@@ -115,6 +115,13 @@ brancherInterface({
   },
   fin(r) {
     UI.majHud();
+    if (partie.ami) { // défi entre amis : pas de récompense, juste le résultat
+      ronron(0);
+      const gagne = r.place === 1, nom = partie.ami.joueur.nom;
+      setTimeout(() => { baisserMusique(3); sfx.finPartie(gagne); UI.bandeau(gagne ? '🏆 Tu as gagné le défi !' : `💥 ${nom} a gagné le défi`, '', 4000); }, 1400);
+      setTimeout(retourAtelier, 5000);
+      return;
+    }
     const gains = recompenser(save, r.place, r.mode);
     ronron(0); setTimeout(() => { baisserMusique(3); sfx.finPartie(r.place <= 4); }, 1400); // après le jingle du duel, pas en même temps
     sauver(save);
@@ -245,7 +252,7 @@ function brancher(c, hote) {
       controlesActifs(false);
       mode = 'partie';
       UI.montrer('hud');
-      if (hote) setTimeout(() => { c.send({ type: 'manche', manche: 0 }); commencerManche(); }, 600);
+      setTimeout(() => commencerManche(), 600); // chacun ses cafards ; on se retrouve au duel
     } else messageAmi(m);
   });
   c.on('close', () => {

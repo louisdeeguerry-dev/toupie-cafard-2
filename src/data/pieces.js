@@ -34,7 +34,10 @@ export const multiplicateurNiveau = k => 1 + 0.5 * (Math.max(1, k) - 1);
 export const FORCE_PIECES = 0.6;
 export function niveauxPiece(p, k = 1) {
   const m = multiplicateurNiveau(k) * FORCE_PIECES, r = {};
-  for (const [s, v] of Object.entries(p.niveaux)) r[s] = Math.round(v * m * 100) / 100;
+  // Multi-lancer : une pièce lance au plus UNE toupie de plus. Son effet est donc plafonné (bonus et malus ensemble,
+  // pour rester équilibrée) : l'engrenage double ne monte plus au-delà du niveau où il atteint exactement 1 toupie.
+  const mm = p.niveaux.multi ? Math.min(m, 1 / p.niveaux.multi) : m;
+  for (const [s, v] of Object.entries(p.niveaux)) r[s] = Math.round(v * mm * 100) / 100;
   return r;
 }
 
