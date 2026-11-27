@@ -16,6 +16,8 @@ for (const p of fichiers) { const r = './' + relative(racine, p); imports[r] = r
 const carte = `<script type="importmap">${JSON.stringify({ imports })}</script>`;
 let html = readFileSync(join(racine, 'index.html'), 'utf8');
 html = html.replace(/<script type="importmap">[\s\S]*?<\/script>/, carte);
-html = html.replace(/<script type="module" src="src\/main\.js[^"]*"><\/script>/, `<script type="module" src="src/main.js?v=${empreinte(join(racine, 'src', 'main.js'))}"></script>`);
+// Le numéro affiché au menu = empreinte de TOUS les modules : il change dès qu'un seul fichier change
+const globale = createHash('md5').update(Object.values(imports).join('|')).digest('hex').slice(0, 8);
+html = html.replace(/<script type="module" src="src\/main\.js[^"]*"><\/script>/, `<script type="module" src="src/main.js?v=${globale}"></script>`);
 writeFileSync(join(racine, 'index.html'), html);
 console.log(`${fichiers.length + 1} modules versionnés`);
