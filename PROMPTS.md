@@ -1034,3 +1034,10 @@ boîte, pas un émoji au milieu de l'écran.
 session garde l'historique et ce qu'elle apporte.
 **Réalisé** : glisser fait pivoter toutes les pièces sorties (la rotation automatique se met en pause) ; consigne « ↔ Glisse
 pour faire pivoter les pièces ». Explication des sessions donnée à Louis.
+
+---
+
+## 2026-11-27 — Ouverture d'une nouvelle session
+
+**Prompt optimisé** : ouvrir une nouvelle session sur le dépôt, configurée avec les règles du projet (CLAUDE.md, ETAT.md).
+**Réalisé** : session « Toupie Cafard 2 — suite » créée. Elle doit appliquer la règle 0, lire CLAUDE.md et ETAT.md, résumer l'état du jeu et demander à Louis la suite.
