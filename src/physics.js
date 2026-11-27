@@ -23,11 +23,19 @@ export function modeDuel(oui) { duel = !!oui; }
 // Mesures visées : ~4-6 % de barre par choc, plus de la moitié de la chute due aux chocs, 10-15 contacts, 10-20 s.
 export const CHOC = { ref: 600, base: 0.01, parLames: 0.03, parVitesse: 0.12, attraction: 0.7, poussee: 0.12, delai: 0.2, rebond: 0.5, usureDuel: 0.3 };
 
+// Les toupies sont un peu étirées en hauteur pour être lisibles vues de haut (la hauteur ne compte pas dans la physique)
+const HAUTEUR_VUE = 1.35;
 export function creerToupieJeu(equipe, achats, camp, nivPieces = {}, { duel = false } = {}) {
   const s = statsToupie(equipe, achats, nivPieces);
   const mesh = creerToupie(equipe);
   const k = s.rayon / 0.042; // le diamètre se voit
-  mesh.racine.scale.set(k, 1, k);
+  mesh.racine.scale.set(k, HAUTEUR_VUE, k);
+  // Halo au sol de la couleur du camp (vert = toi, rouge = adversaire) : on repère sa toupie d'un coup d'œil.
+  // Il épouse le vrai rayon de la toupie (sa zone de contact), donc il ne ment pas sur la taille.
+  const halo = new THREE.Mesh(new THREE.RingGeometry(0.043, 0.058, 40), new THREE.MeshBasicMaterial({
+    color: camp === 'joueur' ? 0x3fff8a : 0xff5040, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false }));
+  halo.rotation.x = -Math.PI / 2; halo.position.y = 0.0015 / HAUTEUR_VUE; halo.userData.halo = true;
+  mesh.racine.add(halo);
   mesh.racine.visible = false;
   scene.add(mesh.racine);
   const t = {
@@ -304,7 +312,7 @@ export function majToupies(dt, cb) {
     // Flash d'impact : la toupie « gonfle » un instant
     t.flash = Math.max(0, (t.flash || 0) - dt * 7);
     const g = 1 + 0.18 * t.flash;
-    t.mesh.racine.scale.set(t.echelle * g, g, t.echelle * g);
+    t.mesh.racine.scale.set(t.echelle * g, g * HAUTEUR_VUE, t.echelle * g);
   }
 }
 

@@ -105,7 +105,7 @@ export function majBarres(cafards, toupies) {
     if (!t.lancee || t.tombe) continue;
     // 100 % = rotation de départ, 0 % = seuil de chute
     const frac = (t.rotation / t.rotationMax - t.s.seuilChute) / (1 - t.s.seuilChute);
-    placer(barre(), t.x, 0.075, t.z, frac, (t.camp === 'joueur' ? 'toupie moi' : 'toupie adv') + (frac < 0.25 ? ' alerte' : ''), `${Math.max(0, Math.round(frac * 100))} %`);
+    placer(barre(), t.x, 0.075, t.z, frac, (t.camp === 'joueur' ? 'toupie moi' : 'toupie adv') + (frac < 0.25 ? ' alerte' : ''), frac < 0.5 ? `${Math.max(0, Math.round(frac * 100))} %` : ''); // le % seulement quand ça devient serré
   }
   for (let i = utilisees; i < reserve.length; i++) reserve[i].style.display = 'none';
 }
