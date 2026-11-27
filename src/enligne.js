@@ -38,7 +38,7 @@ function canalLocal(code, role) {
   const c = {
     open: false,
     send: d => bc.postMessage({ de: role, d }),
-    on: (ev, f) => ecoute[ev].push(f),
+    on: (ev, f) => ecoute[ev]?.push(f), // (error, iceStateChanged… : sans objet en local)
     close: () => { bc.postMessage({ de: role, bye: true }); bc.close(); },
   };
   bc.onmessage = e => {

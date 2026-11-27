@@ -1070,3 +1070,10 @@ corrections d'interface. Combo : le build Combo finit dernier, elle n'est pas tr
 parties ; garder la stat Combo telle quelle ; mettre à jour textes, état et publication.
 **Réalisé** : `degatsDuel` = 1 vie, puis 2 dès l'étape 6 ; la boutique annonce « défaite : −N ❤️ » avant chaque duel ; textes du
 défi ami mis à jour ; 6 parties robot sans erreur ; Combo inchangée.
+
+## 2026-11-27 — Défi entre amis : fin de duel bloquée
+**Prompt optimisé** (dev réseau/gameplay) : en défi entre amis, après une victoire la toupie continue de tourner, sans
+verdict ni suite. Trouver la cause, corriger, vérifier à deux onglets, publier.
+**Réalisé** : l'invité dépendait d'un seul message « fin » de l'hôte (perdu sur le relais = blocage). Le résultat voyage
+aussi dans l'état envoyé 20×/s, l'hôte renvoie « fin » 3 fois, l'invité conclut seul après 3 s. Testé à deux onglets avec
+messages « fin » supprimés : verdicts, vies et manche suivante OK. Mode `?local` réparé (plantait à la création).

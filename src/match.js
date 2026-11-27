@@ -477,7 +477,8 @@ function envoyerEtat() {
     if (t.lancee) liste.push([camp, i, +t.x.toFixed(4), +t.z.toFixed(4), +(t.rotation / t.rotationMax).toFixed(3), t.tombe ? 1 : 0,
       +t.mesh.inclinaison.rotation.x.toFixed(3), +t.mesh.inclinaison.rotation.z.toFixed(3)]);
   });
-  partie.ami.envoyer({ type: 'etat', t: liste, phase: partie.phase });
+  // Le résultat du duel voyage aussi dans l'état (si le message « fin » se perd sur le relais, l'invité conclut quand même)
+  partie.ami.envoyer({ type: 'etat', t: liste, phase: partie.phase, fin: partie.resultat ? { gagneHote: partie.resultat.gagne } : null });
 }
 
 // Messages reçus de l'ami
@@ -491,7 +492,7 @@ export function messageAmi(m) {
   } else if (A.hote && m.type === 'pret-duel') {
     A.joueur.niveaux = m.niveaux || {}; A.luiPret = true; tenterDuelAmi();
   } else if (!A.hote && m.type === 'go-duel') {
-    A.joueur.niveaux = m.niveaux || {}; A.go = true; A.moiPret = false; commencerManche();
+    A.joueur.niveaux = m.niveaux || {}; A.go = true; A.moiPret = false; A.verdictVu = false; A.finAuto = 0; commencerManche();
   } else if (!A.hote && m.type === 'etat') {
     A.etat = m;
   } else if (!A.hote && m.type === 'choc') {
@@ -502,7 +503,7 @@ export function messageAmi(m) {
     sfx.metal(Math.min(1, pct / 10), -m.x / ARENE_R);
     popup(m.bloque ? '🛡️ Bloqué' : `${m.crit ? '💥 ' : ''}−${Math.max(1, Math.round(pct))} %`, -m.bx, -m.bz, moiTouche ? 'degat-moi' : 'degat');
   } else if (!A.hote && m.type === 'fin') {
-    finDuelAmi(!m.gagneHote);
+    if (partie.type === 'duel') finDuelAmi(!m.gagneHote); // les doublons (renvois) arrivés après le duel sont ignorés
   }
 }
 
@@ -512,6 +513,11 @@ function majInvite(dt) {
   if (partie.phase === 'jeu') minuteurs(dt, !!partie.lachees);
   const e = A.etat;
   if (!e) return;
+  // Résultat connu par l'état de l'hôte : verdict tout de suite ; si le message « fin » n'arrive pas, on conclut seul
+  if (e.fin && partie.phase === 'jeu') {
+    if (!A.verdictVu) { A.verdictVu = true; ui.finDuel?.(!e.fin.gagneHote); A.finAuto = performance.now() + 3000; }
+    else if (performance.now() > A.finAuto) { finDuelAmi(!e.fin.gagneHote); return; }
+  }
   const vus = new Set();
   for (const [campHote, i, x, z, ratio, tombe, ix, iz] of e.t) {
     const camp = campHote === 'joueur' ? 'adverse' : 'joueur', cle = camp + i;
@@ -559,8 +565,10 @@ function finDuelAmi(gagne) {
   const A = partie.ami;
   if (partie.phase === 'bilan' && !A.hote) return;
   partie.phase = 'bilan'; lanceur.actif = false;
-  if (A.hote) A.envoyer({ type: 'fin', gagneHote: gagne });
-  else ui.finDuel?.(gagne);
+  if (A.hote) { // envoyé 3 fois : un message perdu sur le relais ne doit pas bloquer l'invité
+    const m = { type: 'fin', gagneHote: gagne };
+    A.envoyer(m); setTimeout(() => partie.ami === A && A.envoyer(m), 500); setTimeout(() => partie.ami === A && A.envoyer(m), 1500);
+  } else if (!A.verdictVu) ui.finDuel?.(gagne);
   const deg = PARTIE.degatsDuel(etape());
   if (gagne) A.joueur.vies -= deg; else partie.moi.vies -= deg;
   terminerManche({ type: 'duel', gagne, adversaire: A.joueur.nom, degats: deg, contacts: partie.contacts, duree: partie.chrono });
