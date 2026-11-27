@@ -14,10 +14,34 @@ patteGeo.translate(0, -0.5, 0);
 const matDore = new THREE.MeshStandardMaterial({ color: 0xffc531, roughness: 0.25, metalness: 0.9, emissive: 0x6b4a00, emissiveIntensity: 0.4 });
 const matTete = new THREE.MeshStandardMaterial({ color: 0x2b170a, roughness: 0.5 });
 const matPatte = new THREE.MeshStandardMaterial({ color: 0x1e1108, roughness: 0.8 });
+// Carapace de cafard (dessinée une fois) : fente entre les deux élytres sur le dos, nervures en long,
+// anneaux de l'abdomen sur les flancs, bords plus sombres. Vernis brillant (clearcoat) = chitine.
+let texCarapace = null;
+function carapace() {
+  if (texCarapace) return texCarapace;
+  const c = document.createElement('canvas'); c.width = c.height = 256;
+  const g = c.getContext('2d');
+  const fond = g.createLinearGradient(0, 0, 0, 256);
+  fond.addColorStop(0, '#ffffff'); fond.addColorStop(0.45, '#e6e6e6'); fond.addColorStop(0.55, '#9a9a9a'); fond.addColorStop(1, '#6a6a6a');
+  g.fillStyle = fond; g.fillRect(0, 0, 256, 256);
+  g.strokeStyle = 'rgba(0,0,0,.75)'; g.lineWidth = 5; // fente des élytres (méridien du dos)
+  for (const u of [64, 192]) { g.beginPath(); g.moveTo(u, 0); g.lineTo(u, 128); g.stroke(); }
+  g.strokeStyle = 'rgba(0,0,0,.18)'; g.lineWidth = 2; // nervures
+  for (let u = 8; u < 256; u += 16) { g.beginPath(); g.moveTo(u, 10); g.lineTo(u, 120); g.stroke(); }
+  g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 3; // anneaux de l'abdomen
+  for (let v = 140; v < 250; v += 18) { g.beginPath(); g.moveTo(0, v); g.lineTo(256, v); g.stroke(); }
+  texCarapace = new THREE.CanvasTexture(c); texCarapace.colorSpace = THREE.SRGBColorSpace;
+  return texCarapace;
+}
 const matsCorps = {};
-const matCorps = t => matsCorps[t] ||= new THREE.MeshStandardMaterial({
-  color: TYPES[t].couleur, roughness: TYPES[t].metal ? 0.25 : 0.35, metalness: TYPES[t].metal ? 0.8 : 0.2,
+const matCorps = t => matsCorps[t] ||= new THREE.MeshPhysicalMaterial({
+  color: TYPES[t].couleur, map: carapace(), roughness: TYPES[t].metal ? 0.25 : 0.45, metalness: TYPES[t].metal ? 0.8 : 0.1,
+  clearcoat: 0.8, clearcoatRoughness: 0.25,
 });
+const matPronotum = new THREE.MeshPhysicalMaterial({ color: 0x3a2412, roughness: 0.4, clearcoat: 0.9, clearcoatRoughness: 0.2 });
+// Antenne courbe (fouet), géométrie partagée, mise à l'échelle par cafard
+const antenneGeo = new THREE.TubeGeometry(new THREE.QuadraticBezierCurve3(
+  new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.25, 0.35, 0.9), new THREE.Vector3(0.9, 0.1, 1.6)), 12, 0.035, 4);
 
 function modele(type, r, dore) {
   const g = new THREE.Group(), araignee = type === 'araignee', larve = type === 'larve';
@@ -47,12 +71,19 @@ function modele(type, r, dore) {
     g.add(p);
     pattes.push(p);
   }
-  if (!araignee && !larve) for (const c of [-1, 1]) { // antennes
-    const a = new THREE.Mesh(patteGeo, matPatte);
-    a.scale.set(r * 0.25, r * 1.3, r * 0.25);
-    a.position.set(c * r * 0.12, r * 0.5, r * 1.15);
-    a.rotation.set(-1.9, 0, c * 0.4);
-    g.add(a);
+  if (!araignee && !larve) {
+    // Pronotum : le « bouclier » entre la tête et les ailes, typique du cafard
+    const pr = new THREE.Mesh(corpsGeo, dore ? matDore : matPronotum);
+    pr.scale.set(r * 0.62, r * 0.26, r * 0.4);
+    pr.position.set(0, r * 0.5, r * 0.62);
+    g.add(pr);
+    for (const c of [-1, 1]) { // antennes courbes, longues comme le corps
+      const a = new THREE.Mesh(antenneGeo, matPatte);
+      a.scale.set(c * r, r, r);
+      a.position.set(c * r * 0.1, r * 0.45, r * 1.15);
+      a.userData.antenne = c;
+      g.add(a);
+    }
   }
   g.traverse(o => { if (o.isMesh) o.castShadow = true; });
   return { g, pattes };
