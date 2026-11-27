@@ -37,14 +37,15 @@ export const AMELIO = Object.fromEntries(AMELIORATIONS.map(a => [a.id, a]));
 export const PAQUET = 3;
 // n = nombre d'achats déjà faits (le prix et le plafond portent sur les ACHATS) ; la rareté multiplie les niveaux gagnés.
 export const SANS_RARETE = id => id === 'multi' || id === 'priorite';
-// Le Nid s'achète cafard par cafard : commune +1, rare +1,5, épique +2, légendaire +3 cafards
+// Le Nid s'achète cafard par cafard, et n'existe qu'en rare (+1 cafard), épique (+2) ou légendaire (+3)
 const UNITAIRE = ['nid'];
+const MULT_NID = { rare: 1, epique: 2, legendaire: 3 };
 export function paquet(a, n, rarete = 'commune') {
   const k = SANS_RARETE(a.id) || UNITAIRE.includes(a.id) ? 1 : Math.min(PAQUET, a.max - n);
   if (k <= 0) return null;
   let prix = 0;
   for (let i = 0; i < k; i++) prix += a.prix(n + i);
-  const mult = SANS_RARETE(a.id) ? 1 : RARETE_OFFRE[rarete]?.mult || 1;
+  const mult = SANS_RARETE(a.id) ? 1 : a.id === 'nid' ? MULT_NID[rarete] || 1 : RARETE_OFFRE[rarete]?.mult || 1;
   // Plus rare = plus cher, mais pas au prorata : effet ×2 → prix ×1,5 ; effet ×3 → prix ×2
   const surcout = 1 + (mult - 1) * 0.5;
   return { achats: k, niveaux: Math.round(k * mult * 10) / 10, prix: Math.round((k > 1 ? prix * 0.85 : prix) * surcout) };
@@ -60,7 +61,9 @@ export function tirerOffresPour(achats = {}, veine = 0) {
     const l = dispo.filter(a => !offres.some(o => o.id === a.id));
     let r = Math.random() * l.reduce((x, a) => x + poids(a), 0), choisi = l[0];
     for (const a of l) if ((r -= poids(a)) < 0) { choisi = a; break; }
-    offres.push({ id: choisi.id, rarete: SANS_RARETE(choisi.id) ? 'commune' : tirerRarete(veine) });
+    let rarete = SANS_RARETE(choisi.id) ? 'commune' : tirerRarete(veine);
+    if (choisi.id === 'nid') while (rarete === 'commune') rarete = tirerRarete(veine); // pas de Nid commun
+    offres.push({ id: choisi.id, rarete });
   }
   return offres;
 }

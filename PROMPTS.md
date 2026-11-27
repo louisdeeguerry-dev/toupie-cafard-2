@@ -913,3 +913,10 @@ Testé : contre un bot (départ ensemble, lancer automatique à 7 s) et entre de
 - Code d'entraînement effacé par erreur pendant ce chantier, restauré.
 
 Testé : défi complet entre deux navigateurs (3 lancers et boutique chacun, puis duel synchronisé, vies cohérentes), aucune erreur.
+
+---
+
+## 2026-11-27 — Nid : pas de rareté commune
+
+**Prompt optimisé** : le Nid n'existe qu'en rare (+1 cafard), épique (+2) et légendaire (+3) ; pas de Nid commun.
+**Réalisé** : une offre de Nid tire sa rareté sans commune ; +1, +2 ou +3 cafards ; prix ×1, ×1,5 ou ×2 ; étiquette « Rare · +1 cafard ».

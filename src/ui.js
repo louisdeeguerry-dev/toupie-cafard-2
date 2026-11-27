@@ -420,7 +420,7 @@ export function afficherBilan(bilan, onPret) {
     const conseil = (partie.conseils || []).includes(id);
     const fmtK = String(k).replace('.', ',');
     return `<button class="offre rarete-${rarete} ${conseil ? 'conseil' : ''}" style="--rar:${R.couleur}" data-a="${id}" data-r="${rarete}" ${prix == null || prix > partie.argent ? 'disabled' : ''} title="${esc(a.desc)}">
-      <span class="badge-rarete">${R.nom}${R.mult > 1 ? ` · effet ×${String(R.mult).replace('.', ',')}` : ''}</span>
+      <span class="badge-rarete">${R.nom}${id === 'nid' ? ` · +${k} cafard${k > 1 ? 's' : ''}` : R.mult > 1 ? ` · effet ×${String(R.mult).replace('.', ',')}` : ''}</span>
       ${conseil ? '<span class="badge-conseil">conseillé</span>' : ''}
       <span class="ic">${a.icone}</span><b>${esc(a.nom)}</b>${k > 1 ? `<span class="paquet">+${fmtK} niveaux</span>` : ''}
       <span class="effet">${esc(avant)}<br>→ <span class="plus">${esc(apres)}</span></span>
