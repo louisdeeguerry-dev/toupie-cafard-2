@@ -163,8 +163,8 @@ function lancerBot() {
   tenterLacher();
 }
 
-// Le combo multiplie la prime, mais au plus par 3 (sans plafond, 60 cafards en chaîne rapportaient des fortunes)
-const MULT_COMBO_MAX = 3;
+// Le combo multiplie la prime ; au-delà de ×2, chaque cafard de la chaîne ajoute de moins en moins (dégressif, sans plafond)
+const multCombo = x => (x <= 2 ? x : 2 * (1 + Math.log(x / 2)));
 const rappels = {
   tue(c, t, crit) {
     if (t.camp !== 'joueur' || partie.type !== 'cafards') return;
@@ -172,7 +172,7 @@ const rappels = {
     const st = mesStats(), fenetre = st.comboFenetre, bonusCombo = st.comboBonus;
     partie.combo = partie.tempsJeu - partie.dernierKill < fenetre ? partie.combo + 1 : 1;
     partie.dernierKill = partie.tempsJeu;
-    const brut = CAFARDS.prime * CAFARDS.primeEtape(etape()) * (c.t?.prime || 1) * st.prime * (c.dore ? 4 : 1) * Math.min(MULT_COMBO_MAX, 1 + bonusCombo * (partie.combo - 1));
+    const brut = CAFARDS.prime * CAFARDS.primeEtape(etape()) * (c.t?.prime || 1) * st.prime * (c.dore ? 4 : 1) * multCombo(1 + bonusCombo * (partie.combo - 1));
     // On garde les centimes : une Prime ×1,2 finit vraiment par rapporter plus
     partie.reste = (partie.reste || 0) + brut;
     const gain = Math.floor(partie.reste);

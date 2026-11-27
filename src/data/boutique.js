@@ -8,7 +8,7 @@ import { RARETE_OFFRE, BOUTIQUE, tirerRarete } from '../config.js';
 // (voir src/stats.js) : certaines pièces en donnent ou en retirent aussi.
 // Les prix montent de plus en plus vite (n² ) : impossible de tout acheter d'un coup en fin de partie.
 const REGLES = {
-  multi: { max: 2, prix: n => 60 + n * 50 }, // très cher : une toupie de plus, c'est énorme
+  multi: { prix: n => 60 + n * 50 }, // très cher : une toupie de plus, c'est énorme (et chaque toupie en plus tourne 30 % moins fort)
   nid: { prix: n => 5 + n * 4 + n * n }, // 5, 10, 17, 26, 37… : chaque cafard de plus coûte plus cher prime: { prix: n => 4 + n * 3 + n * n }, chance: { prix: n => 6 + n * 4 + n * n },
   combo: { prix: n => 4 + n * 3 + n * n },
   tirelire: { prix: n => 6 + n * 5 + n * n },
@@ -17,7 +17,7 @@ const REGLES = {
 // Toupie et lanceur : +1 niveau dans une stat (les pouvoirs spéciaux coûtent plus cher)
 export const STAT_ACHATS = STATS.map(s => ({
   id: s.id, stat: true, groupe: s.groupe, nom: s.nom, icone: s.icone, desc: s.desc,
-  // Pas de plafond : les prix montent (n²), c'est ça qui limite. Seul le Multi-lancer est borné (le lanceur n'a que 3 places).
+  // Pas de plafond : les prix montent (n²) et les effets sont dégressifs au-delà de 10 niveaux (voir degressif dans stats.js).
   max: REGLES[s.id]?.max ?? Infinity,
   prix: REGLES[s.id]?.prix || (s.special ? n => 6 + n * 3 + Math.floor((n * n) / 2) : n => 3 + n * 2 + Math.floor((n * n) / 4)),
 }));

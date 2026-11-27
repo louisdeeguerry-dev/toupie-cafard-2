@@ -920,3 +920,18 @@ Testé : défi complet entre deux navigateurs (3 lancers et boutique chacun, pui
 
 **Prompt optimisé** : le Nid n'existe qu'en rare (+1 cafard), épique (+2) et légendaire (+3) ; pas de Nid commun.
 **Réalisé** : une offre de Nid tire sa rareté sans commune ; +1, +2 ou +3 cafards ; prix ×1, ×1,5 ou ×2 ; étiquette « Rare · +1 cafard ».
+
+---
+
+## 2026-11-27 — Améliorations dégressives au lieu de plafonds
+
+**Prompt optimisé** : ne pas plafonner les améliorations, mais les rendre dégressives : au-delà d'un palier, chaque niveau
+apporte de moins en moins.
+**Réalisé** :
+- `degressif()` dans `src/stats.js` : linéaire jusqu'à 10 niveaux, logarithmique au-delà (15 → 14,1 ; 20 → 16,9 ; 50 → 26,1 ; 100 → 33), appliqué à toutes les stats.
+- Plafonds retirés :
+  - Nid : plus de +15 ;
+  - Multi-lancer : sans maximum, chaque toupie en plus tourne 30 % moins fort ;
+  - Tourbillon : plus de 60 % ;
+  - combo : dégressif au-delà de ×2 ;
+  - critique et Trèfle doré : se rapprochent de 100 % sans l'atteindre.

@@ -67,8 +67,12 @@ export const STAT = Object.fromEntries(STATS.map(s => [s.id, s]));
 // jamais plus lourd que le bonus équivalent (important pour l'équilibre des pièces et de leurs niveaux).
 const f = (a, L) => (L >= 0 ? 1 + a * L : 1 / (1 + a * -L));
 
+export const SEUIL_DEGRESSIF = 10;
+export const degressif = x => (x <= SEUIL_DEGRESSIF ? x : SEUIL_DEGRESSIF * (1 + Math.log(1 + (x - SEUIL_DEGRESSIF) / SEUIL_DEGRESSIF)));
 export function calculer(niv) {
-  const L = id => niv[id] || 0, P = id => Math.max(0, niv[id] || 0);
+  // Rendements DÉGRESSIFS : jusqu'à 10 niveaux, chaque niveau compte en entier ; au-delà, chaque niveau compte de moins
+  // en moins (logarithme), sans jamais s'arrêter. Pas de plafond, mais on ne peut pas tout pousser à l'infini.
+  const L = id => degressif(niv[id] || 0), P = id => Math.max(0, degressif(niv[id] || 0));
   return {
     rayon: 0.046 * f(0.08, L('diametre')),
     masse: 20 * f(0.15, L('poids')),
@@ -80,13 +84,13 @@ export function calculer(niv) {
     seuilChute: Math.min(0.6, 0.25 / f(0.06, L('equilibre'))),
     rebond: Math.max(0.2, Math.min(0.95, 0.6 + 0.04 * L('rebond'))),
     attraction: 0.12 * P('agressivite'),
-    crit: Math.min(1, 0.04 * P('critique')),
+    crit: 1 - Math.exp(-0.041 * P('critique')), // probabilité : se rapproche de 100 % sans l'atteindre
     critMult: 3 * Math.max(1, 0.04 * P('critique')),
     feu: P('feu') ? 0.25 + 0.08 * P('feu') : 0,
     feuDuree: 1 + 0.08 * P('feu'),
     souffle: P('souffle') ? 0.03 + 0.012 * P('souffle') : 0,
     souffleMax: 0.25 + 0.03 * P('souffle'),
-    tornade: P('tornade') ? Math.min(0.6, 0.12 + 0.03 * P('tornade')) : 0,
+    tornade: P('tornade') ? 0.12 + 0.03 * P('tornade') : 0,
     tornadeRayon: 0.1 + 0.012 * P('tornade'),
     tours: 600 * f(0.18, L('puissance')),
     vitesse: 0.95 * f(0.1, L('elan')),
@@ -94,9 +98,9 @@ export function calculer(niv) {
     toupies: 1 + Math.round(P('multi')), // nombre entier de toupies : pièce (≤ 1) + achats (1 par achat)
     // Bureau
     // Nid : 1 cafard de plus par niveau (arrondi en dessous), 15 au maximum : un bureau plein reste jouable et l'argent ne s'emballe pas
-    nid: Math.max(-4, Math.min(15, Math.floor(L('nid') + 1e-6))),
+    nid: Math.max(-4, Math.floor(L('nid') + 1e-6)),
     prime: f(0.12, L('prime')),
-    chanceDore: P('chance') ? Math.min(0.6, 0.02 + 0.02 * P('chance')) : 0, // plafonnés : sans maximum d'achats, on ne dépasse pas 60 %
+    chanceDore: P('chance') ? 1 - Math.exp(-(0.02 + 0.02 * P('chance'))) : 0, // probabilité : se rapproche de 100 % sans l'atteindre
     comboFenetre: Math.max(0.6, 1.0 + 0.15 * L('combo')),
     comboBonus: Math.max(0, 0.05 + 0.03 * L('combo')),
     interetMax: Math.max(0, Math.floor(3 + L('tirelire'))),
