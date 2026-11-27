@@ -404,7 +404,7 @@ export function afficherBilan(bilan, onPret) {
   const carte = o => {
     const { id, rarete = 'commune' } = typeof o === 'string' ? { id: o } : o;
     const a = STAT_ACHATS.find(x => x.id === id), R = RARETE_OFFRE[rarete];
-    const p = partie.moi, prix = prixAmelio(id), k = niveauxAchat(id, rarete) || 1;
+    const p = partie.moi, prix = prixAmelio(id, rarete), k = niveauxAchat(id, rarete) || 1;
     const niv = niveauxToupie(p.equipe, p.niveaux, p.nivPieces);
     let avant = STAT[id].fmt(calcul(niv)); const apres = STAT[id].fmt(calcul({ ...niv, [id]: (niv[id] || 0) + k }));
     if (avant === '—') avant = 'pas encore';

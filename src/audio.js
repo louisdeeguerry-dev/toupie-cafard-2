@@ -11,7 +11,8 @@ const FICHIERS = {
   boite: ['evolution0.mp3'],
   critique: ['critique0.wav'],
 };
-let ctx = null, gain = null;
+let ctx = null, gain = null, bus = null;
+let volEffets = 1, volMusique = 1; // réglés dans les Paramètres (0 à 1)
 const tampons = {};
 const dernier = {};
 
@@ -32,10 +33,10 @@ export function activerAudio() {
     ctx = new (window.AudioContext || window.webkitAudioContext)();
     // Bus de sortie : gain maître → compresseur (évite la saturation quand les sons s'empilent) → enceintes
     gain = ctx.createGain();
-    gain.gain.value = 0.55;
+    gain.gain.value = 0.55 * volEffets;
     const comp = ctx.createDynamicsCompressor();
     comp.threshold.value = -14; comp.knee.value = 10; comp.ratio.value = 4; comp.attack.value = 0.004; comp.release.value = 0.18;
-    gain.connect(comp); comp.connect(ctx.destination);
+    gain.connect(comp); comp.connect(ctx.destination); bus = comp;
     Object.keys(FICHIERS).forEach(charger);
   } catch { ctx = null; }
 }
@@ -112,11 +113,18 @@ export const sfx = {
 };
 // Sans audio activé (avant le premier clic) ou en cas d'erreur WebAudio : silence, jamais de plantage
 for (const k of Object.keys(sfx)) { const f = sfx[k]; sfx[k] = (...args) => { if (!ctx) return; try { f(...args); } catch { /* silence */ } }; }
+// Volumes (Paramètres) : effets et musique séparés, de 0 à 1
+export function reglerVolumes(effets, mus) {
+  volEffets = effets; volMusique = mus;
+  if (!ctx) return;
+  gain.gain.setTargetAtTime(0.55 * volEffets, ctx.currentTime, 0.05);
+  if (musGain && musiqueActive) musGain.gain.setTargetAtTime(0.5 * volMusique, ctx.currentTime, 0.1);
+}
 // La musique s'efface un instant pendant un jingle
 export function baisserMusique(duree = 1.5) {
   if (!ctx || !musGain || !musiqueActive) return;
   const t = ctx.currentTime;
-  musGain.gain.cancelScheduledValues(t); musGain.gain.setTargetAtTime(0.25, t, 0.05); musGain.gain.setTargetAtTime(0.9, t + duree, 0.5);
+  musGain.gain.cancelScheduledValues(t); musGain.gain.setTargetAtTime(0.12 * volMusique, t, 0.05); musGain.gain.setTargetAtTime(0.5 * volMusique, t + duree, 0.5);
 }
 
 // Ronronnement de ta toupie : sa hauteur suit la rotation (on « entend » la toupie faiblir)
@@ -168,8 +176,8 @@ function planifier() {
 }
 export function musique(oui = musiqueActive) {
   if (!ctx) return;
-  if (!musGain) { musGain = ctx.createGain(); musGain.gain.value = 0; musGain.connect(gain); }
-  musGain.gain.setTargetAtTime(oui ? 0.9 : 0, ctx.currentTime, 0.6);
+  if (!musGain) { musGain = ctx.createGain(); musGain.gain.value = 0; musGain.connect(bus); }
+  musGain.gain.setTargetAtTime(oui ? 0.5 * volMusique : 0, ctx.currentTime, 0.6);
   if (oui && !musTimer) { musProchain = ctx.currentTime + 0.1; musTimer = setInterval(planifier, 100); }
   if (!oui && musTimer) setTimeout(() => { if (!musiqueActive) { clearInterval(musTimer); musTimer = null; } }, 1500);
 }

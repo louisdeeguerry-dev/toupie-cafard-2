@@ -93,8 +93,6 @@ export const PIECES = [
     niveaux: { feu: 6, endurance: -3, equilibre: -3 }, desc: 'Laisse une traînée de feu qui brûle les cafards… et se consume.' },
   { id: 'ame-sangsue', slot: 'ame', nom: 'Âme sangsue', rarete: 'epique', forme: 'sangsue', couleur: 0x2ecc71,
     niveaux: { souffle: 6, lames: -3, elan: -3 }, desc: 'Chaque cafard écrasé lui rend de la rotation.' },
-  { id: 'ame-orage', slot: 'ame', nom: 'Âme d\'orage', rarete: 'epique', forme: 'orage', couleur: 0x8fd3ff,
-    niveaux: { eclair: 6, puissance: -3, endurance: -3 }, desc: 'Ses coups lancent des éclairs qui sautent de cafard en cafard.' },
   { id: 'ame-cyclone', slot: 'ame', nom: 'Âme cyclone', rarete: 'epique', forme: 'cyclone', couleur: 0xb2bec3,
     niveaux: { tornade: 6, glisse: -3, elan: -3 }, desc: 'Aspire les cafards proches.' },
   { id: 'ame-fer', slot: 'ame', nom: 'Fer à cheval', rarete: 'rare', forme: 'fer', couleur: 0xc0c7cf,

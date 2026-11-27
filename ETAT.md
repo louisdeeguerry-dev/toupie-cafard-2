@@ -12,10 +12,12 @@
 - **Temps limités** (jeu dynamique, en vue du jeu en ligne) : 15 s pour lancer, accélération jusqu'à ×5 si une toupie tourne encore 10 s après le lancer, 25 s de boutique ; réglages dans `PARTIE` (`src/config.js`).
 - **Duel** : il n'y a pas de vie ; chaque choc fait perdre de la rotation, et **la première toupie arrêtée perd**.
   L'usure ne démarre qu'une fois les deux toupies lancées.
+- **Paramètres** (menu ⚙️) : qualité d'image, ombres, halo, secousses, plein écran, volumes ; `src/parametres.js`.
+- **Améliorations sans plafond** (sauf Multi-lancer) ; une offre rare coûte plus cher, mais pas au prorata (rare ×1,25, épique ×1,5, légendaire ×2). Pondeuse et Éclairs en chaîne supprimés.
 - **Cafards** : ils **évoluent après chaque duel** (vie plus haute, nouvelles espèces contrées par des stats précises).
 - **Toupie choisie avant la partie, verrouillée pendant** : 4 pièces (base, couronne, pointe, âme) et 2 pièces de lanceur
   (engrenage, ressort).
-  - **56 pièces**, chacune avec autant de bonus que de malus (vérifié par un test).
+  - **56 pièces** (l'âme d'orage a été retirée et le Fer à cheval ajouté), chacune avec autant de bonus que de malus (vérifié par un test).
   - Les doublons débloquent des niveaux de pièce, qui amplifient bonus ET malus.
 - **Stats** : celles du jeu 1 (toupie, lanceur) et le bureau (Nid, Prime, Trèfle, Combo, Tirelire).
 - **Boutique** :

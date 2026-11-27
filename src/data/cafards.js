@@ -14,10 +14,6 @@ export const TYPES = {
     desc: 'Très rapide, il fuit la toupie.', contre: ['diametre', 'agressivite', 'tornade'] },
   araignee: { nom: 'Araignée', icone: '🕷️', vie: 2, taille: 1.2, vitesse: 1.2, prime: 3, toile: true, couleur: 0x1d1d22,
     desc: 'Tisse des toiles qui engluent la toupie et la font ralentir.', contre: ['poids', 'elan', 'feu'] },
-  pondeuse: { nom: 'Pondeuse', icone: '🥚', vie: 3.5, taille: 1.5, vitesse: 0.4, prime: 4, ponte: 4, couleur: 0x6b2f4e,
-    desc: 'Pond des larves tant qu\'elle est en vie.', contre: ['eclair', 'feu', 'endurance'] },
-  larve: { nom: 'Larve', icone: '🐛', vie: 0.4, taille: 0.6, vitesse: 0.8, prime: 0.5, couleur: 0xe8d8b0,
-    desc: 'Pondue par la pondeuse.' },
 };
 
 // Proportions de chaque espèce selon l'étape (l'étape 5 et suivantes gardent le dernier mélange)
@@ -26,7 +22,7 @@ export const COMPOSITION = [
   { cafard: 0.7, gros: 0.3 },
   { cafard: 0.45, gros: 0.2, blinde: 0.2, coureur: 0.15 },
   { cafard: 0.3, gros: 0.15, blinde: 0.2, coureur: 0.15, araignee: 0.2 },
-  { cafard: 0.2, gros: 0.15, blinde: 0.2, coureur: 0.15, araignee: 0.2, pondeuse: 0.1 },
+  { cafard: 0.3, gros: 0.15, blinde: 0.2, coureur: 0.15, araignee: 0.2 },
 ];
 export const compositionEtape = etape => COMPOSITION[Math.min(COMPOSITION.length, etape) - 1];
 

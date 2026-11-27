@@ -775,3 +775,22 @@ Un commit et une publication par point.
 - L'atelier, la partie et l'écran d'inspection (onglets de niveau) suivent le niveau.
 - Dégâts sur les cafards : lames × élan absolu × poids × critique ; la toupie standard lancée à fond fait les mêmes dégâts qu'avant.
 - En duel, c'était déjà le cas : lames, vitesse d'approche, rapport des masses, critique.
+
+---
+
+## 2026-11-27 — Pondeuse et éclairs retirés, améliorations sans plafond, prix selon la rareté, Paramètres
+
+**Prompt optimisé** : (rôle : game designer et dev gameplay)
+- Retirer la pondeuse : elle pousse à attendre pour farmer les œufs, ce qui donnait un argent démesuré (68 000 💰 à l'étape 9).
+- Supprimer le plafond des améliorations : plus jamais de boutique vide.
+- Retirer les Éclairs en chaîne, trop forts.
+- Dégâts : une toupie à 0 d'élan fait au minimum ×1 ; la rotation compte aussi.
+- Une amélioration plus rare coûte plus cher, mais pas au prorata (effet ×2 → prix ×1,5).
+- Ajouter un menu Paramètres pour régler l'image et le son.
+
+**Réalisé** :
+- Pondeuse, larves, stat et âme d'orage supprimées (56 pièces).
+- Plus de plafond, sauf pour le Multi-lancer (2 toupies en plus, la place du lanceur) ; Trèfle doré et Tourbillon bornés à 60 %.
+- Surcoût de rareté 1 + (effet − 1) × 0,5 : rare ×1,25, épique ×1,5, légendaire ×2.
+- Dégâts sur les cafards : élan de ×1 à ×2,1, rotation de ×0,6 à ×1.
+- Écran Paramètres : qualité d'image, ombres, halo, secousses, plein écran, volume des effets et de la musique (sauvegardés).

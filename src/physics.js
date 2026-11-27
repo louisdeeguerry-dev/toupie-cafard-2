@@ -213,7 +213,10 @@ export function majToupies(dt, cb) {
     // Dégâts d'un impact sur un cafard = lames × élan RÉEL de la toupie (une toupie lancée fort frappe plus fort qu'une lente,
     // en absolu) × poids (une toupie lourde écrase mieux) × critique éventuel (dans frapperCafard)
     const vitesse = Math.hypot(t.vx, t.vz);
-    const elan = 0.7 + 0.7 * Math.min(2.2, vitesse / 0.95); // toupie standard lancée à fond : ×1,4 (comme avant) ; très rapide : jusqu'à ×2,2
+    // Élan : ×1 au minimum (toupie presque arrêtée), ×1,45 pour une toupie standard lancée à fond, jusqu'à ×2,1 très rapide
+    const elan = 1 + 0.45 * Math.min(2.4, vitesse / 0.95);
+    // Rotation : une toupie qui tourne à fond frappe plus fort qu'une toupie qui s'essouffle (×0,6 → ×1)
+    const tourne = 0.6 + 0.4 * Math.max(0, t.rotation / t.rotationMax);
     const m = s.masse / 20, poids = Math.min(1.5, Math.max(0.7, Math.sqrt(m)));
     for (const c of cafards) {
       if (c.mort || c.chute > 0) continue;
@@ -222,7 +225,7 @@ export function majToupies(dt, cb) {
       if (c.coup <= 0) {
         c.coup = 0.12;
         t.rotation -= CHOC.ref * 0.012 * s.inertie; // frapper coûte un peu de rotation, en tr/min absolus (moins avec l'Inertie)
-        frapperCafard(t, c, DEGATS_BASE * s.lames * elan * poids * (0.9 + Math.random() * 0.2), cb);
+        frapperCafard(t, c, DEGATS_BASE * s.lames * elan * poids * tourne * (0.9 + Math.random() * 0.2), cb);
       }
       if (d > 0 && d < min) { // on se sépare et on se repousse
         const nx = dx / d, nz = dz / d, chev = min - d, mc = 0.5 * c.masse;

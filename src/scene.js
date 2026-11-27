@@ -22,7 +22,18 @@ const composeur = new EffectComposer(renderer);
 const passeRendu = new RenderPass(new THREE.Scene(), new THREE.PerspectiveCamera());
 const halo = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.45, 0.5, 0.92);
 composeur.addPass(passeRendu); composeur.addPass(halo); composeur.addPass(new OutputPass());
+// Réglages graphiques (Paramètres) : qualité d'image (résolution), ombres, halo lumineux
+const graph = { halo: true };
+export function reglerGraphismes({ qualite = 'haute', ombres = true, halo = true } = {}) {
+  const dpr = window.devicePixelRatio || 1;
+  renderer.setPixelRatio(qualite === 'basse' ? Math.min(0.75, dpr) : qualite === 'moyenne' ? Math.min(1, dpr) : Math.min(2, dpr));
+  renderer.shadowMap.enabled = ombres;
+  scene.traverse(o => { if (o.material) [].concat(o.material).forEach(m => { m.needsUpdate = true; }); });
+  graph.halo = halo;
+  cadrer();
+}
 export function rendre(sc, cam) {
+  if (!graph.halo) { renderer.render(sc, cam); return; } // sans halo : rendu direct, plus léger
   passeRendu.scene = sc; passeRendu.camera = cam;
   // La vitrine est déjà très éclairée (projecteurs) : halo plus discret et réservé aux vraies sources de lumière
   const vit = sc === vitrine;
@@ -137,7 +148,7 @@ export function decorTerrain(id) {
 // Caméra : position de base (tout le bureau) ; en duel elle se rapproche des toupies ; secousse sur les gros chocs
 const base = { pos: new THREE.Vector3(), cible: new THREE.Vector3(0, 0, 0.07) };
 const cam = { pos: new THREE.Vector3(), cible: new THREE.Vector3(0, 0, 0.07), secousse: 0 };
-export function secouer(force) { cam.secousse = Math.max(cam.secousse, force); }
+export function secouer(force) { if (window.__tc2Secousses === false) return; cam.secousse = Math.max(cam.secousse, force); } // désactivable (Paramètres)
 // suivi : null (vue normale) ou { x, z, ecart } (milieu des toupies et distance entre elles)
 export function majCamera(dt, suivi) {
   let pos = base.pos, cible = base.cible;

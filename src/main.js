@@ -10,6 +10,7 @@ import { majCamera, rendre } from './scene.js';
 import { activerAudio, ronron, musique, basculerMusique, musiqueActive, sfx, baisserMusique } from './audio.js';
 import * as UI from './ui.js';
 import { VERSION } from './config.js';
+import { initParametres } from './parametres.js';
 import { recompenser } from './progression.js';
 import { TERRAIN } from './data/terrains.js';
 import { TYPES } from './data/cafards.js';
@@ -34,8 +35,9 @@ const atelier = UI.creerAtelier(save, {
 majVitrine();
 
 // ---------------------------------------------------------------- Écrans hors partie : menu, atelier, boutique, collection
-const ECRANS = ['menu', 'atelier', 'boutiqueMeta', 'collection'];
+const ECRANS = ['menu', 'atelier', 'boutiqueMeta', 'collection', 'parametres'];
 initControles(renderer.domElement);
+initParametres();
 function allerA(ecran) {
   for (const e of ECRANS) UI.montrer(e, e === ecran);
   controlesActifs(ecran === 'atelier'); // dans l'atelier : glisser pour pivoter, molette pour zoomer

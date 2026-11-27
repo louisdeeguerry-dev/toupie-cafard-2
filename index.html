@@ -285,6 +285,12 @@
 #statsGauche .sb.vide { display: none; }
 #statsGauche .groupe h3 { margin: 8px 0 4px; }
 #atelier .gauche { scrollbar-width: thin; }
+/* Paramètres */
+.parametres { display: flex; flex-direction: column; gap: 10px; min-width: min(380px, 90vw); }
+.parametres h3 { margin: 10px 0 0; }
+.parametres label { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.parametres label.case { justify-content: flex-start; }
+.parametres select, .parametres input[type=range] { flex: 1; max-width: 200px; }
 /* Verdict du duel plein écran */
 #verdict { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none;
   opacity: 0; transition: opacity .2s; z-index: 30; }
@@ -341,6 +347,7 @@
       <button class="btn second" data-ecran="atelier">🛠️ Atelier</button>
       <button class="btn second" data-ecran="boutiqueMeta">📦 Boutique</button>
       <button class="btn second" data-ecran="collection">📚 Collection</button>
+      <button class="btn second" data-ecran="parametres">⚙️ Paramètres</button>
     </div>
     <div id="profil"></div>
     <button class="retour-menu" id="btnTest" title="Débloque toutes les pièces et tous les terrains au niveau max (ta vraie sauvegarde est mise de côté)">🧪 Mode test</button>
@@ -349,6 +356,23 @@
 </div>
 
 <!-- Boutique (hors partie) : boîtes mystère -->
+<div id="parametres" class="ecran cache">
+  <div class="menu-centre panneau parametres">
+    <button class="retour-menu" data-ecran="menu">← Menu</button>
+    <h2>⚙️ Paramètres</h2>
+    <h3>🖼️ Image</h3>
+    <label>Qualité d'image
+      <select id="pQualite"><option value="basse">Basse (appareils lents)</option><option value="moyenne">Moyenne</option><option value="haute">Haute</option></select></label>
+    <label class="case"><input type="checkbox" id="pOmbres"> Ombres</label>
+    <label class="case"><input type="checkbox" id="pHalo"> Halo lumineux (lueurs, étincelles)</label>
+    <label class="case"><input type="checkbox" id="pSecousses"> Secousses de l'écran</label>
+    <button class="btn second" id="pPleinEcran">⛶ Plein écran</button>
+    <h3>🔊 Son</h3>
+    <label>Effets <input type="range" id="pEffets" min="0" max="100"></label>
+    <label>Musique <input type="range" id="pMusique" min="0" max="100"></label>
+  </div>
+</div>
+
 <div id="boutiqueMeta" class="ecran cache">
   <div class="menu-centre panneau">
     <button class="retour-menu" data-ecran="menu">← Menu</button>

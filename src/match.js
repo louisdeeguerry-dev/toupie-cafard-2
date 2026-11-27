@@ -354,16 +354,16 @@ export function relancerOffres() {
 export const interetsPrevus = () => Math.min(Math.floor(partie.argent / ECONOMIE.interetPour), mesStats().interetMax);
 export const prioriteDispo = () => partie.moi.terrain !== 'aucun' && partie.manche >= MANCHE_PRIORITE;
 
-export function prixAmelio(id) {
+export function prixAmelio(id, rarete = 'commune') {
   const a = AMELIO[id], n = ach(id);
   if (id === 'priorite' && !prioriteDispo()) return null;
-  return n >= a.max ? null : paquet(a, n).prix;
+  return n >= a.max ? null : paquet(a, n, rarete).prix;
 }
 export const niveauxAchat = (id, rarete = 'commune') => (paquet(AMELIO[id], ach(id), rarete)?.niveaux || 0);
 
 // Acheter une offre : les niveaux gagnés dépendent de sa rareté (même prix) ; ensuite les offres sont relancées (gratuit)
 export function acheter(id, rarete = 'commune') {
-  const prix = prixAmelio(id);
+  const prix = prixAmelio(id, rarete);
   if (prix == null || partie.argent < prix) { son('refus'); return false; }
   const pq = paquet(AMELIO[id], ach(id), rarete);
   partie.argent -= prix;

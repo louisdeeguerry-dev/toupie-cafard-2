@@ -33,7 +33,7 @@ function pieceAuHasard(slot) {
 const ARCHETYPES = [
   ['poids', 'inertie', 'equilibre', 'puissance'], // lourd
   ['elan', 'glisse', 'agressivite', 'vitesse'], // rapide
-  ['lames', 'critique', 'eclair', 'feu'], // tranchant
+  ['lames', 'critique', 'feu'], // tranchant
   ['endurance', 'souffle', 'equilibre', 'inertie'], // endurant
   ['prime', 'chance', 'combo', 'nid', 'lames'], // économe
 ];

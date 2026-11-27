@@ -1,5 +1,5 @@
 // Les cafards : ils tombent du ciel sur le bureau et s'y promènent. Plusieurs espèces (voir src/data/cafards.js) :
-// gros, blindés, coureurs qui fuient, araignées qui tissent des toiles, pondeuses qui pondent des larves.
+// gros, blindés, coureurs qui fuient, araignées qui tissent des toiles.
 import * as THREE from 'three';
 import { scene } from './scene.js';
 import { ARENE_R } from './config.js';
@@ -166,11 +166,6 @@ export function majCafards(dt, t, menaces = []) {
     }
     // Araignée : tisse une toile de temps en temps
     if (c.t.toile && (c.toileT -= dt) <= 0) { c.toileT = 3.5 + Math.random() * 2; tisser(c); }
-    // Pondeuse : pond des larves (6 au plus)
-    if (c.t.ponte && c.pontes < 6 && (c.ponteT += dt) > c.t.ponte) {
-      c.ponteT = 0; c.pontes++;
-      ajouterCafard({ vieBase: c.vieBase, type: 'larve', x: c.x + (Math.random() - 0.5) * 0.04, z: c.z + (Math.random() - 0.5) * 0.04 });
-    }
     let vx = Math.sin(c.dir) * c.vitesse + c.kx, vz = Math.cos(c.dir) * c.vitesse + c.kz;
     c.kx *= Math.exp(-5 * dt); c.kz *= Math.exp(-5 * dt);
     c.x += vx * dt; c.z += vz * dt;

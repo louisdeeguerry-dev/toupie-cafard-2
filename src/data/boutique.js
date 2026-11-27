@@ -9,15 +9,16 @@ import { RARETE_OFFRE, BOUTIQUE, tirerRarete } from '../config.js';
 // Les prix montent de plus en plus vite (n² ) : impossible de tout acheter d'un coup en fin de partie.
 const REGLES = {
   multi: { max: 2, prix: n => 60 + n * 50 }, // très cher : une toupie de plus, c'est énorme
-  nid: { max: 6, prix: n => 4 + n * 3 + n * n }, prime: { max: 6, prix: n => 4 + n * 3 + n * n }, chance: { max: 4, prix: n => 6 + n * 4 + n * n },
-  combo: { max: 5, prix: n => 4 + n * 3 + n * n },
-  tirelire: { max: 3, prix: n => 6 + n * 5 + n * n },
-  veine: { max: 5, prix: n => 4 + n * 3 + n * n }, // Chance : un investissement, rentable si on achète beaucoup ensuite
+  nid: { prix: n => 4 + n * 3 + n * n }, prime: { prix: n => 4 + n * 3 + n * n }, chance: { prix: n => 6 + n * 4 + n * n },
+  combo: { prix: n => 4 + n * 3 + n * n },
+  tirelire: { prix: n => 6 + n * 5 + n * n },
+  veine: { prix: n => 4 + n * 3 + n * n }, // Chance : un investissement, rentable si on achète beaucoup ensuite
 };
 // Toupie et lanceur : +1 niveau dans une stat (les pouvoirs spéciaux coûtent plus cher)
 export const STAT_ACHATS = STATS.map(s => ({
   id: s.id, stat: true, groupe: s.groupe, nom: s.nom, icone: s.icone, desc: s.desc,
-  max: REGLES[s.id]?.max ?? (s.special ? 6 : 8),
+  // Pas de plafond : les prix montent (n²), c'est ça qui limite. Seul le Multi-lancer est borné (le lanceur n'a que 3 places).
+  max: REGLES[s.id]?.max ?? Infinity,
   prix: REGLES[s.id]?.prix || (s.special ? n => 6 + n * 3 + Math.floor((n * n) / 2) : n => 3 + n * 2 + Math.floor((n * n) / 4)),
 }));
 export const BUREAU = STAT_ACHATS.filter(a => a.groupe === 'bureau');
@@ -42,7 +43,9 @@ export function paquet(a, n, rarete = 'commune') {
   let prix = 0;
   for (let i = 0; i < k; i++) prix += a.prix(n + i);
   const mult = SANS_RARETE(a.id) ? 1 : RARETE_OFFRE[rarete]?.mult || 1;
-  return { achats: k, niveaux: Math.round(k * mult * 10) / 10, prix: k > 1 ? Math.round(prix * 0.85) : prix };
+  // Plus rare = plus cher, mais pas au prorata : effet ×2 → prix ×1,5 ; effet ×3 → prix ×2
+  const surcout = 1 + (mult - 1) * 0.5;
+  return { achats: k, niveaux: Math.round(k * mult * 10) / 10, prix: Math.round((k > 1 ? prix * 0.85 : prix) * surcout) };
 }
 
 // Les offres de la boutique (joueur ET bots, mêmes règles) : 4 stats au hasard parmi celles pas encore au plafond,
