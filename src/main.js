@@ -11,7 +11,7 @@ import { activerAudio, ronron, musique, basculerMusique, musiqueActive, sfx, bai
 import * as UI from './ui.js';
 import { VERSION } from './config.js';
 import { initParametres } from './parametres.js';
-import { demarrerOuverture, cliquerOuverture, finirOuverture } from './ouverture3d.js';
+import { demarrerOuverture, cliquerOuverture, finirOuverture, tournerPieces } from './ouverture3d.js';
 import { RARETES, SLOTS } from './data/pieces.js';
 import { creerDefi, rejoindreDefi } from './enligne.js';
 import { demarrerAmi, messageAmi, quitterAmi, demarrerEntrainement } from './match.js';
@@ -72,6 +72,7 @@ function boite(n = Math.min(5, save.boites)) {
   selectionAtelier('ouverture', null);
   UI.montrer('ouverture');
   $('ouvertureLots').classList.add('cache');
+  $('ouvertureAide').style.top = ''; $('ouvertureAide').style.bottom = '';
   $('ouvertureAide').textContent = lots.length > 1 ? `👆 Clique pour ouvrir les ${lots.length} boîtes` : '👆 Clique pour ouvrir la boîte';
   UI.son?.('choix');
 }
@@ -80,7 +81,7 @@ function cliquerBoites() {
   const e = ouverture.etape = cliquerOuverture();
   UI.son?.('toc', { volume: 0.6, hauteur: 0.7 + e * 0.2 }); UI.son?.('choix', { volume: 0.4, hauteur: 0.8 + e * 0.15 });
   $('ouvertureAide').textContent = ['', 'Encore !', 'Ça s\'ouvre…', 'Dernier clic !', ''][e];
-  if (e === 4) { sfx.legendaire(); UI.son?.('boite'); setTimeout(recapLots, 1700); }
+  if (e === 4) { sfx.legendaire(); UI.son?.('boite'); setTimeout(recapLots, 1700); setTimeout(() => { if (!ouverture) return; const a = $('ouvertureAide'); a.textContent = '↔ Glisse pour faire pivoter les pièces'; a.style.bottom = 'auto'; a.style.top = '24px'; }, 1800); }
 }
 function recapLots() {
   const R = id => RARETES[id] || RARETES.commune;
@@ -371,7 +372,13 @@ document.getElementById('entrainement').addEventListener('click', () => {
 // ---------------------------------------------------------------- Boutique 3D : on clique sur un paquet du comptoir
 import { PRODUITS, produitSous } from './magasin3d.js';
 import { acheterProduit, MONNAIE } from './progression.js';
-renderer.domElement.addEventListener('pointerdown', () => { if (ouverture) cliquerBoites(); });
+let glisse = null;
+renderer.domElement.addEventListener('pointerdown', e => { if (!ouverture) return; cliquerBoites(); glisse = { x: e.clientX, y: e.clientY }; });
+renderer.domElement.addEventListener('pointermove', e => { // pièces sorties : glisser pour les faire pivoter
+  if (!ouverture || !glisse || ouverture.etape < 4) return;
+  tournerPieces(e.clientX - glisse.x, e.clientY - glisse.y); glisse = { x: e.clientX, y: e.clientY };
+});
+addEventListener('pointerup', () => { glisse = null; });
 const enBoutique = () => !document.getElementById('boutiqueMeta').classList.contains('cache') && mode === 'atelier';
 const ndc = e => { const r = renderer.domElement.getBoundingClientRect(); return { x: ((e.clientX - r.left) / r.width) * 2 - 1, y: -((e.clientY - r.top) / r.height) * 2 + 1 }; };
 renderer.domElement.addEventListener('pointermove', e => {

@@ -108,6 +108,12 @@ export function cliquerOuverture() {
   if (etat.etape === 4) for (const b of etat.boites) b.piece.visible = true;
   return etat.etape;
 }
+// Une fois sorties, on fait pivoter les pièces en glissant (toutes ensemble)
+export function tournerPieces(dx, dy) {
+  if (etat.etape < 4) return;
+  etat.manuel = 2.5; // la rotation automatique se met en pause un instant
+  for (const b of etat.boites) { b.piece.rotation.y += dx * 0.012; b.piece.rotation.x = Math.max(-1.2, Math.min(1.2, b.piece.rotation.x + dy * 0.012)); }
+}
 export function finirOuverture() { etat.actif = false; scene.visible = false; for (const b of etat.boites) b.g.removeFromParent(); etat.boites = []; }
 
 const ANGLE = [0, 0, -0.7, -1.9, -2.6]; // ouverture du couvercle à chaque étape
@@ -115,6 +121,7 @@ export function majOuverture(dt, t) {
   if (!scene.visible) return;
   const k = 1 - Math.exp(-7 * dt);
   etat.secousse = Math.max(0, (etat.secousse || 0) - dt * 3);
+  etat.manuel = Math.max(0, (etat.manuel || 0) - dt);
   for (const [i, b] of etat.boites.entries()) {
     b.g.rotation.z = Math.sin(t * 40 + i) * 0.04 * etat.secousse * (etat.etape < 4 ? 1 : 0);
     b.charniere.rotation.x += (ANGLE[etat.etape] - b.charniere.rotation.x) * k;
@@ -126,7 +133,7 @@ export function majOuverture(dt, t) {
       b.sortie = Math.min(1, b.sortie + dt * 1.2);
       const e = 1 - (1 - b.sortie) ** 3;
       b.piece.position.y = b.H * 0.35 + e * 0.14;
-      b.piece.rotation.y += dt * 2.2;
+      if (!(etat.manuel > 0)) b.piece.rotation.y += dt * 1.2;
       b.halo.position.y = b.piece.position.y; b.halo.scale.setScalar(0.13 + Math.sin(t * 5) * 0.02);
     }
   }

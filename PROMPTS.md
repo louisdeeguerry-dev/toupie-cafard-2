@@ -1025,3 +1025,12 @@ boîte, pas un émoji au milieu de l'écran.
   3. il s'ouvre et la lumière jaillit ;
   4. le vrai modèle de la pièce (topMesh ou lanceurMesh) monte hors de la boîte en tournant.
 - Puis récapitulatif des lots, avec « Équiper » ou « Choisir » ; « Ouvrir » ouvre jusqu'à 5 boîtes ; un gros carton ouvre ses 5 boîtes ensemble.
+
+---
+
+## 2026-11-27 — Faire pivoter les pièces sorties des boîtes ; question sur les nouvelles sessions
+
+**Prompt optimisé** : permettre de faire pivoter (glisser) les pièces une fois sorties de leurs boîtes. Expliquer si une nouvelle
+session garde l'historique et ce qu'elle apporte.
+**Réalisé** : glisser fait pivoter toutes les pièces sorties (la rotation automatique se met en pause) ; consigne « ↔ Glisse
+pour faire pivoter les pièces ». Explication des sessions donnée à Louis.
