@@ -7,6 +7,7 @@ const N = +(process.argv[2] || 100), ACHATS = +(process.argv[3] || 15);
 const BUILDS = {
   defaut: [],
   elan: ['elan', 'rebond', 'glisse', 'poids'],
+  elanMixte: ['elan', 'endurance', 'glisse', 'poids'], // Élan + Endurance achetée (joueur avisé)
   puissance: ['puissance', 'endurance', 'inertie', 'equilibre'],
   lames: ['lames', 'critique', 'diametre', 'poids'],
   endurance: ['endurance', 'equilibre', 'inertie', 'souffle'],

@@ -174,7 +174,7 @@ export const PIECES = [
 // simulateur : node tests/duels-sim.js 150 avec MARGE=1 ; estimé contre les cafards). Les MALUS de chaque pièce sont
 // recalculés pour que bonus et malus pèsent autant en effet réel. Les stats et les signes ne changent pas (règle 5).
 export const IMPACT = { endurance: 1.5, lames: 1.3, poids: 1.3, inertie: 1.3, equilibre: 1.3, agressivite: 1.3, puissance: 1.2,
-  critique: 0.8, diametre: 0.7, glisse: 0.6, precision: 0.6, elan: 0.5, rebond: 0.4 };
+  critique: 0.8, diametre: 0.7, glisse: 0.5, precision: 0.6, elan: 0.35, rebond: 0.3 };
 export const poidsStat = s => (POIDS_EQUILIBRAGE[s] || 1) * (IMPACT[s] || 1);
 for (const p of PIECES) {
   let plus = 0, moins = 0;

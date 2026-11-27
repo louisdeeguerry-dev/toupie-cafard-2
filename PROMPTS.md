@@ -1077,3 +1077,10 @@ verdict ni suite. Trouver la cause, corriger, vérifier à deux onglets, publier
 **Réalisé** : l'invité dépendait d'un seul message « fin » de l'hôte (perdu sur le relais = blocage). Le résultat voyage
 aussi dans l'état envoyé 20×/s, l'hôte renvoie « fin » 3 fois, l'invité conclut seul après 3 s. Testé à deux onglets avec
 messages « fin » supprimés : verdicts, vies et manche suivante OK. Mode `?local` réparé (plantait à la création).
+
+## 2026-11-27 — Améliorer l'Élan sans terrain et l'Endurance
+**Prompt optimisé** (game designer) : remonter l'Élan sur le bureau rond (10 %) et l'Endurance pure (7 %) au-dessus de
+25 % de duels gagnés, sans qu'aucun build dépasse 70 %, avec des mécanismes crédibles (règle 5).
+**Réalisé** : poids d'impact Élan 0,35 / Rebond 0,3 / Glisse 0,5 (mesurés) ; « recul » : frapper une toupie plus stable que
+soi fait perdre de la rotation (`CHOC.recul` 0,2) ; lames un peu plus tranchantes (`parLames` 0,04). Simulateur : 29 à 69 %
+pour tous les builds (Endurance 29 %, Élan bureau rond 19 %, 27 % avec Endurance achetée). Coup glissant testé, sans effet.

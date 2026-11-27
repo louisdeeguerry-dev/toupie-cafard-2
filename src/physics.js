@@ -25,6 +25,8 @@ export function modeDuel(oui) { duel = !!oui; }
 // finissent par se retrouver au milieu, comme dans une vraie arène de toupies (la Cuve est la version très creusée).
 // partRelative : 0 = pertes en tr/min absolus, 1 = en part de la rotation de la cible ; entre les deux, moyenne géométrique.
 // deriveDuel : part de la « danse » aléatoire gardée en duel (moins de danse = la toupie ralentie finit au fond de l'arène).
+// glissant : coup glissant, une toupie qui file vite (au-delà de 0,5 m/s) encaisse moins (contact bref).
+// recul : frapper une toupie stable (Inertie, Équilibre) fait perdre de la rotation à l'attaquant (comme cogner un mur).
 // glissementDuel : 0 = frottement en traînée (la vitesse fond d'une même part chaque seconde) ; 1 = vrai frottement de
 // glissement (freinage constant : une toupie lancée 3× plus vite file 3× plus longtemps, ce qui donne sa valeur à l'Élan).
 // frottementDuel : part du frottement au sol gardée en duel (arène lisse : les toupies gardent leur élan plus longtemps).
@@ -32,9 +34,9 @@ export function modeDuel(oui) { duel = !!oui; }
 // masseDuel : exposant du rapport de masses sur les pertes (1 = plein effet) ; seuilMaxDuel : seuil de chute maximal en duel.
 // inertieDuel : exposant de l'Inertie de la cible sur les pertes (1 = plein effet, 0,5 = effet adouci).
 // usureTassee : 0 = usure de duel selon l'Endurance seule ; 1 = même usure pour tous (les malus d'Endurance comptent moins).
-export const CHOC = { ref: 600, base: 0.01, parLames: 0.03, parVitesse: 0.12, attraction: 0.1, parAgressivite: 0.3, rebondBoost: 1.35, rebondPlafond: 1.9,
+export const CHOC = { ref: 600, base: 0.01, parLames: 0.04, parVitesse: 0.12, attraction: 0.1, parAgressivite: 0.3, rebondBoost: 1.35, rebondPlafond: 1.9,
   // Réglages calés au simulateur (tests/duels-sim.js, 27/11, 2e passe) : Élan 46 % (77 % sur terrain rebondissant), Puissance 69 %
-  cuvette: 1.1, partRelative: 0.85, usureTassee: 0.45, deriveDuel: 0.2, inertieDuel: 0.5, masseDuel: 0.5, seuilMaxDuel: 0.3, approcheMax: 99, frottementDuel: 1, glissementDuel: 0, poussee: 0.12, delai: 0.2, rebond: 0.5, usureDuel: 0.22 };
+  cuvette: 1.1, partRelative: 0.85, usureTassee: 0.45, deriveDuel: 0.2, inertieDuel: 0.5, masseDuel: 0.5, seuilMaxDuel: 0.3, approcheMax: 99, frottementDuel: 1, glissementDuel: 0, glissant: 0, recul: 0.2, poussee: 0.12, delai: 0.2, rebond: 0.5, usureDuel: 0.22 };
 
 // Les toupies sont un peu étirées en hauteur pour être lisibles vues de haut (la hauteur ne compte pas dans la physique)
 const HAUTEUR_VUE = 1.35;
@@ -372,6 +374,8 @@ function frapperToupie(att, cible, approche, cb, contact) {
     * (2 * att.s.masse / (att.s.masse + cible.s.masse)) ** CHOC.masseDuel * cible.s.inertie ** CHOC.inertieDuel * (0.5 + 0.5 * att.rotation / att.rotationMax);
   let crit = false;
   if (att.s.crit && Math.random() < att.s.crit * 0.5) { perte *= 1.5; crit = true; } // critiques moins forts en duel
+  if (CHOC.glissant) perte /= 1 + CHOC.glissant * Math.max(0, Math.hypot(cible.vx, cible.vz) - 0.5);
+  if (CHOC.recul) att.rotation -= (perte / cible.rotationMax) * att.rotationMax * CHOC.recul * Math.min(2, Math.max(0, att.s.seuilChute / cible.s.seuilChute - 1)); // une toupie plus stable que son attaquant ne bronche pas : c'est lui qui recule
   if (cible.carapace && perte / cible.rotationMax > 0.04) { cible.carapace = false; cb.choc?.(att, cible, 0, true, false, contact); return; }
   cible.rotation -= perte;
   cb.choc?.(att, cible, perte, false, crit, contact);
