@@ -942,3 +942,18 @@ apporte de moins en moins.
 
 **Prompt optimisé** : le coup critique doit pouvoir atteindre 100 % ; tout ce qui dépasse 100 % augmente les dégâts critiques.
 **Réalisé** : 4 % par niveau (niveaux dégressifs au-delà de 10) jusqu'à 100 % ; le surplus multiplie le coup critique (×3 de base, 125 % → ×3,75).
+
+---
+
+## 2026-11-27 — Boîte mystère façon boîte de jouet, ouverture en plusieurs clics
+
+**Prompt optimisé** : (rôle : designer UI et motion) refaire la boîte mystère comme une boîte de toupie du commerce, sans
+aucune marque, très colorée. Elle s'ouvre un peu plus à chaque clic ; une fois ouverte, la pièce sort de la boîte et brille.
+**Réalisé** :
+- Boîte en CSS : carte de présentation trouée, couvercle « OUVRIR ICI », façade dégradée avec lignes de vitesse, toupie
+  arc-en-ciel qui tourne, titre en relief, pastille « NOUVEAU ! », scellé rouge.
+- 4 clics, qui se cumulent :
+  1. le scellé se déchire ;
+  2. le couvercle s'entrouvre ;
+  3. il s'ouvre et laisse passer des rayons de la couleur de la rareté (indice) ;
+  4. la pièce sort en brillant, puis la carte du lot apparaît.

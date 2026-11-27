@@ -156,18 +156,57 @@
 
   /* ---------- Boîte mystère ---------- */
   #boite { position: fixed; inset: 0; background: rgba(10, 7, 5, .82); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; z-index: 20; }
-  .carton { width: 220px; height: 200px; position: relative; cursor: pointer; transform-style: preserve-3d; perspective: 500px; }
-  .carton .face { position: absolute; inset: 30px 0 0 0; background: linear-gradient(160deg, #d9a35b, #b97a35); border-radius: 6px;
-    box-shadow: inset 0 0 0 3px #8f5a22, 0 18px 40px rgba(0,0,0,.6); display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  .carton .face .logo { font-weight: 900; font-size: 22px; color: #3b2108; text-align: center; line-height: 1.05; }
-  .carton .face .logo span { display: block; font-size: 52px; }
-  .carton .face .prix { position: absolute; right: -10px; top: 10px; background: #e63946; color: #fff; font-weight: 900; padding: 6px 10px; border-radius: 50%; transform: rotate(12deg); font-size: 13px; }
-  .carton .face .code { position: absolute; left: 10px; bottom: 8px; width: 60px; height: 22px;
-    background: repeating-linear-gradient(90deg, #222 0 2px, transparent 2px 4px, #222 4px 5px, transparent 5px 8px); background-color: #fff; }
-  .carton .rabat { position: absolute; left: 0; right: 0; top: 10px; height: 26px; background: #c48a44; border-radius: 4px; box-shadow: inset 0 0 0 3px #8f5a22; transform-origin: top; transition: transform .4s; }
-  .carton.secoue { animation: secoue .5s ease-in-out infinite; }
-  .carton.ouvert .rabat { transform: rotateX(160deg) translateY(-10px); }
-  .carton.ouvert { animation: none; }
+  /* Boîte façon jouet : carte de présentation trouée, couvercle, façade très colorée ; s'ouvre en plusieurs clics */
+  .jouet { position: relative; width: 250px; height: 300px; cursor: pointer; user-select: none; perspective: 700px; }
+  .jouet .carte-haut { position: absolute; left: 18px; right: 18px; top: 0; height: 58px; border-radius: 14px 14px 4px 4px;
+    background: linear-gradient(120deg, #ffd23f, #ff7b00 45%, #e8005a); box-shadow: 0 6px 18px rgba(0,0,0,.5); display: flex; align-items: flex-end; justify-content: center; }
+  .jouet .trou { position: absolute; top: 10px; left: 50%; width: 46px; height: 12px; margin-left: -23px; border-radius: 8px; background: #14100c; }
+  .jouet .bandeau-haut { font-weight: 900; font-size: 12px; color: #fff; letter-spacing: .08em; padding-bottom: 6px; text-shadow: 0 2px 0 #7a0030; }
+  .jouet .couvercle { position: absolute; left: 6px; right: 6px; top: 52px; height: 30px; border-radius: 6px; transform-origin: 50% 100%;
+    background: linear-gradient(90deg, #2a0b6b, #3b1fd1 50%, #2a0b6b); box-shadow: inset 0 -4px 0 rgba(0,0,0,.35); display: flex; align-items: center; justify-content: center;
+    transition: transform .45s cubic-bezier(.3,1.6,.5,1); z-index: 3; }
+  .jouet .couvercle span { backface-visibility: hidden; color: #ffe066; font-size: 11px; font-weight: 900; letter-spacing: .1em; }
+  .jouet .facade { position: absolute; left: 0; right: 0; top: 78px; bottom: 0; border-radius: 8px; overflow: hidden; z-index: 2;
+    background: radial-gradient(circle at 70% 30%, #00e5ff, transparent 45%), radial-gradient(circle at 20% 80%, #ff2bd6, transparent 50%), linear-gradient(160deg, #1b1464, #3a0ca3 40%, #7209b7 70%, #f72585);
+    box-shadow: inset 0 0 0 4px rgba(255,255,255,.25), 0 20px 40px rgba(0,0,0,.6); }
+  .jouet .vitesse { position: absolute; inset: 0; background: repeating-linear-gradient(115deg, transparent 0 14px, rgba(255,255,255,.12) 14px 17px); }
+  .jouet .toupie-dessin { position: absolute; left: 50%; top: 22px; width: 120px; height: 120px; margin-left: -60px; border-radius: 50%;
+    background: conic-gradient(#ffd23f, #ff7b00, #e8005a, #7209b7, #00e5ff, #ffd23f); box-shadow: 0 0 30px rgba(0,229,255,.6), inset 0 0 0 8px rgba(0,0,0,.35); animation: tourneBoite 2.5s linear infinite; }
+  .jouet .toupie-dessin i { position: absolute; inset: 22%; border-radius: 50%; border: 4px dashed rgba(255,255,255,.7); }
+  .jouet .toupie-dessin i:nth-child(2) { inset: 36%; border-style: solid; border-color: #14100c; background: #2b2f36; }
+  .jouet .toupie-dessin i:nth-child(3) { inset: 8%; border: 3px solid rgba(255,255,255,.35); }
+  .jouet .toupie-dessin b { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 34px; color: #fff; text-shadow: 0 0 10px #000; animation: tourneBoite 2.5s linear infinite reverse; }
+  .jouet .titre-boite { position: absolute; left: 0; right: 0; bottom: 46px; text-align: center; font-weight: 900; font-size: 26px; line-height: .95; color: #fff; letter-spacing: .02em;
+    text-shadow: 3px 3px 0 #e8005a, -2px -2px 0 #3a0ca3, 0 0 18px rgba(255,255,255,.4); transform: skewX(-8deg); }
+  .jouet .sous-titre { position: absolute; left: 0; right: 0; bottom: 28px; text-align: center; color: #ffe066; font-weight: 900; font-size: 12px; letter-spacing: .15em; }
+  .jouet .pastille-neuf { position: absolute; right: 8px; top: 10px; width: 62px; height: 62px; border-radius: 50%; background: #ffd23f; color: #c1121f; font-weight: 900; font-size: 11px;
+    display: flex; align-items: center; justify-content: center; transform: rotate(14deg); box-shadow: 0 0 0 4px #c1121f, 0 4px 10px rgba(0,0,0,.4);
+    clip-path: polygon(50% 0, 61% 12%, 77% 6%, 80% 22%, 95% 25%, 89% 40%, 100% 50%, 89% 60%, 95% 75%, 80% 78%, 77% 94%, 61% 88%, 50% 100%, 39% 88%, 23% 94%, 20% 78%, 5% 75%, 11% 60%, 0 50%, 11% 40%, 5% 25%, 20% 22%, 23% 6%, 39% 12%); }
+  .jouet .cote-boite { position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; font-size: 9px; font-weight: 800; color: rgba(255,255,255,.75); letter-spacing: .12em; }
+  .jouet .scelle { position: absolute; left: 50%; top: -6px; transform: translateX(-50%) rotate(-3deg); background: #e63946; color: #fff; font-weight: 900; font-size: 11px; padding: 3px 14px;
+    border: 2px dashed #fff; letter-spacing: .15em; transition: transform .3s, opacity .3s; z-index: 4; }
+  .jouet .rayons { position: absolute; left: 50%; top: 70px; width: 520px; height: 520px; margin: -260px 0 0 -260px; border-radius: 50%; opacity: 0; pointer-events: none;
+    background: repeating-conic-gradient(var(--lueur, #fff) 0 8deg, transparent 8deg 22deg); filter: blur(2px); transition: opacity .5s; animation: tourneBoite 8s linear infinite; z-index: 1;
+    -webkit-mask: radial-gradient(circle, #000 20%, transparent 65%); mask: radial-gradient(circle, #000 20%, transparent 65%); }
+  .jouet .piece-sortie { position: absolute; left: 50%; top: 60px; width: 96px; height: 96px; margin-left: -48px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 52px; opacity: 0; transform: translateY(80px) scale(.3); z-index: 5; pointer-events: none;
+    background: radial-gradient(circle, #fff 0, var(--lueur, #fff) 35%, transparent 70%); }
+  /* Étapes d'ouverture : 1 scellé déchiré, 2 couvercle entrouvert, 3 couvercle ouvert + lumière, 4 la pièce sort et brille */
+  .jouet.etape1 .scelle { transform: translateX(-50%) rotate(-25deg) translateY(-20px); opacity: 0; }
+  .jouet.etape1 { animation: secoue .25s ease-in-out 2; }
+  .jouet.etape2 .couvercle { transform: rotateX(-50deg); }
+  .jouet.etape2 { animation: secoue .3s ease-in-out 2; }
+  .jouet.etape3 .couvercle { transform: rotateX(-105deg); }
+  .jouet.etape3 .rayons { opacity: .55; }
+  .jouet.etape3 { animation: secoue .35s ease-in-out 3; }
+  .jouet.etape4 .couvercle { transform: rotateX(-150deg); }
+  .jouet.etape4 .carte-haut { opacity: .25; transition: opacity .4s; }
+  .jouet.etape4 .rayons { opacity: .9; }
+  .jouet.etape4 .piece-sortie { animation: pieceSort .9s cubic-bezier(.2,1.5,.4,1) forwards, pieceBrille 1.2s ease-in-out .9s infinite alternate; }
+  .jouet.secoue { animation: secoue .5s ease-in-out infinite; }
+  @keyframes tourneBoite { to { transform: rotate(360deg); } }
+  @keyframes pieceSort { to { opacity: 1; transform: translateY(-70px) scale(1.25); } }
+  @keyframes pieceBrille { from { box-shadow: 0 0 20px 6px var(--lueur, #fff); filter: brightness(1); } to { box-shadow: 0 0 60px 22px var(--lueur, #fff); filter: brightness(1.35); } }
   @keyframes secoue { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-4deg) scale(1.02); } 75% { transform: rotate(4deg) scale(1.02); } }
   .revelation { width: min(340px, 90vw); text-align: center; padding: 18px; animation: apparait .5s cubic-bezier(.2,1.6,.4,1); }
   .revelation .grand { font-size: 22px; font-weight: 900; margin: 4px 0; }
@@ -431,9 +470,20 @@
 
 <!-- Boîte mystère -->
 <div id="boite" class="cache">
-  <div class="carton" id="carton">
-    <div class="rabat"></div>
-    <div class="face"><div class="logo"><span>🌀</span>BOÎTE<br>MYSTÈRE</div><div class="prix">NEUF !</div><div class="code"></div></div>
+  <div class="jouet" id="carton">
+    <div class="rayons"></div>
+    <div class="carte-haut"><i class="trou"></i><span class="bandeau-haut">⚡ ÉDITION MYSTÈRE ⚡</span></div>
+    <div class="couvercle"><span>OUVRIR ICI ▼</span></div>
+    <div class="facade">
+      <div class="vitesse"></div>
+      <div class="toupie-dessin"><i></i><i></i><i></i><b>?</b></div>
+      <div class="titre-boite">TOUPIE<br>CAFARD 2</div>
+      <div class="sous-titre">PIÈCE MYSTÈRE</div>
+      <div class="pastille-neuf">NOUVEAU&nbsp;!</div>
+      <div class="cote-boite">COMBAT · VITESSE · ÉCRASE !</div>
+      <div class="scelle" id="scelle">SCELLÉ</div>
+    </div>
+    <div class="piece-sortie" id="pieceSortie"></div>
   </div>
   <div class="petit" id="boiteAide">Touche la boîte pour l'ouvrir</div>
   <div id="revelation"></div>

@@ -221,16 +221,31 @@ export function ouvrirBoite(save, { onFini }) {
   if (save.boites <= 0) return;
   montrer('boite');
   const carton = $('carton');
-  carton.className = 'carton secoue';
+  carton.className = 'jouet secoue';
+  carton.style.removeProperty('--lueur');
+  $('pieceSortie').textContent = '';
   $('revelation').innerHTML = '';
-  $('boiteAide').textContent = 'Touche la boîte pour l\'ouvrir';
+  $('boiteAide').textContent = 'Clique sur la boîte pour l\'ouvrir (4 clics)';
   son('choix');
+  // Le lot est tiré dès le départ : la couleur de la lumière (3e clic) annonce déjà sa rareté
+  save.boites--;
+  const lot = tirerBoite(save.terrains, { garantie: save.boitesSansLegendaire >= GARANTIE_LEGENDAIRE - 1 });
+  save.boitesSansLegendaire = lot.rarete === 'legendaire' ? 0 : save.boitesSansLegendaire + 1;
+  const rar = RARETES[lot.type === 'piece' ? lot.piece.rarete : lot.type === 'terrain' ? lot.terrain.rarete : 'legendaire'];
+  const icone = lot.type === 'piece' ? SLOTS.find(s => s.id === lot.piece.slot).icone : lot.type === 'terrain' ? lot.terrain.icone : lot.coffre.icone;
+  let clics = 0;
+  const textes = ['Encore !', 'Ça s\'ouvre…', 'Dernier clic !'];
   carton.onclick = () => {
+    clics++;
+    carton.className = 'jouet ' + [1, 2, 3, 4].slice(0, clics).map(i => 'etape' + i).join(' '); // les étapes se cumulent
+    if (clics === 3) carton.style.setProperty('--lueur', rar.couleur);
+    if (clics < 4) { $('boiteAide').textContent = textes[clics - 1]; son('toc', { volume: 0.5, hauteur: 0.8 + clics * 0.2 }); son('choix', { volume: 0.4, hauteur: 0.8 + clics * 0.15 }); return; }
     carton.onclick = null;
-    save.boites--;
-    const lot = tirerBoite(save.terrains, { garantie: save.boitesSansLegendaire >= GARANTIE_LEGENDAIRE - 1 });
-    save.boitesSansLegendaire = lot.rarete === 'legendaire' ? 0 : save.boitesSansLegendaire + 1;
-    carton.className = 'carton ouvert';
+    $('pieceSortie').textContent = icone;
+    sfx.legendaire();
+    revelerLot();
+  };
+  const revelerLot = () => {
     son('boite');
     $('boiteAide').textContent = '';
     if (lot.type === 'coffre') {
@@ -242,7 +257,7 @@ export function ouvrirBoite(save, { onFini }) {
           <div class="grand">${c.icone} ${esc(c.nom)}</div><div class="desc">+${c.ecrous} ${MONNAIE.icone} ${MONNAIE.nom} — ${esc(c.desc)}</div>
           <div class="actions" style="margin-top:14px"><button class="btn" id="boiteGarder">Super !</button></div></div>`;
         $('boiteGarder').onclick = () => { montrer('boite', false); onFini(c, false); };
-      }, 450);
+      }, 1100);
     }
     if (lot.type === 'terrain') {
       const t = lot.terrain, r = RARETES[t.rarete];
@@ -258,7 +273,7 @@ export function ouvrirBoite(save, { onFini }) {
           </div></div>`;
         $('boiteGarder').onclick = () => { montrer('boite', false); onFini(t, false); };
         $('boiteEquiper').onclick = () => { save.terrain = t.id; montrer('boite', false); onFini(t, true); };
-      }, 450);
+      }, 1100);
     }
     const p = lot.piece;
     const neuve = !save.collection[p.id];
@@ -275,7 +290,7 @@ export function ouvrirBoite(save, { onFini }) {
         </div></div>`;
       $('boiteGarder').onclick = () => { montrer('boite', false); onFini(p, false); };
       $('boiteEquiper').onclick = () => { save.equipe[p.slot] = p.id; montrer('boite', false); onFini(p, true); };
-    }, 450);
+    }, 1100);
   };
 }
 
