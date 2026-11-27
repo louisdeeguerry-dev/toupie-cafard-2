@@ -442,7 +442,7 @@ export function afficherBilan(bilan, onPret) {
     return `<div class="offre-bloc"><button class="offre rarete-${rarete} ${conseil ? 'conseil' : ''}" style="--rar:${R.couleur}" data-a="${id}" data-r="${rarete}" ${prix == null || prix > partie.argent ? 'disabled' : ''} title="${esc(a.desc)}">
       <span class="badge-rarete">${R.nom}${id === 'nid' ? ` · +${k} cafard${k > 1 ? 's' : ''}` : R.mult > 1 ? ` · effet ×${String(R.mult).replace('.', ',')}` : ''}</span>
       ${conseil ? '<span class="badge-conseil">conseillé</span>' : ''}
-      <span class="ic">${a.icone}</span><b>${esc(a.nom)}</b>${k > 1 ? `<span class="paquet">+${fmtK} niveaux</span>` : ''}
+      <span class="ic">${a.icone}</span><b>${esc(a.nom)}</b>${k > 1 ? `<span class="paquet" title="Un achat = un lot de ${fmtK} niveaux d'un coup">lot de +${fmtK} niveaux</span>` : ''}
       <span class="effet">${esc(avant)}<br>→ <span class="plus">${esc(apres)}</span></span>
       <span class="px">${prix == null ? 'MAX' : prix + ' 💰'}</span>${manque ? `<span class="manque">il manque ${manque} 💰</span>` : ''}</button>${peutBannir() && partie.offres ? `<span class="bannir" data-bannir="${id}" role="button" title="Bannir ${esc(a.nom)} : cette amélioration ne sortira plus de toute la partie (1 seul bannissement par partie)">🚫</span>` : ''}</div>`;
   };

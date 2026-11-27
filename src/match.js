@@ -94,7 +94,7 @@ export function commencerManche() {
     partie.prochainAdversaire = null;
     partie.terrainDuel = terrainDuel(partie.moi, partie.adversaire);
     choisirTerrain(partie.terrainDuel.terrain);
-    decorTerrain(partie.terrainDuel.terrain);
+    decorTerrain(partie.terrainDuel.terrain, true);
     modeDuel(true);
     railAdverse.visible = true;
     partie.botLance = false;

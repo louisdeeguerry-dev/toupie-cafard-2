@@ -170,6 +170,19 @@ export const PIECES = [
     niveaux: { elan: 7, puissance: -4, precision: -3 }, desc: 'Raide et nerveux : la toupie part comme une flèche, mais ce gros ressort prend la place de l\'engrenage et la détente est brutale (jauge moins précise).' },
 ];
 
+// Pondération par IMPACT : un niveau d'Équilibre ou d'Endurance pèse bien plus lourd qu'un niveau d'Élan (mesuré en duel au
+// simulateur : node tests/duels-sim.js 150 avec MARGE=1 ; estimé contre les cafards). Les MALUS de chaque pièce sont
+// recalculés pour que bonus et malus pèsent autant en effet réel. Les stats et les signes ne changent pas (règle 5).
+export const IMPACT = { endurance: 1.3, lames: 1.3, poids: 1.2, inertie: 1.2, equilibre: 1.2, agressivite: 1.2, puissance: 1.1,
+  critique: 0.9, glisse: 0.8, elan: 0.8, diametre: 0.8, precision: 0.7, rebond: 0.6 };
+export const poidsStat = s => (POIDS_EQUILIBRAGE[s] || 1) * (IMPACT[s] || 1);
+for (const p of PIECES) {
+  let plus = 0, moins = 0;
+  for (const [s, v] of Object.entries(p.niveaux)) if (v > 0) plus += v * poidsStat(s); else moins -= v * poidsStat(s);
+  if (!moins || !plus) continue;
+  for (const [s, v] of Object.entries(p.niveaux)) if (v < 0) p.niveaux[s] = Math.round(v * (plus / moins) * 100) / 100;
+}
+
 export const PIECE = Object.fromEntries(PIECES.map(p => [p.id, p]));
 export const DEPART = {
   base: 'base-standard', couronne: 'couronne-standard', pointe: 'pointe-standard', ame: 'ame-vide',

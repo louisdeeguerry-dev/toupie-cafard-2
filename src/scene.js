@@ -152,12 +152,24 @@ for (const r of [0.12, 0.24, 0.36, 0.48]) {
 }
 cuve.visible = false;
 scene.add(cuve);
-export function decorTerrain(id) {
+// En duel, l'arène est légèrement creusée (pente douce vers le centre, CHOC.cuvette dans physics.js) : des cercles très
+// légers le montrent (la Cuve, très creusée, a les siens, plus marqués)
+const creux = new THREE.Group();
+for (const r of [0.15, 0.3, 0.45]) {
+  const anneau = new THREE.Mesh(new THREE.RingGeometry(r - 0.003, r, 64), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.05 + r * 0.08, depthWrite: false }));
+  anneau.rotation.x = -Math.PI / 2;
+  anneau.position.y = 0.0006;
+  creux.add(anneau);
+}
+creux.visible = false;
+scene.add(creux);
+export function decorTerrain(id, duel = false) {
   const c = id === 'rebond' ? { color: 0x2f80ed, emissive: 0x0b3b8a, roughness: 0.3 }
     : id === 'collant' ? { color: 0x7dbb3a, emissive: 0x1f3d05, roughness: 0.1 }
     : REBORD_NEUTRE;
   rebordMat.color.setHex(c.color); rebordMat.emissive.setHex(c.emissive); rebordMat.roughness = c.roughness;
   cuve.visible = id === 'cuve';
+  creux.visible = duel && id !== 'cuve';
   carre.visible = id === 'rebond'; plateau.visible = rebordRond.visible = id !== 'rebond';
 }
 

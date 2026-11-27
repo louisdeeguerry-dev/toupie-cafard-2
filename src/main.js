@@ -228,6 +228,7 @@ const CLE_AVANT_TEST = 'toupie-cafard-2-avant-test';
 const btnTest = document.getElementById('btnTest');
 const enTest = () => { try { return !!localStorage.getItem(CLE_AVANT_TEST); } catch { return false; } };
 btnTest.textContent = enTest() ? '🧪 Quitter le mode test' : '🧪 Mode test (tout débloqué)';
+document.body.classList.toggle('mode-test', enTest()); // bandeau « MODE TEST » bien visible (retour des testeurs)
 if (enTest() && save.ecrous < 100000) { save.ecrous = 100000; sauver(save); atelier.rendre(); } // mode test : écrous toujours rechargés
 // Bouton de test dans la boutique : des écrous à volonté (toujours disponible pendant le prototype)
 document.getElementById('ecrousTest').addEventListener('click', () => { save.ecrous += 10000; sauver(save); atelier.rendre(); UI.son?.('piece'); });
@@ -346,8 +347,12 @@ function brancher(c, hote) {
   const direBonjour = () => c.send({ type: 'bonjour', joueur: moi });
   if (c.open) direBonjour(); else c.on('open', direBonjour);
 }
+// Chaque tentative (créer / rejoindre) a un numéro : les messages et erreurs d'une tentative abandonnée n'écrasent plus
+// ceux de la nouvelle (retour des testeurs : « Rejoindre » après « Créer » affichait l'erreur de la création)
+let essaiDefi = 0;
 $('creerDefi').onclick = async () => {
   activerAudio(); finirDefi(); statut('Création du défi…');
+  const n = ++essaiDefi, st = t => { if (n === essaiDefi) statut(t); };
   try {
     defi = await creerDefi({
       code(code) {
@@ -361,15 +366,16 @@ $('creerDefi').onclick = async () => {
           else navigator.clipboard?.writeText(lien).then(() => statut('Lien copié : ' + lien), () => statut(lien));
         };
       },
-      connecte: c => brancher(c, true),
-      erreur: statut, statut,
+      connecte: c => { if (n === essaiDefi) brancher(c, true); },
+      erreur: st, statut: st,
     });
-  } catch (e) { statut('Impossible de créer le défi : ' + e.message); }
+  } catch (e) { st('Impossible de créer le défi : ' + e.message); }
 };
 async function rejoindre(code) {
   activerAudio(); finirDefi(); statut('Connexion au défi ' + code + '…');
-  try { defi = await rejoindreDefi(code, { connecte: c => brancher(c, false), erreur: statut, statut }); }
-  catch (e) { statut('Impossible de rejoindre : ' + e.message); }
+  const n = ++essaiDefi, st = t => { if (n === essaiDefi) statut(t); };
+  try { defi = await rejoindreDefi(code, { connecte: c => { if (n === essaiDefi) brancher(c, false); }, erreur: st, statut: st }); }
+  catch (e) { st('Impossible de rejoindre : ' + e.message); }
 }
 $('rejoindreDefi').onclick = () => { const c = $('codeAmi').value.trim(); if (c.length >= 4) rejoindre(c); else statut('Entre le code de ton ami.'); };
 // Lien reçu d'un ami : …/?ami=CODE
@@ -380,6 +386,7 @@ if (codeLien) { allerA('ami'); $('codeAmi').value = codeLien.toUpperCase(); rejo
 document.getElementById('entrainement').addEventListener('click', () => {
   activerAudio();
   demarrerEntrainement({ ...save.equipe }, { ...save.niveauxPieces });
+  UI.aide(AIDE); // comment lancer (retour des testeurs : rien ne l'indiquait à l'entraînement)
   modeleLanceur(save.equipe);
   for (const e of ECRANS) UI.montrer(e, false);
   controlesActifs(false);
