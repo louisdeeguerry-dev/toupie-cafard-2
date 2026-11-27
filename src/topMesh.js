@@ -2,10 +2,51 @@
 import * as THREE from 'three';
 import { PIECE } from './data/pieces.js';
 
-const mat = (couleur, o = {}) => new THREE.MeshStandardMaterial({ color: couleur, roughness: 0.35, metalness: 0.55, ...o });
+// ---------------------------------------------------------------- Textures d'usinage (dessinées une fois, partagées)
+// Chaque motif raconte comment la pièce est fabriquée (règle 5) :
+// - « tourne » : stries de tour (pièce usinée en tournant) ; « moletage » : losanges d'accroche des couronnes ;
+// - « brosse » : métal brossé (pointes, lames) ; « martele » : métal martelé (pièces lourdes).
+// Le même dessin sert de relief (bumpMap), de rugosité (roughnessMap) et de légère variation de teinte (map).
+const motifs = {};
+const alea = (() => { let s = 7; return () => ((s = (s * 16807) % 2147483647) / 2147483647); })();
+function dessiner(nom) {
+  const c = document.createElement('canvas'); c.width = c.height = 256;
+  const g = c.getContext('2d'), img = g.createImageData(256, 256), d = img.data;
+  const ecrire = f => { for (let y = 0; y < 256; y++) for (let x = 0; x < 256; x++) { const v = Math.max(0, Math.min(255, f(x, y) * 255)), i = (y * 256 + x) * 4; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255; } };
+  if (nom === 'tourne') { const l = Array.from({ length: 256 }, () => alea()); ecrire((x, y) => 0.72 + 0.18 * Math.sin(y * 1.6) * Math.sin(y * 0.23) + 0.1 * l[y]); }
+  else if (nom === 'moletage') ecrire((x, y) => { const k = (Math.PI * 2 * 16) / 256, a = Math.abs(Math.sin(x * k + y * k)), b = Math.abs(Math.sin(x * k - y * k)); return 0.45 + 0.55 * Math.min(a, b) ** 0.6; });
+  else if (nom === 'brosse') { const l = Array.from({ length: 256 }, () => alea()); ecrire((x, y) => 0.75 + 0.2 * l[y] + 0.05 * alea()); }
+  else if (nom === 'martele') {
+    ecrire(() => 0.85);
+    g.putImageData(img, 0, 0);
+    for (let i = 0; i < 70; i++) { // coups de marteau : petites cuvettes rondes
+      const x = alea() * 256, y = alea() * 256, r = 8 + alea() * 14, rg = g.createRadialGradient(x, y, 0, x, y, r);
+      rg.addColorStop(0, 'rgba(40,40,40,.55)'); rg.addColorStop(0.7, 'rgba(120,120,120,.2)'); rg.addColorStop(1, 'rgba(255,255,255,.15)');
+      g.fillStyle = rg; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+    }
+    return c;
+  }
+  g.putImageData(img, 0, 0);
+  return c;
+}
+const REPET = { tourne: [1, 1], moletage: [10, 1], brosse: [1, 1], martele: [2, 1] };
+function textures(nom) {
+  if (motifs[nom]) return motifs[nom];
+  const c = dessiner(nom);
+  const fab = srgb => { const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(...REPET[nom]); t.anisotropy = 4; if (srgb) t.colorSpace = THREE.SRGBColorSpace; return t; };
+  return (motifs[nom] = { map: fab(true), relief: fab(false) });
+}
+const mat = (couleur, o = {}, motif = null) => {
+  const m = new THREE.MeshStandardMaterial({ color: couleur, roughness: 0.35, metalness: 0.55, ...o });
+  if (motif) {
+    const t = textures(motif);
+    Object.assign(m, { map: t.map, bumpMap: t.relief, bumpScale: motif === 'moletage' ? 0.0012 : 0.0006, roughnessMap: t.relief, roughness: Math.min(1, m.roughness * 1.4) });
+  }
+  return m;
+};
 
 function pointe(p) {
-  const g = new THREE.Group(), m = mat(p.couleur);
+  const g = new THREE.Group(), m = mat(p.couleur, {}, 'brosse');
   let h = 0.018;
   switch (p.forme) {
     case 'clou': {
@@ -66,7 +107,7 @@ function pointe(p) {
 }
 
 function base(p, y) {
-  const g = new THREE.Group(), m = mat(p.couleur);
+  const g = new THREE.Group(), m = mat(p.couleur, {}, p.forme === 'lourde' ? 'martele' : 'tourne');
   let r = 0.026, h = 0.014;
   switch (p.forme) {
     case 'lourde': r = 0.029; h = 0.017; break;
@@ -104,7 +145,7 @@ function base(p, y) {
 }
 
 function couronne(p, y) {
-  const g = new THREE.Group(), m = mat(p.couleur);
+  const g = new THREE.Group(), m = mat(p.couleur, {}, 'moletage');
   const R = 0.034;
   switch (p.forme) {
     case 'dents': {
@@ -121,7 +162,7 @@ function couronne(p, y) {
       break;
     }
     case 'bouclier': {
-      const c = new THREE.Mesh(new THREE.CylinderGeometry(R + 0.006, R + 0.008, 0.012, 48, 1, true), mat(p.couleur, { side: THREE.DoubleSide }));
+      const c = new THREE.Mesh(new THREE.CylinderGeometry(R + 0.006, R + 0.008, 0.012, 48, 1, true), mat(p.couleur, { side: THREE.DoubleSide }, 'brosse'));
       c.position.y = y;
       const bord = new THREE.Mesh(new THREE.TorusGeometry(R + 0.007, 0.002, 8, 48), mat(0xdfe6ee));
       bord.rotation.x = Math.PI / 2; bord.position.y = y + 0.006;
@@ -133,7 +174,7 @@ function couronne(p, y) {
       t.rotation.x = Math.PI / 2; t.position.y = y;
       g.add(t);
       for (let i = 0; i < 4; i++) {
-        const l = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.003, 0.009), mat(p.couleur, { metalness: 0.95, roughness: 0.15 }));
+        const l = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.003, 0.009), mat(p.couleur, { metalness: 0.95, roughness: 0.15 }, 'brosse'));
         const a = (i / 4) * Math.PI * 2;
         l.position.set(Math.cos(a) * (R + 0.002), y, Math.sin(a) * (R + 0.002));
         l.rotation.y = -a + 0.9;
@@ -150,7 +191,7 @@ function couronne(p, y) {
       break;
     }
     case 'inertie': {
-      const t = new THREE.Mesh(new THREE.TorusGeometry(R + 0.002, 0.008, 14, 48), mat(p.couleur, { metalness: 1, roughness: 0.2 }));
+      const t = new THREE.Mesh(new THREE.TorusGeometry(R + 0.002, 0.008, 14, 48), mat(p.couleur, { metalness: 1, roughness: 0.2 }, 'tourne'));
       t.rotation.x = Math.PI / 2; t.position.y = y;
       g.add(t);
       break;
@@ -162,7 +203,7 @@ function couronne(p, y) {
     }
   }
   // Disque qui relie la couronne à la base
-  const disque = new THREE.Mesh(new THREE.CylinderGeometry(R, R, 0.003, 40), mat(0x2b2f36, { metalness: 0.3 }));
+  const disque = new THREE.Mesh(new THREE.CylinderGeometry(R, R, 0.003, 40), mat(0x2b2f36, { metalness: 0.3 }, 'tourne'));
   disque.position.y = y;
   g.add(disque);
   return { g };

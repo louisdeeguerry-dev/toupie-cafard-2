@@ -707,3 +707,20 @@ plafond sur la mesure réelle, environ 3,5 par lancer.
 **Prompt optimisé** : caler le plafond des cafards écrasés par les bots sur la mesure réelle du robot (environ 3,5 par lancer) et rejouer 5 parties par stratégie.
 **Réalisé** : plafond 3,4 × couverture (couverture plafonnée à 1,3) ; les bots passent de 3,4 cafards par lancer à l'étape 1 à 4,2 à l'étape 7. Tests relancés.
 Résultats (5 parties par stratégie) : sacrifice 6,6, économie 4,8, mixte 5,8, puissance 4,8 ; aucune erreur.
+
+---
+
+## 2026-11-27 — Agents critiques : graphismes, sons, ressenti de jeu
+
+**Prompt optimisé** : (rôle : directeur artistique, sound designer, game designer) lancer des agents critiques pour lister ce qui peut encore être amélioré, surtout les graphismes, les bruitages et les visuels. 3 agents ciblés (Sonnet), 5 captures maximum chacun, rapport de 400 mots maximum, aucune modification de fichier.
+
+---
+
+## 2026-11-27 — Textures des toupies
+
+**Prompt optimisé** : (rôle : artiste 3D technique) ajouter de la texture sur les pièces des toupies (couronnes, bases, pointes…), en restant cohérent avec la fabrication de chaque pièce (règle 5).
+**Réalisé** : textures d'usinage procédurales partagées dans `src/topMesh.js`, utilisées en relief, en rugosité et en teinte :
+- moletage (losanges d'accroche) sur les couronnes ;
+- stries de tour sur les bases et le disque ;
+- métal martelé sur la base lourde ;
+- métal brossé sur les pointes, les lames et le bouclier.
