@@ -1008,3 +1008,20 @@ s'il s'exprime mal.
 - Correctif durable : `outils/versionner.mjs` ajoute une empreinte `?v=` à chaque module via la carte d'imports, et un numéro de version s'affiche au menu.
 - La règle de publication est ajoutée à CLAUDE.md.
 - Testé : tous les modules sont versionnés ; le bouton +10 000 🔩 fonctionne (0 → 10 000).
+
+---
+
+## 2026-11-27 — Ouverture des boîtes en 3D, par 5, avec la vraie pièce qui sort
+
+**Prompt optimisé** : (rôle : dev 3D Three.js, motion design) refaire l'ouverture des boîtes en vraie 3D, avec une vue
+plongeante inclinée. Les boîtes s'ouvrent toutes ensemble (5 d'un coup). C'est le vrai modèle 3D de la pièce qui sort de sa
+boîte, pas un émoji au milieu de l'écran.
+**Réalisé** :
+- `src/ouverture3d.js` : table ronde éclairée dans la vitrine, 1 à 5 boîtes 3D en arc de cercle (corps ouvert, couvercle à
+  charnière, scellé, lumière intérieure et halo de la couleur de la rareté).
+- 4 clics, sur toutes les boîtes à la fois :
+  1. le scellé saute ;
+  2. le couvercle s'entrouvre ;
+  3. il s'ouvre et la lumière jaillit ;
+  4. le vrai modèle de la pièce (topMesh ou lanceurMesh) monte hors de la boîte en tournant.
+- Puis récapitulatif des lots, avec « Équiper » ou « Choisir » ; « Ouvrir » ouvre jusqu'à 5 boîtes ; un gros carton ouvre ses 5 boîtes ensemble.

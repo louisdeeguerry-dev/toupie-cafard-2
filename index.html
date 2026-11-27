@@ -352,6 +352,17 @@
 .achat-paquet { position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%); width: min(360px, 92vw); text-align: center; animation: apparait .35s cubic-bezier(.2,1.6,.4,1); }
 .achat-paquet .grand { font-size: 22px; font-weight: 900; }
 @media (max-width: 720px) { .boutique-meta { top: auto; bottom: 10px; } .achat-paquet { bottom: auto; top: 12px; } }
+/* Ouverture des boîtes en 3D : consigne en bas, récapitulatif des lots */
+#ouverture { position: fixed; inset: 0; pointer-events: none; z-index: 15; }
+.ouverture-aide { position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); font-size: 20px; font-weight: 900; color: #fff;
+  text-shadow: 0 3px 10px #000; animation: pulse .6s infinite alternate; white-space: nowrap; }
+.ouverture-lots { pointer-events: auto; position: absolute; left: 0; right: 0; margin: 0 auto; bottom: 16px; width: min(920px, 96vw);
+  display: flex; flex-direction: column; gap: 10px; animation: apparait .4s cubic-bezier(.2,1.6,.4,1); }
+.ouverture-lots .liste { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.lot { flex: 1 1 160px; max-width: 200px; border: 2px solid var(--rar); border-radius: 12px; padding: 8px; text-align: center; background: rgba(0,0,0,.35);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--rar) 50%, transparent); }
+.lot .rar { color: var(--rar); font-weight: 900; font-size: 12px; } .lot b { display: block; margin: 2px 0; } .lot .petit { font-size: 11px; }
+.lot button { margin-top: 6px; padding: 6px 10px; font-size: 13px; }
 /* Défi entre amis */
 .defi { display: flex; flex-direction: column; gap: 10px; min-width: min(380px, 90vw); text-align: center; }
 .defi label { display: flex; gap: 10px; align-items: center; justify-content: center; }
@@ -496,6 +507,10 @@
 </div>
 
 <!-- Boîte mystère -->
+<div id="ouverture" class="cache">
+  <div class="ouverture-aide" id="ouvertureAide"></div>
+  <div class="panneau ouverture-lots cache" id="ouvertureLots"></div>
+</div>
 <div id="boite" class="cache">
   <div class="jouet" id="carton">
     <div class="rayons"></div>
@@ -548,7 +563,7 @@
 <!-- Fin de partie -->
 <div id="fin" class="voile cache"><div class="panneau" id="finContenu"></div></div>
 
-<script type="importmap">{"imports":{"three":"./vendor/three.module.js?v=a762b858","./src/atelier3d.js":"./src/atelier3d.js?v=0ae7776f","./src/audio.js":"./src/audio.js?v=a66add9e","./src/bots.js":"./src/bots.js?v=2611c545","./src/bugs.js":"./src/bugs.js?v=aa4e2d33","./src/config.js":"./src/config.js?v=99f84282","./src/data/boutique.js":"./src/data/boutique.js?v=0b36c7fc","./src/data/cafards.js":"./src/data/cafards.js?v=4e07a535","./src/data/pieces.js":"./src/data/pieces.js?v=7beee675","./src/data/terrains.js":"./src/data/terrains.js?v=8b9869d7","./src/enligne.js":"./src/enligne.js?v=93de28d5","./src/fx.js":"./src/fx.js?v=5dda52a4","./src/inspecteur.js":"./src/inspecteur.js?v=463ff45d","./src/lanceurMesh.js":"./src/lanceurMesh.js?v=fc910be9","./src/launcher.js":"./src/launcher.js?v=a6e47665","./src/magasin3d.js":"./src/magasin3d.js?v=56a71464","./src/main.js":"./src/main.js?v=8024a8d2","./src/match.js":"./src/match.js?v=d3af056f","./src/parametres.js":"./src/parametres.js?v=a8dab31a","./src/physics.js":"./src/physics.js?v=e8481735","./src/progression.js":"./src/progression.js?v=81194ffc","./src/save.js":"./src/save.js?v=45a68a57","./src/scene.js":"./src/scene.js?v=180428e0","./src/stats.js":"./src/stats.js?v=50e4b2fd","./src/topMesh.js":"./src/topMesh.js?v=442f8de6","./src/ui.js":"./src/ui.js?v=238c19a4","./vendor/jsm/postprocessing/EffectComposer.js":"./vendor/jsm/postprocessing/EffectComposer.js?v=eccf8177","./vendor/jsm/postprocessing/MaskPass.js":"./vendor/jsm/postprocessing/MaskPass.js?v=10b721db","./vendor/jsm/postprocessing/OutputPass.js":"./vendor/jsm/postprocessing/OutputPass.js?v=8ca54f44","./vendor/jsm/postprocessing/Pass.js":"./vendor/jsm/postprocessing/Pass.js?v=a5ec37ce","./vendor/jsm/postprocessing/RenderPass.js":"./vendor/jsm/postprocessing/RenderPass.js?v=89aaff34","./vendor/jsm/postprocessing/ShaderPass.js":"./vendor/jsm/postprocessing/ShaderPass.js?v=f145da64","./vendor/jsm/postprocessing/UnrealBloomPass.js":"./vendor/jsm/postprocessing/UnrealBloomPass.js?v=a60d7378","./vendor/jsm/shaders/CopyShader.js":"./vendor/jsm/shaders/CopyShader.js?v=6088e45f","./vendor/jsm/shaders/LuminosityHighPassShader.js":"./vendor/jsm/shaders/LuminosityHighPassShader.js?v=05b8a6dd","./vendor/jsm/shaders/OutputShader.js":"./vendor/jsm/shaders/OutputShader.js?v=251fcfe4"}}</script>
-<script type="module" src="src/main.js?v=ccff8308"></script>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js?v=a762b858","./src/atelier3d.js":"./src/atelier3d.js?v=61140325","./src/audio.js":"./src/audio.js?v=a66add9e","./src/bots.js":"./src/bots.js?v=2611c545","./src/bugs.js":"./src/bugs.js?v=aa4e2d33","./src/config.js":"./src/config.js?v=99f84282","./src/data/boutique.js":"./src/data/boutique.js?v=0b36c7fc","./src/data/cafards.js":"./src/data/cafards.js?v=4e07a535","./src/data/pieces.js":"./src/data/pieces.js?v=7beee675","./src/data/terrains.js":"./src/data/terrains.js?v=8b9869d7","./src/enligne.js":"./src/enligne.js?v=93de28d5","./src/fx.js":"./src/fx.js?v=5dda52a4","./src/inspecteur.js":"./src/inspecteur.js?v=463ff45d","./src/lanceurMesh.js":"./src/lanceurMesh.js?v=fc910be9","./src/launcher.js":"./src/launcher.js?v=a6e47665","./src/magasin3d.js":"./src/magasin3d.js?v=0af5946b","./src/main.js":"./src/main.js?v=fb3322f9","./src/match.js":"./src/match.js?v=d3af056f","./src/ouverture3d.js":"./src/ouverture3d.js?v=27c034e7","./src/parametres.js":"./src/parametres.js?v=a8dab31a","./src/physics.js":"./src/physics.js?v=e8481735","./src/progression.js":"./src/progression.js?v=81194ffc","./src/save.js":"./src/save.js?v=45a68a57","./src/scene.js":"./src/scene.js?v=180428e0","./src/stats.js":"./src/stats.js?v=50e4b2fd","./src/topMesh.js":"./src/topMesh.js?v=442f8de6","./src/ui.js":"./src/ui.js?v=238c19a4","./vendor/jsm/postprocessing/EffectComposer.js":"./vendor/jsm/postprocessing/EffectComposer.js?v=eccf8177","./vendor/jsm/postprocessing/MaskPass.js":"./vendor/jsm/postprocessing/MaskPass.js?v=10b721db","./vendor/jsm/postprocessing/OutputPass.js":"./vendor/jsm/postprocessing/OutputPass.js?v=8ca54f44","./vendor/jsm/postprocessing/Pass.js":"./vendor/jsm/postprocessing/Pass.js?v=a5ec37ce","./vendor/jsm/postprocessing/RenderPass.js":"./vendor/jsm/postprocessing/RenderPass.js?v=89aaff34","./vendor/jsm/postprocessing/ShaderPass.js":"./vendor/jsm/postprocessing/ShaderPass.js?v=f145da64","./vendor/jsm/postprocessing/UnrealBloomPass.js":"./vendor/jsm/postprocessing/UnrealBloomPass.js?v=a60d7378","./vendor/jsm/shaders/CopyShader.js":"./vendor/jsm/shaders/CopyShader.js?v=6088e45f","./vendor/jsm/shaders/LuminosityHighPassShader.js":"./vendor/jsm/shaders/LuminosityHighPassShader.js?v=05b8a6dd","./vendor/jsm/shaders/OutputShader.js":"./vendor/jsm/shaders/OutputShader.js?v=251fcfe4"}}</script>
+<script type="module" src="src/main.js?v=5774b7a8"></script>
 </body>
 </html>

@@ -11,6 +11,8 @@ import { activerAudio, ronron, musique, basculerMusique, musiqueActive, sfx, bai
 import * as UI from './ui.js';
 import { VERSION } from './config.js';
 import { initParametres } from './parametres.js';
+import { demarrerOuverture, cliquerOuverture, finirOuverture } from './ouverture3d.js';
+import { RARETES, SLOTS } from './data/pieces.js';
 import { creerDefi, rejoindreDefi } from './enligne.js';
 import { demarrerAmi, messageAmi, quitterAmi, demarrerEntrainement } from './match.js';
 import { recompenser } from './progression.js';
@@ -32,7 +34,7 @@ const atelier = UI.creerAtelier(save, {
   onEquipe(slot) { majVitrine(slot); },
   onSelection(onglet, slot) { selectionAtelier(onglet, slot); },
   onJouer: demarrer,
-  onBoite: boite,
+  onBoite: () => boite(),
 });
 majVitrine();
 
@@ -58,11 +60,58 @@ document.addEventListener('click', e => {
 });
 allerA('menu');
 
-function boite() {
-  // Ouvre les boîtes l'une après l'autre (un gros carton = 5 boîtes à la suite)
-  UI.ouvrirBoite(save, { onFini() { sauver(save); atelier.rendre(); majVitrine(); if (aOuvrir > 0 && save.boites > 0) { aOuvrir--; setTimeout(boite, 250); } } });
+// Ouverture des boîtes en 3D (1 ou 5 à la fois, toutes ensemble) : voir src/ouverture3d.js
+let ouverture = null;
+function boite(n = Math.min(5, save.boites)) {
+  if (save.boites <= 0) return;
+  activerAudio();
+  const lots = demarrerOuverture(save, n);
+  sauver(save);
+  ouverture = { lots, etape: 0 };
+  UI.montrer('boutiqueMeta', false);
+  selectionAtelier('ouverture', null);
+  UI.montrer('ouverture');
+  $('ouvertureLots').classList.add('cache');
+  $('ouvertureAide').textContent = lots.length > 1 ? `👆 Clique pour ouvrir les ${lots.length} boîtes` : '👆 Clique pour ouvrir la boîte';
+  UI.son?.('choix');
 }
-let aOuvrir = 0;
+function cliquerBoites() {
+  if (!ouverture || ouverture.etape >= 4) return;
+  const e = ouverture.etape = cliquerOuverture();
+  UI.son?.('toc', { volume: 0.6, hauteur: 0.7 + e * 0.2 }); UI.son?.('choix', { volume: 0.4, hauteur: 0.8 + e * 0.15 });
+  $('ouvertureAide').textContent = ['', 'Encore !', 'Ça s\'ouvre…', 'Dernier clic !', ''][e];
+  if (e === 4) { sfx.legendaire(); UI.son?.('boite'); setTimeout(recapLots, 1700); }
+}
+function recapLots() {
+  const R = id => RARETES[id] || RARETES.commune;
+  const carte = (lot, i) => {
+    const r = R(lot.rarete);
+    if (lot.type === 'piece') {
+      const p = lot.piece, sl = SLOTS.find(s => s.id === p.slot);
+      return `<div class="lot" style="--rar:${r.couleur}"><div class="rar">${r.nom}</div><b>${sl.icone} ${p.nom}</b>
+        <div class="petit">${lot.neuve ? 'NOUVELLE !' : `doublon : niveau ${Math.min(5, lot.exemplaires)} débloqué`}</div>
+        <button class="btn second" data-equiper="${i}">Équiper</button></div>`;
+    }
+    if (lot.type === 'terrain') return `<div class="lot" style="--rar:${r.couleur}"><div class="rar">${r.nom}</div><b>${lot.terrain.icone} ${lot.terrain.nom}</b>
+      <div class="petit">Terrain de duel · NOUVEAU !</div><button class="btn second" data-equiper="${i}">Choisir</button></div>`;
+    return `<div class="lot" style="--rar:${r.couleur}"><div class="rar">${r.nom}</div><b>${lot.coffre.icone} ${lot.coffre.nom}</b><div class="petit">+${lot.coffre.ecrous} 🔩</div></div>`;
+  };
+  const el = $('ouvertureLots');
+  el.innerHTML = `<div class="liste">${ouverture.lots.map(carte).join('')}</div><div class="actions"><button class="btn" id="finOuverture">Continuer</button></div>`;
+  el.classList.remove('cache');
+  $('ouvertureAide').textContent = '';
+  el.querySelectorAll('[data-equiper]').forEach(b => b.onclick = () => {
+    const lot = ouverture.lots[+b.dataset.equiper];
+    if (lot.type === 'piece') save.equipe[lot.piece.slot] = lot.piece.id; else save.terrain = lot.terrain.id;
+    b.textContent = '✔ Équipé'; b.disabled = true; sauver(save); UI.son?.('achat', { volume: 0.5 });
+  });
+  $('finOuverture').onclick = () => {
+    finirOuverture(); ouverture = null;
+    UI.montrer('ouverture', false);
+    sauver(save); atelier.rendre(); majVitrine();
+    allerA('boutiqueMeta');
+  };
+}
 
 function demarrer() {
   activerAudio();
@@ -322,6 +371,7 @@ document.getElementById('entrainement').addEventListener('click', () => {
 // ---------------------------------------------------------------- Boutique 3D : on clique sur un paquet du comptoir
 import { PRODUITS, produitSous } from './magasin3d.js';
 import { acheterProduit, MONNAIE } from './progression.js';
+renderer.domElement.addEventListener('pointerdown', () => { if (ouverture) cliquerBoites(); });
 const enBoutique = () => !document.getElementById('boutiqueMeta').classList.contains('cache') && mode === 'atelier';
 const ndc = e => { const r = renderer.domElement.getBoundingClientRect(); return { x: ((e.clientX - r.left) / r.width) * 2 - 1, y: -((e.clientY - r.top) / r.height) * 2 + 1 }; };
 renderer.domElement.addEventListener('pointermove', e => {
@@ -344,7 +394,7 @@ renderer.domElement.addEventListener('click', e => {
     if (!acheterProduit(save, p)) return;
     el.classList.add('cache'); sauver(save); atelier.rendre();
     UI.son?.('piece');
-    aOuvrir = p.pieces - 1; boite();
+    boite(p.pieces);
   };
 });
 

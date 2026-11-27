@@ -33,7 +33,7 @@ function cadre(g, l, h) { // liseré blanc intérieur, comme une boîte de jouet
   g.lineWidth = l * 0.025; g.strokeStyle = 'rgba(255,255,255,.55)';
   g.strokeRect(l * 0.03, l * 0.03, l - l * 0.06, h - l * 0.06);
 }
-function texture(produit, l, h, type = 'face') {
+export function texture(produit, l, h, type = 'face') {
   const c = document.createElement('canvas'); c.width = l; c.height = h;
   const g = c.getContext('2d');
   fond(g, l, h);
@@ -62,6 +62,7 @@ function texture(produit, l, h, type = 'face') {
   texteAjuste(g, 'CAFARD 2', cx, h * 0.75, utile, l * 0.2, { contour: '#e8005a' });
   texteAjuste(g, produit.pieces > 1 ? '5 PIÈCES MYSTÈRE' : '1 PIÈCE MYSTÈRE', cx, h * 0.87, utile, l * 0.09, { remplir: '#ffe066' });
   // Pastille de prix (dans la marge, en haut à droite) : « 100 / ÉCROUS »
+  if (!produit.prix || produit.prix === '?') return fin(c); // boîte à ouvrir : pas d'étiquette de prix
   const px = l - marge - l * 0.1, py = marge + l * 0.1, pr = l * 0.12;
   g.beginPath(); g.arc(px, py, pr, 0, Math.PI * 2); g.fillStyle = '#ffd23f'; g.fill();
   g.lineWidth = pr * 0.14; g.strokeStyle = '#c1121f'; g.stroke();
