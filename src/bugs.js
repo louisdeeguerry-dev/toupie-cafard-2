@@ -43,7 +43,23 @@ const matPronotum = new THREE.MeshPhysicalMaterial({ color: 0x3a2412, roughness:
 const antenneGeo = new THREE.TubeGeometry(new THREE.QuadraticBezierCurve3(
   new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.25, 0.35, 0.9), new THREE.Vector3(0.9, 0.1, 1.6)), 12, 0.035, 4);
 
+function mannequin(r) {
+  // Un poteau en bois lesté, coiffé d'une cible rouge et blanche (immobile)
+  const g = new THREE.Group(), bois = new THREE.MeshStandardMaterial({ color: 0xc8a165, roughness: 0.7 });
+  const socle = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.95, r * 1.05, r * 0.35, 28), new THREE.MeshStandardMaterial({ color: 0x3a3f47, metalness: 0.6, roughness: 0.4 }));
+  socle.position.y = r * 0.17;
+  const poteau = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.55, r * 0.62, r * 1.4, 24), bois);
+  poteau.position.y = r * 1.05;
+  g.add(socle, poteau);
+  [[0.62, 0xd63a2a], [0.45, 0xf4efe6], [0.28, 0xd63a2a], [0.12, 0xf4efe6]].forEach(([k, c], i) => {
+    const d = new THREE.Mesh(new THREE.CylinderGeometry(r * k, r * k, 0.002, 28), new THREE.MeshStandardMaterial({ color: c, roughness: 0.6 }));
+    d.position.y = r * 1.76 + i * 0.0015; g.add(d);
+  });
+  g.traverse(o => { if (o.isMesh) o.castShadow = true; });
+  return { g, pattes: [] };
+}
 function modele(type, r, dore) {
+  if (type === 'mannequin') return mannequin(r);
   const g = new THREE.Group(), araignee = type === 'araignee', larve = type === 'larve';
   const corps = new THREE.Mesh(corpsGeo, dore ? matDore : matCorps(type));
   corps.scale.set(r * (araignee ? 0.8 : 0.75), r * (larve ? 0.5 : 0.38), r * (araignee ? 0.8 : type === 'coureur' ? 1.15 : 1));
@@ -158,6 +174,7 @@ export function majCafards(dt, t, menaces = []) {
       continue;
     }
     c.coup = Math.max(0, c.coup - dt);
+    if (c.t.fixe) { c.kx = c.kz = 0; c.g.position.set(c.x, 0, c.z); continue; } // mannequin : ne bouge jamais
     c.dir += (Math.random() - 0.5) * 3 * dt;
     // Coureur : fuit la toupie la plus proche
     if (c.t.fuite) for (const m of menaces) {

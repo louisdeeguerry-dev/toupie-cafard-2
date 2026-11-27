@@ -95,10 +95,11 @@ function placer(b, x, y, z, frac, classe, texte = '') {
   b.lastChild.textContent = texte;
 }
 // cafards : barre seulement s'ils sont blessés ; toupies : barre de rotation (la toupie s'arrête quand elle tombe sous son seuil)
-export function majBarres(cafards, toupies) {
+// Sans argument (retour au menu) : toutes les barres sont cachées
+export function majBarres(cafards = [], toupies = []) {
   utilisees = 0;
   for (const c of cafards) {
-    if (c.mort || c.chute > 0 || c.vie >= c.vieMax) continue;
+    if (c.mort || c.chute > 0 || c.vie >= c.vieMax || c.t?.fixe) continue;
     placer(barre(), c.x, c.r * 1.6 + 0.01, c.z, c.vie / c.vieMax, 'cafard');
   }
   for (const t of toupies) {

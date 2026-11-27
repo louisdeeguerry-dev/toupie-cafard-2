@@ -874,3 +874,22 @@ deux joueurs ont lancé. On a 7 s pour lancer, sinon le lancer part tout seul.
 - Contre un ami, l'hôte lâche les deux toupies ; si le lancer de l'invité n'arrive pas, lancer par défaut au bout de 10 s.
 
 Testé : contre un bot (départ ensemble, lancer automatique à 7 s) et entre deux navigateurs (relais local) ; aucune erreur.
+
+---
+
+## 2026-11-27 — Sons en fin de partie, barres au menu, mode Entraînement, vérification du diamètre
+
+**Prompt optimisé** : (rôle : dev gameplay)
+- Corriger les problèmes de sons en fin de partie.
+- Corriger les barres de vie qui restent affichées au menu.
+- Créer un mode Entraînement : on tire sur un mannequin immobile à vie infinie.
+- Vérifier si le diamètre augmente l'inertie et les dégâts.
+
+**Réalisé** :
+- Au retour au menu : le ronronnement de la toupie est coupé (il pouvait continuer sans fin), les barres et l'aide sont effacées.
+- Le jingle de fin de partie est décalé après celui du duel (ils se superposaient).
+- Mode 🎯 Entraînement depuis le menu :
+  - mannequin poteau-cible au centre, immobile (la toupie rebondit dessus) et à vie infinie ;
+  - dégâts de chaque coup affichés, avec le total du lancer, le meilleur coup et le meilleur lancer ;
+  - lancers illimités, sans chrono ni boutique.
+- Diamètre vérifié dans le code : il ne change que la taille (zone de contact), ni l'inertie ni les dégâts d'un coup ; une toupie plus large touche simplement plus souvent.

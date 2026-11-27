@@ -4,6 +4,9 @@
 // une toupie restée faible ne tue plus rien (donc ne gagne plus rien) quand les cafards ont évolué.
 
 export const TYPES = {
+  // Mannequin d'entraînement : immobile, vie infinie (mode Entraînement uniquement)
+  mannequin: { nom: 'Mannequin', icone: '🎯', vie: 1e12, taille: 2.4, vitesse: 0, prime: 0, couleur: 0xc8a165, fixe: true, masse: 1e6,
+    desc: 'Cible immobile pour tester sa toupie.' },
   cafard: { nom: 'Cafard', icone: '🪳', vie: 1, taille: 1, vitesse: 1, prime: 1, couleur: 0x5a3214,
     desc: 'Le cafard de base.' },
   gros: { nom: 'Gros cafard', icone: '🐛', vie: 2.2, taille: 1.35, vitesse: 0.65, prime: 2, masse: 3, couleur: 0x3e2210,

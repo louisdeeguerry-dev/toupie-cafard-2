@@ -31,7 +31,7 @@ export function nouvellePartie(equipe, { pseudo = 'Toi', mode = 'normale', nivPi
   for (let i = 1; i < PARTIE.joueurs; i++) joueurs.push(creerBot(noms[i]));
   const avecTerrain = terrain && terrain !== 'aucun';
   Object.assign(partie, {
-    active: true, mode, joueurs, moi: joueurs[0], manche: 0, lancerCafards: 0, ami: null,
+    active: true, mode, joueurs, moi: joueurs[0], manche: 0, lancerCafards: 0, ami: null, entrainement: null,
     argent: avecTerrain ? PARTIE.argentAvecTerrain : PARTIE.argentSansTerrain,
     phase: 'attente', type: null, lancers: 0, tues: 0,
     adversaire: null, mesToupies: [], sesToupies: [], attenteRelance: 0, resultat: null, chrono: 0, gainsManche: 0,
@@ -41,7 +41,7 @@ export function nouvellePartie(equipe, { pseudo = 'Toi', mode = 'normale', nivPi
 }
 
 export const etape = () => Math.floor(partie.manche / PARTIE.cycle.length) + 1;
-export const typeManche = (m = partie.manche) => partie.ami ? 'duel' : PARTIE.cycle[m % PARTIE.cycle.length];
+export const typeManche = (m = partie.manche) => partie.entrainement ? 'cafards' : partie.ami ? 'duel' : PARTIE.cycle[m % PARTIE.cycle.length];
 // Numéro du lancer dans l'étape (1 à 3) pour une manche de cafards
 export const lancerDansEtape = (m = partie.manche) => (m % PARTIE.cycle.length) + 1;
 export const vivants = () => partie.joueurs.filter(j => !j.elimine);
@@ -61,6 +61,7 @@ function choisirAdversaire() {
 export function commencerManche() {
   partie.mancheAffichee = null;
   partie.type = typeManche();
+  if (partie.entrainement) return mancheEntrainement();
   Object.assign(partie, { gainsManche: 0, resultat: null, chrono: 0, combo: 0, renfortT: 0, tues: 0, contacts: 0, attenteRelance: 0,
     tempsLancer: 0, depuisLancer: 0, acceleration: 1, horloge: null, lanceEnvoye: false,
     monLancer: null, sonLancer: null, lachees: false });
@@ -181,7 +182,16 @@ const rappels = {
     son(c.dore ? 'piece' : c.t.vie >= 2 ? 'gros' : 'ecrase', { volume: 0.7, hauteur: 1 + Math.min(0.5, partie.combo * 0.04), pan: c.x / ARENE_R });
     ui.hud?.();
   },
-  touche(c, t, degats, crit) { if (crit) popup('💥 CRITIQUE', c.x, c.z, 'crit'); son('toc', { volume: 0.35, hauteur: 1.3 }); },
+  touche(c, t, degats, crit) {
+    const E = partie.entrainement;
+    if (E) { // entraînement : chaque coup affiche ses dégâts
+      E.lancer += degats; E.coups++; E.meilleur = Math.max(E.meilleur, degats);
+      popup(`${crit ? '💥 ' : ''}${degats.toFixed(1)}`, c.x, c.z, crit ? 'crit' : 'argent');
+      sfx.metal(Math.min(1, degats / 4), c.x / ARENE_R); ui.entrainement?.(E);
+      return;
+    }
+    if (crit) popup('💥 CRITIQUE', c.x, c.z, 'crit'); son('toc', { volume: 0.35, hauteur: 1.3 });
+  },
   eclair() { son('critique', { volume: 0.35, hauteur: 1.6 }); },
   choc(a, b, perte, bloque, crit, contact) {
     const pct = (100 * perte) / b.rotationMax;
@@ -211,6 +221,7 @@ function minuteurs(dt, lancees) {
   partie.horloge = now;
   const duel = partie.type === 'duel', limite = duel ? PARTIE.tempsLancerDuel : PARTIE.tempsLancer;
   const pret = duel ? !!partie.monLancer : lancees; // j'ai fait mon lancer
+  if (partie.entrainement && !pret) { ui.minuteur?.('🎯 Entraînement : lance quand tu veux', false); return; }
   const parti = duel ? !!partie.lachees : lancees; // les toupies sont parties
   if (!parti) partie.tempsLancer += d;
   if (!pret) {
@@ -281,6 +292,7 @@ export function majPartie(dt, t) {
 
 // ---------------------------------------------------------------- Fins de manche
 function finLancer() {
+  if (partie.entrainement) return finLancerEntrainement();
   partie.phase = 'bilan';
   lanceur.actif = false;
   terminerManche({ type: 'cafards', tues: partie.tues, restants: cafards.filter(c => !c.mort).length, lancer: lancerDansEtape() });
@@ -515,4 +527,32 @@ function finDuelAmi(gagne) {
   const fini = partie.moi.vies <= 0 || A.joueur.vies <= 0;
   ui.finAmi?.({ gagne, fini, score: [VIES_AMI - A.joueur.vies, VIES_AMI - partie.moi.vies], adversaire: A.joueur.nom });
   if (!fini && A.hote) setTimeout(() => { if (partie.ami) { partie.manche++; A.envoyer({ type: 'manche', manche: partie.manche }); commencerManche(); } }, 3200);
+}
+
+// ---------------------------------------------------------------- Entraînement : un mannequin immobile à vie infinie
+// On lance autant qu'on veut ; chaque coup affiche ses dégâts ; ni chrono, ni boutique, ni adversaire.
+export function demarrerEntrainement(equipe, nivPieces) {
+  nouvellePartie(equipe, { nivPieces });
+  partie.mode = 'entrainement';
+  partie.entrainement = { lancer: 0, coups: 0, meilleur: 0, meilleurLancer: 0, lancers: 0 };
+  partie.joueurs = [partie.moi];
+  commencerManche();
+}
+function mancheEntrainement() {
+  Object.assign(partie, { resultat: null, chrono: 0, tues: 0, attenteRelance: 0, tempsLancer: 0, depuisLancer: 0, acceleration: 1, horloge: null,
+    monLancer: null, sonLancer: null, lachees: false, type: 'cafards' });
+  viderToupies(); partie.mesToupies = []; partie.sesToupies = [];
+  choisirTerrain(null); decorTerrain(null); modeDuel(false); railAdverse.visible = false;
+  if (!cafards.some(c => c.t.fixe)) { viderCafards(); viderTaches(); ajouterCafard({ vieBase: 1, type: 'mannequin', x: 0, z: -0.12 }); }
+  partie.entrainement.lancer = 0; partie.entrainement.coups = 0;
+  partie.lancers = 1; partie.phase = 'jeu';
+  lanceur.actif = true; lanceur.zoneParfait = mesStats().parfait;
+  ui.entrainement?.(partie.entrainement);
+}
+function finLancerEntrainement() {
+  const E = partie.entrainement;
+  E.lancers++; E.meilleurLancer = Math.max(E.meilleurLancer, E.lancer);
+  ui.entrainement?.(E, true);
+  partie.phase = 'bilan';
+  setTimeout(() => { if (partie.entrainement === E && partie.active) commencerManche(); }, 900);
 }

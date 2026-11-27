@@ -339,21 +339,27 @@ export function majHud() {
   const moi = partie.moi, etroit = window.innerWidth < 720;
   const viesMax = partie.ami ? 3 : PARTIE.vies; // défi entre amis : 3 vies chacun
   $('vies').textContent = etroit ? `❤️ ${Math.max(0, moi.vies)}` : '❤️'.repeat(Math.max(0, moi.vies)) + '🖤'.repeat(Math.max(0, viesMax - moi.vies));
-  $('argent').style.display = partie.ami ? 'none' : '';
+  $('argent').style.display = partie.ami || partie.entrainement ? 'none' : '';
+  $('vies').style.display = partie.entrainement ? 'none' : '';
+  $('salon').style.display = partie.entrainement ? 'none' : '';
+  if (partie.entrainement) $('manches').innerHTML = `<span>🎯 Entraînement · ${partie.entrainement.lancers} lancer${partie.entrainement.lancers > 1 ? 's' : ''}</span>`;
   if (partie.ami) { // pas d'étapes ni d'argent en défi : juste le score
     const a = partie.ami.joueur;
     $('manches').innerHTML = `<span>🤝 Défi · <b>${3 - a.vies}</b> – <b>${3 - moi.vies}</b> contre ${esc(a.nom)}</span>`;
   }
   compteurArgent(partie.argent);
   const n = PARTIE.cycle.length, mm = partie.mancheAffichee ?? partie.manche, et = Math.floor(mm / n) + 1, debut = (et - 1) * n;
-  if (!partie.ami) $('manches').innerHTML = `<span class="petit">${etroit ? 'É' : 'Étape '}${et}</span>` + PARTIE.cycle.map((t, i) => {
+  if (!partie.ami && !partie.entrainement) $('manches').innerHTML = `<span class="petit">${etroit ? 'É' : 'Étape '}${et}</span>` + PARTIE.cycle.map((t, i) => {
     const m = debut + i, cls = m < mm ? 'fait' : m === mm ? 'cours' : '';
     return `<i class="${cls}" title="${t === 'duel' ? 'Duel' : 'Cafards'}">${t === 'duel' ? '⚔️' : '🪳'}</i>`;
   }).join('');
   $('salon').innerHTML = [...partie.joueurs].sort((a, b) => (b.elimine ? -1 : b.vies) - (a.elimine ? -1 : a.vies)).map(j =>
     `<div class="${j === moi ? 'moi' : ''} ${j === partie.adversaire ? 'adv' : ''} ${j.elimine ? 'out' : ''}"><span>${esc(j.nom)}</span><span>${j.elimine ? j.place + 'e' : '❤️' + j.vies}</span></div>`
   ).join('');
-  if (partie.type === 'cafards') {
+  if (partie.entrainement) {
+    $('objectif').textContent = '🎯 Vise le mannequin : il ne bouge pas et ne meurt jamais';
+    $('lancers').classList.add('cache');
+  } else if (partie.type === 'cafards') {
     $('objectif').textContent = `🪳 Lancer ${lancerDansEtape()}/3 · ${partie.tues} écrasé${partie.tues > 1 ? 's' : ''}`;
     $('objectif').style.color = '';
     $('lancers').textContent = `💰 +${partie.gainsManche}`;

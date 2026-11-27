@@ -229,8 +229,9 @@ export function majToupies(dt, cb) {
       }
       if (d > 0 && d < min) { // on se sépare et on se repousse
         const nx = dx / d, nz = dz / d, chev = min - d, mc = 0.5 * c.masse;
-        t.x -= nx * chev * (mc / (m + mc)); t.z -= nz * chev * (mc / (m + mc));
-        c.x += nx * chev * (m / (m + mc)); c.z += nz * chev * (m / (m + mc));
+        const fixe = c.t.fixe; // mannequin : c'est la toupie qui rebondit, entièrement
+        t.x -= nx * chev * (fixe ? 1 : mc / (m + mc)); t.z -= nz * chev * (fixe ? 1 : mc / (m + mc));
+        if (!fixe) { c.x += nx * chev * (m / (m + mc)); c.z += nz * chev * (m / (m + mc)); }
         const vn = t.vx * nx + t.vz * nz;
         if (vn > 0) { const k = 1.2 * vn * (1.6 / (m + 1.6)); t.vx -= k * nx; t.vz -= k * nz; }
         c.kx += nx * 0.12 * Math.min(2, m); c.kz += nz * 0.12 * Math.min(2, m);

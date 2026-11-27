@@ -12,7 +12,7 @@ import * as UI from './ui.js';
 import { VERSION } from './config.js';
 import { initParametres } from './parametres.js';
 import { creerDefi, rejoindreDefi } from './enligne.js';
-import { demarrerAmi, messageAmi, quitterAmi } from './match.js';
+import { demarrerAmi, messageAmi, quitterAmi, demarrerEntrainement } from './match.js';
 import { recompenser } from './progression.js';
 import { TERRAIN } from './data/terrains.js';
 import { TYPES } from './data/cafards.js';
@@ -91,6 +91,10 @@ brancherInterface({
     }
   },
   hud: UI.majHud,
+  entrainement(E, fin) {
+    UI.aide(`🎯 Ce lancer : ${E.lancer.toFixed(1)} dégâts (${E.coups} coup${E.coups > 1 ? 's' : ''}) · meilleur coup ${E.meilleur.toFixed(1)} · meilleur lancer ${E.meilleurLancer.toFixed(1)}`);
+    if (fin) UI.majHud();
+  },
   finAmi(r) {
     UI.verdict(r.gagne, `${r.score[0]} – ${r.score[1]} contre ${r.adversaire}`);
     if (r.fini) setTimeout(() => {
@@ -112,7 +116,7 @@ brancherInterface({
   fin(r) {
     UI.majHud();
     const gains = recompenser(save, r.place, r.mode);
-    baisserMusique(3); sfx.finPartie(r.place <= 4);
+    ronron(0); setTimeout(() => { baisserMusique(3); sfx.finPartie(r.place <= 4); }, 1400); // après le jingle du duel, pas en même temps
     sauver(save);
     setTimeout(() => UI.afficherFin(r, gains, retourAtelier), 600);
   },
@@ -121,6 +125,9 @@ brancherInterface({
 function retourAtelier() {
   quitterAmi(); finirDefi();
   abandonner();
+  majBarres(); // plus aucune barre de vie au menu
+  ronron(0); // le ronronnement de la toupie s'arrête
+  UI.aide('');
   mode = 'atelier';
   UI.montrer('hud', false);
   UI.montrer('panneauStats', false);
@@ -285,3 +292,15 @@ $('rejoindreDefi').onclick = () => { const c = $('codeAmi').value.trim(); if (c.
 // Lien reçu d'un ami : …/?ami=CODE
 const codeLien = new URLSearchParams(location.search).get('ami');
 if (codeLien) { allerA('ami'); $('codeAmi').value = codeLien.toUpperCase(); rejoindre(codeLien); }
+
+// ---------------------------------------------------------------- Entraînement (mannequin immobile, vie infinie)
+document.getElementById('entrainement').addEventListener('click', () => {
+  activerAudio();
+  demarrerEntrainement({ ...save.equipe }, { ...save.niveauxPieces });
+  modeleLanceur(save.equipe);
+  for (const e of ECRANS) UI.montrer(e, false);
+  controlesActifs(false);
+  mode = 'partie';
+  UI.montrer('hud');
+  UI.majHud();
+});
