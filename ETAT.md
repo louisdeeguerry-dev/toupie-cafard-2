@@ -12,6 +12,12 @@
 - **Temps limités** (jeu dynamique, en vue du jeu en ligne) : 15 s pour lancer, accélération jusqu'à ×5 si une toupie tourne encore 10 s après le lancer, 25 s de boutique ; réglages dans `PARTIE` (`src/config.js`).
 - **Duel** : il n'y a pas de vie ; chaque choc fait perdre de la rotation, et **la première toupie arrêtée perd**.
   L'usure ne démarre qu'une fois les deux toupies lancées.
+- **🤝 Défier un ami** (temps réel, `src/enligne.js` et la fin de `src/match.js`) :
+  - code à 5 lettres ou lien `?ami=CODE` ;
+  - connexion directe entre navigateurs (PeerJS) ;
+  - l'hôte calcule la physique, l'invité envoie son lancer et voit tout en miroir ;
+  - 3 vies chacun, 1 vie par duel perdu ;
+  - test local : `?local` (deux onglets).
 - **Paramètres** (menu ⚙️) : qualité d'image, ombres, halo, secousses, plein écran, volumes ; `src/parametres.js`.
 - **Améliorations sans plafond** (sauf Multi-lancer) ; une offre rare coûte plus cher, mais pas au prorata (rare ×1,25, épique ×1,5, légendaire ×2). Pondeuse et Éclairs en chaîne supprimés.
 - **Cafards** : ils **évoluent après chaque duel** (vie plus haute, nouvelles espèces contrées par des stats précises).

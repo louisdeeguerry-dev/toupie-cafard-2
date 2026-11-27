@@ -291,6 +291,14 @@
 .parametres label { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .parametres label.case { justify-content: flex-start; }
 .parametres select, .parametres input[type=range] { flex: 1; max-width: 200px; }
+/* Défi entre amis */
+.defi { display: flex; flex-direction: column; gap: 10px; min-width: min(380px, 90vw); text-align: center; }
+.defi label { display: flex; gap: 10px; align-items: center; justify-content: center; }
+.defi input { background: #1a130e; color: #fff; border: 1px solid var(--bord); border-radius: 8px; padding: 8px 10px; font-size: 16px; }
+.code-gros { font-size: 44px; font-weight: 900; letter-spacing: .25em; color: var(--or); }
+.rejoindre { display: flex; gap: 8px; justify-content: center; }
+.rejoindre input { width: 120px; text-transform: uppercase; letter-spacing: .2em; text-align: center; }
+.ou { opacity: .6; }
 /* Verdict du duel plein écran */
 #verdict { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none;
   opacity: 0; transition: opacity .2s; z-index: 30; }
@@ -343,6 +351,7 @@
     <h1>TOUPIE CAFARD 2</h1>
     <div class="modes" id="modes"></div>
     <button class="btn gros" id="jouer">JOUER ▶</button>
+    <button class="btn second" data-ecran="ami">🤝 Défier un ami</button>
     <div class="menu-boutons">
       <button class="btn second" data-ecran="atelier">🛠️ Atelier</button>
       <button class="btn second" data-ecran="boutiqueMeta">📦 Boutique</button>
@@ -356,6 +365,24 @@
 </div>
 
 <!-- Boutique (hors partie) : boîtes mystère -->
+<div id="ami" class="ecran cache">
+  <div class="menu-centre panneau defi">
+    <button class="retour-menu" data-ecran="menu">← Menu</button>
+    <h2>🤝 Défier un ami</h2>
+    <p class="petit">Duel en temps réel, chacun avec la toupie de son atelier. Chacun a 3 ❤️ : un duel perdu coûte 1 vie.</p>
+    <label>Ton pseudo <input id="pseudo" maxlength="16" placeholder="Toi"></label>
+    <button class="btn" id="creerDefi">Créer un défi</button>
+    <div id="codeDefi" class="cache">
+      <div class="petit">Donne ce code à ton ami (ou envoie-lui le lien) :</div>
+      <div class="code-gros" id="codeTexte">…</div>
+      <button class="btn second" id="copierLien">📋 Copier le lien</button>
+    </div>
+    <div class="ou">— ou —</div>
+    <div class="rejoindre"><input id="codeAmi" maxlength="5" placeholder="CODE" autocomplete="off"><button class="btn second" id="rejoindreDefi">Rejoindre</button></div>
+    <div class="petit" id="statutDefi"></div>
+  </div>
+</div>
+
 <div id="parametres" class="ecran cache">
   <div class="menu-centre panneau parametres">
     <button class="retour-menu" data-ecran="menu">← Menu</button>

@@ -11,6 +11,8 @@ import { activerAudio, ronron, musique, basculerMusique, musiqueActive, sfx, bai
 import * as UI from './ui.js';
 import { VERSION } from './config.js';
 import { initParametres } from './parametres.js';
+import { creerDefi, rejoindreDefi } from './enligne.js';
+import { demarrerAmi, messageAmi, quitterAmi } from './match.js';
 import { recompenser } from './progression.js';
 import { TERRAIN } from './data/terrains.js';
 import { TYPES } from './data/cafards.js';
@@ -35,7 +37,7 @@ const atelier = UI.creerAtelier(save, {
 majVitrine();
 
 // ---------------------------------------------------------------- Écrans hors partie : menu, atelier, boutique, collection
-const ECRANS = ['menu', 'atelier', 'boutiqueMeta', 'collection', 'parametres'];
+const ECRANS = ['menu', 'atelier', 'boutiqueMeta', 'collection', 'parametres', 'ami'];
 initControles(renderer.domElement);
 initParametres();
 function allerA(ecran) {
@@ -89,6 +91,13 @@ brancherInterface({
     }
   },
   hud: UI.majHud,
+  finAmi(r) {
+    UI.verdict(r.gagne, `${r.score[0]} – ${r.score[1]} contre ${r.adversaire}`);
+    if (r.fini) setTimeout(() => {
+      UI.bandeau(r.gagne ? '🏆 Défi gagné !' : '💥 Défi perdu', `${r.score[0]} – ${r.score[1]} contre ${r.adversaire}`, 3500);
+      setTimeout(retourAtelier, 3500);
+    }, 2200);
+  },
   minuteur: UI.minuteur,
   lance() { UI.aide(''); partie.lancesFaits = (partie.lancesFaits || 0) + 1; },
   finDuel(gagne) {
@@ -110,6 +119,7 @@ brancherInterface({
 });
 
 function retourAtelier() {
+  quitterAmi(); finirDefi();
   abandonner();
   mode = 'atelier';
   UI.montrer('hud', false);
@@ -202,3 +212,59 @@ window.__tc2 = { VERSION, partie, save: () => save, lancerDirect, acheter, inter
     commencerManche();
   },
   reset() { save = reinitialiser(); location.reload(); } };
+
+// ---------------------------------------------------------------- Défier un ami (temps réel)
+let defi = null, conn = null;
+function finirDefi() { const c = conn; conn = null; try { c?.close(); } catch { /* déjà fermé */ } try { defi?.fermer(); } catch { /* rien */ } defi = null; }
+const $ = id => document.getElementById(id);
+$('pseudo').value = save.pseudo || '';
+$('pseudo').oninput = e => { save.pseudo = e.target.value.trim().slice(0, 16); sauver(save); };
+const statut = t => { $('statutDefi').textContent = t; };
+function brancher(c, hote) {
+  conn = c;
+  statut('Connecté ! La partie commence…');
+  const moi = { pseudo: save.pseudo || 'Joueur', equipe: { ...save.equipe }, nivPieces: { ...save.niveauxPieces }, terrain: save.terrain };
+  c.on('data', m => {
+    if (m.type === 'bonjour') {
+      demarrerAmi({ hote, envoyer: d => { try { c.send(d); } catch { /* coupé */ } }, moi, ami: m.joueur });
+      modeleLanceur(save.equipe);
+      for (const e of ECRANS) UI.montrer(e, false);
+      controlesActifs(false);
+      mode = 'partie';
+      UI.montrer('hud');
+      if (hote) setTimeout(() => { c.send({ type: 'manche', manche: 0 }); commencerManche(); }, 600);
+    } else messageAmi(m);
+  });
+  c.on('close', () => {
+    if (conn !== c) return;
+    if (mode === 'partie') { UI.bandeau('🔌 Ton ami s\'est déconnecté', '', 2500); setTimeout(retourAtelier, 2500); }
+    else statut('Connexion fermée.');
+  });
+  c.send({ type: 'bonjour', joueur: moi });
+}
+$('creerDefi').onclick = async () => {
+  activerAudio(); finirDefi(); statut('Création du défi…');
+  try {
+    defi = await creerDefi({
+      code(code) {
+        $('codeDefi').classList.remove('cache'); $('codeTexte').textContent = code;
+        statut('En attente de ton ami…');
+        $('copierLien').onclick = () => {
+          const lien = location.origin + location.pathname + '?ami=' + code;
+          navigator.clipboard?.writeText(lien).then(() => statut('Lien copié : ' + lien), () => statut(lien));
+        };
+      },
+      connecte: c => brancher(c, true),
+      erreur: statut,
+    });
+  } catch (e) { statut('Impossible de créer le défi : ' + e.message); }
+};
+async function rejoindre(code) {
+  activerAudio(); finirDefi(); statut('Connexion au défi ' + code + '…');
+  try { defi = await rejoindreDefi(code, { connecte: c => brancher(c, false), erreur: statut }); }
+  catch (e) { statut('Impossible de rejoindre : ' + e.message); }
+}
+$('rejoindreDefi').onclick = () => { const c = $('codeAmi').value.trim(); if (c.length >= 4) rejoindre(c); else statut('Entre le code de ton ami.'); };
+// Lien reçu d'un ami : …/?ami=CODE
+const codeLien = new URLSearchParams(location.search).get('ami');
+if (codeLien) { allerA('ami'); $('codeAmi').value = codeLien.toUpperCase(); rejoindre(codeLien); }

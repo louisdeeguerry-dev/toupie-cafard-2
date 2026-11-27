@@ -31,7 +31,7 @@ export function nouvellePartie(equipe, { pseudo = 'Toi', mode = 'normale', nivPi
   for (let i = 1; i < PARTIE.joueurs; i++) joueurs.push(creerBot(noms[i]));
   const avecTerrain = terrain && terrain !== 'aucun';
   Object.assign(partie, {
-    active: true, mode, joueurs, moi: joueurs[0], manche: 0, lancerCafards: 0,
+    active: true, mode, joueurs, moi: joueurs[0], manche: 0, lancerCafards: 0, ami: null,
     argent: avecTerrain ? PARTIE.argentAvecTerrain : PARTIE.argentSansTerrain,
     phase: 'attente', type: null, lancers: 0, tues: 0,
     adversaire: null, mesToupies: [], sesToupies: [], attenteRelance: 0, resultat: null, chrono: 0, gainsManche: 0,
@@ -41,7 +41,7 @@ export function nouvellePartie(equipe, { pseudo = 'Toi', mode = 'normale', nivPi
 }
 
 export const etape = () => Math.floor(partie.manche / PARTIE.cycle.length) + 1;
-export const typeManche = (m = partie.manche) => PARTIE.cycle[m % PARTIE.cycle.length];
+export const typeManche = (m = partie.manche) => partie.ami ? 'duel' : PARTIE.cycle[m % PARTIE.cycle.length];
 // Numéro du lancer dans l'étape (1 à 3) pour une manche de cafards
 export const lancerDansEtape = (m = partie.manche) => (m % PARTIE.cycle.length) + 1;
 export const vivants = () => partie.joueurs.filter(j => !j.elimine);
@@ -62,7 +62,8 @@ export function commencerManche() {
   partie.mancheAffichee = null;
   partie.type = typeManche();
   Object.assign(partie, { gainsManche: 0, resultat: null, chrono: 0, combo: 0, renfortT: 0, tues: 0, contacts: 0, attenteRelance: 0,
-    tempsLancer: 0, depuisLancer: 0, acceleration: 1, horloge: null });
+    tempsLancer: 0, depuisLancer: 0, acceleration: 1, horloge: null, lanceEnvoye: false });
+  if (partie.ami) { partie.ami.fantomes.clear(); partie.ami.etat = null; }
   // Le plateau : on retire les toupies ; les cafards survivants restent d'un lancer à l'autre dans une même étape
   const nouvelleEtape = partie.manche % PARTIE.cycle.length === 0;
   viderToupies(); partie.mesToupies = []; partie.sesToupies = [];
@@ -82,7 +83,7 @@ export function commencerManche() {
     if (manque) son('chute', { volume: 0.4 });
   } else {
     viderCafards(); viderTaches();
-    partie.adversaire = partie.prochainAdversaire && !partie.prochainAdversaire.elimine ? partie.prochainAdversaire : choisirAdversaire();
+    partie.adversaire = partie.ami ? partie.ami.joueur : partie.prochainAdversaire && !partie.prochainAdversaire.elimine ? partie.prochainAdversaire : choisirAdversaire();
     partie.dernierAdversaire = partie.adversaire;
     partie.prochainAdversaire = null;
     partie.terrainDuel = terrainDuel(partie.moi, partie.adversaire);
@@ -117,12 +118,19 @@ function lancerGroupe(joueur, camp, x, z, dx, dz, puiss) {
 // Appelé par le lanceur
 export function lancer({ x, z, dx, dz, puissance: puiss, parfait }) {
   if (partie.phase !== 'jeu' || partie.lancers <= 0 || partie.mesToupies.some(enJeu)) return;
+  if (partie.ami && !partie.ami.hote) { // invité : l'hôte fait la physique, on lui envoie juste le lancer
+    partie.lancers--; partie.lanceEnvoye = true; lanceur.actif = false;
+    partie.ami.envoyer({ type: 'lancer', x, z, dx, dz, puiss: Math.min(1.08, puiss) });
+    sfx.lancer(puiss); if (parfait) { popup('PARFAIT !', x, z - 0.06, 'parfait'); sfx.parfait(); }
+    ui.lance?.();
+    return;
+  }
   partie.lancers--;
   partie.mesToupies = lancerGroupe(partie.moi, 'joueur', x, z, dx, dz, Math.min(1.08, puiss));
   lanceur.actif = false;
   sfx.lancer(puiss);
   if (parfait) { popup('PARFAIT !', x, z - 0.06, 'parfait'); sfx.parfait(); }
-  if (partie.type === 'duel') partie.botLanceDans = 0.25 + Math.random() * 0.3;
+  if (partie.type === 'duel' && !partie.ami) partie.botLanceDans = 0.25 + Math.random() * 0.3;
   ui.hud?.();
   ui.lance?.();
 }
@@ -174,6 +182,7 @@ const rappels = {
       if (pct > 5) son('critique', { volume: 0.3, hauteur: 0.7, pan: p.x / ARENE_R });
     }
     popup(bloque ? '🛡️ Bloqué' : `${crit ? '💥 ' : ''}−${Math.max(1, Math.round(pct))} %`, b.x, b.z, b.camp === 'joueur' ? 'degat-moi' : 'degat');
+    if (partie.ami) { const p = contact || { x: (a.x + b.x) / 2, z: (a.z + b.z) / 2 }; partie.ami.envoyer({ type: 'choc', x: p.x, z: p.z, bx: b.x, bz: b.z, pct, crit, bloque, cible: b.camp }); }
   },
   mur() { son('toc', { volume: 0.25, hauteur: 0.6 }); },
   chute() { son('chute', { volume: 0.6 }); },
@@ -209,12 +218,14 @@ export function majPartie(dt, t) {
   if (!partie.active) return;
   partie.tempsJeu += dt;
   majCafards(dt, t, partie.mesToupies.filter(enJeu));
+  if (partie.ami && !partie.ami.hote) { majInvite(dt); return; }
   if (partie.phase !== 'jeu') { majToupies(dt, rappels); return; }
   if (partie.type === 'duel' && partie.botLanceDans > 0 && !partie.botLance) {
     partie.botLanceDans -= dt;
     if (partie.botLanceDans <= 0) lancerBot();
   }
   majToupies(dt, rappels);
+  if (partie.ami) envoyerEtat();
   const mes = partie.mesToupies, lancees = mes.length > 0, toutesTombees = lancees && !mes.some(enJeu);
   minuteurs(dt, lancees);
 
@@ -255,6 +266,7 @@ function finLancer() {
 function finDuel() {
   partie.phase = 'bilan';
   lanceur.actif = false;
+  if (partie.ami) { finDuelAmi(partie.resultat.gagne); return; }
   const adv = partie.adversaire, deg = PARTIE.degatsDuel(etape());
   const gagne = partie.resultat.gagne;
   if (gagne) adv.vies -= deg; else partie.moi.vies -= deg;
@@ -387,3 +399,98 @@ export function abandonner() {
 // Pour les tests automatiques
 export const _interne = { cafards, toupies };
 export { TYPES };
+
+// ---------------------------------------------------------------- Défi entre amis (temps réel, pair à pair)
+// L'HÔTE calcule toute la physique et envoie l'état ~20 fois par seconde ; l'INVITÉ envoie seulement son lancer et
+// affiche des « fantômes » des toupies. Chacun se voit EN BAS du plateau : l'invité voit tout en miroir (x → −x, z → −z).
+// Partie : une suite de duels, chacun a 3 vies, un duel perdu coûte 1 vie.
+const VIES_AMI = 3;
+export function demarrerAmi({ hote, envoyer, moi, ami }) {
+  nouvellePartie(moi.equipe, { pseudo: moi.pseudo || 'Toi', nivPieces: moi.nivPieces, terrain: moi.terrain });
+  const joueurAmi = { nom: ami.pseudo || 'Ton ami', bot: false, vies: VIES_AMI, equipe: ami.equipe, nivPieces: ami.nivPieces,
+    terrain: ami.terrain || 'aucun', niveaux: {}, achats: {}, elimine: false, place: 0 };
+  partie.moi.vies = VIES_AMI;
+  partie.joueurs = [partie.moi, joueurAmi];
+  partie.ami = { hote, envoyer, joueur: joueurAmi, dernierEnvoi: 0, fantomes: new Map(), etat: null };
+  partie.mode = 'ami';
+}
+export function quitterAmi() { partie.ami = null; }
+
+let tEnvoi = 0;
+function envoyerEtat() {
+  const now = performance.now();
+  if (now - tEnvoi < 50) return;
+  tEnvoi = now;
+  const liste = [];
+  for (const [camp, l] of [['joueur', partie.mesToupies], ['adverse', partie.sesToupies]]) l.forEach((t, i) => {
+    if (t.lancee) liste.push([camp, i, +t.x.toFixed(4), +t.z.toFixed(4), +(t.rotation / t.rotationMax).toFixed(3), t.tombe ? 1 : 0,
+      +t.mesh.inclinaison.rotation.x.toFixed(3), +t.mesh.inclinaison.rotation.z.toFixed(3)]);
+  });
+  partie.ami.envoyer({ type: 'etat', t: liste, phase: partie.phase });
+}
+
+// Messages reçus de l'ami
+export function messageAmi(m) {
+  const A = partie.ami;
+  if (!A) return;
+  if (A.hote && m.type === 'lancer' && partie.type === 'duel' && partie.phase === 'jeu' && !partie.botLance) {
+    // Le lancer de l'invité arrive dans SON repère : on le retourne (il est en face de nous)
+    partie.sesToupies = lancerGroupe(A.joueur, 'adverse', -m.x, -m.z, -m.dx, -m.dz, m.puiss);
+    partie.botLance = true;
+    sfx.lancer(m.puiss);
+  } else if (!A.hote && m.type === 'manche') {
+    partie.manche = m.manche; commencerManche();
+  } else if (!A.hote && m.type === 'etat') {
+    A.etat = m;
+  } else if (!A.hote && m.type === 'choc') {
+    // Vu de l'invité : tout est en miroir, et « joueur » / « adverse » sont inversés
+    const pct = m.pct, moiTouche = m.cible === 'adverse';
+    etincelles(-m.x, -m.z, 8 + Math.round(pct), m.crit ? 0xfff27a : 0xffc46a, 0.8 + pct / 10);
+    geler(Math.min(90, 30 + pct * 6)); secouer(Math.min(0.02, 0.004 + pct * 0.0015));
+    sfx.metal(Math.min(1, pct / 10), -m.x / ARENE_R);
+    popup(m.bloque ? '🛡️ Bloqué' : `${m.crit ? '💥 ' : ''}−${Math.max(1, Math.round(pct))} %`, -m.bx, -m.bz, moiTouche ? 'degat-moi' : 'degat');
+  } else if (!A.hote && m.type === 'fin') {
+    finDuelAmi(!m.gagneHote);
+  }
+}
+
+// Invité : pas de physique, on suit l'état envoyé par l'hôte (fantômes lissés)
+function majInvite(dt) {
+  const A = partie.ami;
+  if (partie.phase === 'jeu') minuteurs(dt, !!partie.lanceEnvoye);
+  const e = A.etat;
+  if (!e) return;
+  const vus = new Set();
+  for (const [campHote, i, x, z, ratio, tombe, ix, iz] of e.t) {
+    const camp = campHote === 'joueur' ? 'adverse' : 'joueur', cle = camp + i;
+    vus.add(cle);
+    let f = A.fantomes.get(cle);
+    if (!f) {
+      const j = camp === 'joueur' ? partie.moi : A.joueur;
+      f = creerToupieJeu(j.equipe, j.niveaux, camp, j.nivPieces, { duel: true });
+      lancerToupie(f, -x, -z, 0, -1, 0.5);
+      A.fantomes.set(cle, f);
+      if (camp === 'adverse') partie.botLance = true; // la caméra suit le duel
+      (camp === 'joueur' ? partie.mesToupies : partie.sesToupies).push(f);
+    }
+    const k = 1 - Math.exp(-18 * dt);
+    f.x += (-x - f.x) * k; f.z += (-z - f.z) * k;
+    f.rotation = ratio * f.rotationMax; f.tombe = tombe;
+    f.mesh.racine.position.set(f.x, 0, f.z);
+    f.mesh.racine.visible = !tombe;
+    f.mesh.inclinaison.rotation.set(-ix, 0, -iz);
+    f.mesh.rotor.rotation.y += dt * (6 + 30 * ratio);
+  }
+}
+
+// Fin d'un duel entre amis (gagne : vu de CE joueur)
+function finDuelAmi(gagne) {
+  const A = partie.ami;
+  partie.phase = 'bilan'; lanceur.actif = false;
+  if (A.hote) A.envoyer({ type: 'fin', gagneHote: gagne });
+  if (gagne) A.joueur.vies--; else partie.moi.vies--;
+  ui.hud?.();
+  const fini = partie.moi.vies <= 0 || A.joueur.vies <= 0;
+  ui.finAmi?.({ gagne, fini, score: [VIES_AMI - A.joueur.vies, VIES_AMI - partie.moi.vies], adversaire: A.joueur.nom });
+  if (!fini && A.hote) setTimeout(() => { if (partie.ami) { partie.manche++; A.envoyer({ type: 'manche', manche: partie.manche }); commencerManche(); } }, 3200);
+}

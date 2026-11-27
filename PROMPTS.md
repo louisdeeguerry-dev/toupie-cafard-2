@@ -801,3 +801,18 @@ Un commit et une publication par point.
 
 **Prompt optimisé** : jouer 5 parties robot par stratégie (×100) après le retrait de la pondeuse, la fin des plafonds et le surcoût de rareté.
 **Réalisé** : sacrifice 6,2, économie 5,6, mixte 5,4, puissance 6,0 ; argent max moyen 10 à 18 💰 (plus d'argent démesuré) ; parties de 25 à 30 manches ; aucune erreur.
+
+---
+
+## 2026-11-27 — Défier un ami en temps réel
+
+**Prompt optimisé** : (rôle : dev réseau temps réel, jeu web statique sur GitHub Pages sans serveur à soi) permettre de
+défier un ami en duel en temps réel : créer un défi (code ou lien), l'ami le rejoint, chacun joue avec la toupie de son
+atelier.
+**Réalisé** :
+- Connexion directe WebRTC via PeerJS (MIT), dont le serveur public ne sert qu'à la mise en relation.
+- L'hôte fait foi : il calcule la physique et envoie l'état 20 fois par seconde.
+- L'invité envoie son lancer et voit des toupies fantômes lissées, en miroir, chacun ayant son lanceur en bas.
+- Chocs relayés (étincelles, sons, %) ; 3 vies chacun ; score dans le HUD ; gestion de la déconnexion ; lien `?ami=CODE`.
+- Testé entre deux onglets avec `?local` : connexion, lancers, fantômes, fin de duel et duel suivant, aucune erreur.
+- Le serveur public PeerJS n'est pas joignable depuis l'environnement de test.
