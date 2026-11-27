@@ -816,3 +816,20 @@ atelier.
 - Chocs relayés (étincelles, sons, %) ; 3 vies chacun ; score dans le HUD ; gestion de la déconnexion ; lien `?ami=CODE`.
 - Testé entre deux onglets avec `?local` : connexion, lancers, fantômes, fin de duel et duel suivant, aucune erreur.
 - Le serveur public PeerJS n'est pas joignable depuis l'environnement de test.
+
+---
+
+## 2026-11-27 — Le défi entre amis ne se connecte pas : test sur deux navigateurs séparés
+
+**Prompt optimisé** : (rôle : dev réseau, testeur) « Défier un ami » ne fonctionne pas chez Louis. Faire se connecter deux
+navigateurs différents, trouver la cause et corriger.
+**Réalisé** :
+- Les agents ne peuvent pas joindre 0.peerjs.com depuis l'environnement (nom de domaine introuvable).
+- Test fait sur deux processus Chromium séparés, avec un vrai serveur PeerJS local (`?serveur=127.0.0.1:9000`).
+- Bug corrigé : chacun écoutait les messages de l'autre seulement après l'ouverture. Le « bonjour » envoyé trop tôt se
+  perdait, et la partie ne démarrait jamais. Maintenant, on écoute dès la création de la connexion et on répond au « bonjour ».
+- Ajouts :
+  - délais de 15 s avec des messages clairs ;
+  - reconnexion au serveur s'il coupe ;
+  - paramètre `?serveur=` pour un autre serveur de mise en relation.
+- Résultat : connexion, lancers, fantômes, fin de duel et vies cohérentes des deux côtés, aucune erreur.

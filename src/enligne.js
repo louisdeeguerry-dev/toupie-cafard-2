@@ -2,7 +2,16 @@
 // Le serveur public de PeerJS ne sert qu'à se trouver (échange d'adresses) ; ensuite tout passe en direct.
 // Pour les tests sur une seule machine : ?local dans l'adresse (BroadcastChannel entre deux onglets).
 const PREFIXE = 'toupiecafard2-';
-const local = new URLSearchParams(location.search).has('local');
+const params = new URLSearchParams(location.search);
+const local = params.has('local');
+// ?serveur=hote:port : un serveur de mise en relation à nous (tests, ou si le serveur public est en panne)
+const optionsPeer = () => {
+  const s = params.get('serveur');
+  if (!s) return { debug: 1 };
+  const [host, port] = s.split(':');
+  return { host, port: +port || 443, path: '/', secure: location.protocol === 'https:' && !/^(localhost|127\.)/.test(host), debug: 1 };
+};
+const DELAI = 15000; // au-delà, on explique ce qui bloque
 
 function chargerPeer() {
   if (window.Peer) return Promise.resolve();
@@ -18,6 +27,7 @@ const codeAuHasard = () => Array.from({ length: 5 }, () => 'ABCDEFGHJKMNPQRSTUVW
 function canalLocal(code, role) {
   const bc = new BroadcastChannel('tc2-' + code), ecoute = { data: [], close: [], open: [] };
   const c = {
+    open: false,
     send: d => bc.postMessage({ de: role, d }),
     on: (ev, f) => ecoute[ev].push(f),
     close: () => { bc.postMessage({ de: role, bye: true }); bc.close(); },
@@ -25,8 +35,8 @@ function canalLocal(code, role) {
   bc.onmessage = e => {
     if (e.data.de === role) return;
     if (e.data.bye) return ecoute.close.forEach(f => f());
-    if (e.data.hello && role === 'hote') { bc.postMessage({ de: role, hello: true }); ecoute.open.forEach(f => f()); return; }
-    if (e.data.hello) { ecoute.open.forEach(f => f()); return; }
+    if (e.data.hello && role === 'hote') { bc.postMessage({ de: role, hello: true }); c.open = true; ecoute.open.forEach(f => f()); return; }
+    if (e.data.hello) { c.open = true; ecoute.open.forEach(f => f()); return; }
     ecoute.data.forEach(f => f(e.data.d));
   };
   if (role === 'invite') setTimeout(() => bc.postMessage({ de: role, hello: true }), 100);
@@ -36,25 +46,29 @@ function canalLocal(code, role) {
 // Crée un défi (hôte) : rappels.code(code) dès que le code est prêt, rappels.connecte(conn) quand l'ami arrive
 export async function creerDefi(rappels) {
   const code = codeAuHasard();
-  if (local) { rappels.code(code); const c = canalLocal(code, 'hote'); c.on('open', () => rappels.connecte(c)); return { fermer: () => c.close() }; }
+  if (local) { rappels.code(code); const c = canalLocal(code, 'hote'); rappels.connecte(c); return { fermer: () => c.close() }; }
   await chargerPeer();
-  const peer = new window.Peer(PREFIXE + code);
-  peer.on('open', () => rappels.code(code));
-  peer.on('connection', c => c.on('open', () => rappels.connecte(c)));
-  peer.on('error', e => rappels.erreur?.(e.type === 'unavailable-id' ? 'Code déjà pris, réessaie.' : 'Connexion impossible (' + e.type + ').'));
+  const peer = new window.Peer(PREFIXE + code, optionsPeer());
+  const t = setTimeout(() => rappels.erreur?.('Le serveur de mise en relation ne répond pas. Vérifie ta connexion internet et réessaie.'), DELAI);
+  peer.on('open', () => { clearTimeout(t); rappels.code(code); });
+  peer.on('connection', c => rappels.connecte(c));
+  peer.on('error', e => { clearTimeout(t); rappels.erreur?.(e.type === 'unavailable-id' ? 'Code déjà pris, réessaie.' : 'Connexion impossible (' + e.type + ').'); });
+  peer.on('disconnected', () => { if (!peer.destroyed) peer.reconnect(); }); // le serveur coupe parfois : on se réinscrit
   return { fermer: () => peer.destroy() };
 }
 
 // Rejoint le défi d'un ami avec son code (invité)
 export async function rejoindreDefi(code, rappels) {
   code = code.trim().toUpperCase();
-  if (local) { const c = canalLocal(code, 'invite'); c.on('open', () => rappels.connecte(c)); return { fermer: () => c.close() }; }
+  if (local) { const c = canalLocal(code, 'invite'); rappels.connecte(c); return { fermer: () => c.close() }; }
   await chargerPeer();
-  const peer = new window.Peer();
+  const peer = new window.Peer(optionsPeer());
+  const t = setTimeout(() => rappels.erreur?.('Impossible de joindre ton ami. Le code est-il le bon ? Son écran « Défier un ami » doit rester ouvert.'), DELAI);
   peer.on('open', () => {
     const c = peer.connect(PREFIXE + code, { reliable: true });
-    c.on('open', () => rappels.connecte(c));
+    c.on('open', () => clearTimeout(t));
+    rappels.connecte(c);
   });
-  peer.on('error', e => rappels.erreur?.(e.type === 'peer-unavailable' ? 'Aucun défi avec ce code.' : 'Connexion impossible (' + e.type + ').'));
+  peer.on('error', e => { clearTimeout(t); rappels.erreur?.(e.type === 'peer-unavailable' ? 'Aucun défi avec ce code (vérifie le code, et que ton ami est toujours sur l\'écran du défi).' : 'Connexion impossible (' + e.type + ').'); });
   return { fermer: () => peer.destroy() };
 }

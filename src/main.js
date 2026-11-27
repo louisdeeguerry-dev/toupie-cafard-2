@@ -222,10 +222,16 @@ $('pseudo').oninput = e => { save.pseudo = e.target.value.trim().slice(0, 16); s
 const statut = t => { $('statutDefi').textContent = t; };
 function brancher(c, hote) {
   conn = c;
-  statut('Connecté ! La partie commence…');
+  statut(hote ? 'Ton ami arrive…' : 'Connexion à ton ami…');
   const moi = { pseudo: save.pseudo || 'Joueur', equipe: { ...save.equipe }, nivPieces: { ...save.niveauxPieces }, terrain: save.terrain };
+  let lance = false;
+  // On écoute AVANT l'ouverture (sinon le « bonjour » de l'ami peut arriver avant qu'on écoute, et se perdre)
   c.on('data', m => {
     if (m.type === 'bonjour') {
+      if (!m.reponse) c.send({ type: 'bonjour', joueur: moi, reponse: true }); // on répond : il a peut-être raté le nôtre
+      if (lance) return;
+      lance = true;
+      statut('Connecté ! La partie commence…');
       demarrerAmi({ hote, envoyer: d => { try { c.send(d); } catch { /* coupé */ } }, moi, ami: m.joueur });
       modeleLanceur(save.equipe);
       for (const e of ECRANS) UI.montrer(e, false);
@@ -240,7 +246,9 @@ function brancher(c, hote) {
     if (mode === 'partie') { UI.bandeau('🔌 Ton ami s\'est déconnecté', '', 2500); setTimeout(retourAtelier, 2500); }
     else statut('Connexion fermée.');
   });
-  c.send({ type: 'bonjour', joueur: moi });
+  c.on('error', e => statut('Erreur de connexion : ' + (e?.type || e?.message || e)));
+  const direBonjour = () => c.send({ type: 'bonjour', joueur: moi });
+  if (c.open) direBonjour(); else c.on('open', direBonjour);
 }
 $('creerDefi').onclick = async () => {
   activerAudio(); finirDefi(); statut('Création du défi…');
