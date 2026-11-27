@@ -320,11 +320,25 @@ export function bandeau(titre, sous = '', duree = 1800) {
   bandeauT = setTimeout(() => b.classList.remove('visible'), duree);
 }
 
+// Le compteur d'argent défile jusqu'à sa nouvelle valeur (au lieu de sauter)
+let argentAffiche = null, argentAnim = 0;
+function compteurArgent(cible) {
+  if (argentAffiche === null || Math.abs(cible - argentAffiche) > 200) argentAffiche = cible;
+  cancelAnimationFrame(argentAnim);
+  const depart = argentAffiche, t0 = performance.now();
+  const pas = () => {
+    const k = Math.min(1, (performance.now() - t0) / 450);
+    argentAffiche = depart + (cible - depart) * (1 - (1 - k) ** 3);
+    $('argent').textContent = `💰 ${Math.round(argentAffiche)}`;
+    if (k < 1) argentAnim = requestAnimationFrame(pas); else argentAffiche = cible;
+  };
+  pas();
+}
 export function majHud() {
   if (!partie.joueurs) return;
   const moi = partie.moi, etroit = window.innerWidth < 720;
   $('vies').textContent = etroit ? `❤️ ${Math.max(0, moi.vies)}` : '❤️'.repeat(Math.max(0, moi.vies)) + '🖤'.repeat(Math.max(0, PARTIE.vies - moi.vies));
-  $('argent').textContent = `💰 ${partie.argent}`;
+  compteurArgent(partie.argent);
   const n = PARTIE.cycle.length, mm = partie.mancheAffichee ?? partie.manche, et = Math.floor(mm / n) + 1, debut = (et - 1) * n;
   $('manches').innerHTML = `<span class="petit">${etroit ? 'É' : 'Étape '}${et}</span>` + PARTIE.cycle.map((t, i) => {
     const m = debut + i, cls = m < mm ? 'fait' : m === mm ? 'cours' : '';
@@ -391,7 +405,9 @@ export function afficherBilan(bilan, onPret) {
     const a = STAT_ACHATS.find(x => x.id === id), R = RARETE_OFFRE[rarete];
     const p = partie.moi, prix = prixAmelio(id), k = niveauxAchat(id, rarete) || 1;
     const niv = niveauxToupie(p.equipe, p.niveaux, p.nivPieces);
-    const avant = STAT[id].fmt(calcul(niv)), apres = STAT[id].fmt(calcul({ ...niv, [id]: (niv[id] || 0) + k }));
+    let avant = STAT[id].fmt(calcul(niv)); const apres = STAT[id].fmt(calcul({ ...niv, [id]: (niv[id] || 0) + k }));
+    if (avant === '—') avant = 'pas encore';
+    const manque = prix != null && prix > partie.argent ? prix - partie.argent : 0;
     const conseil = (partie.conseils || []).includes(id);
     const fmtK = String(k).replace('.', ',');
     return `<button class="offre rarete-${rarete} ${conseil ? 'conseil' : ''}" style="--rar:${R.couleur}" data-a="${id}" data-r="${rarete}" ${prix == null || prix > partie.argent ? 'disabled' : ''} title="${esc(a.desc)}">
@@ -399,7 +415,7 @@ export function afficherBilan(bilan, onPret) {
       ${conseil ? '<span class="badge-conseil">conseillé</span>' : ''}
       <span class="ic">${a.icone}</span><b>${esc(a.nom)}</b>${k > 1 ? `<span class="paquet">+${fmtK} niveaux</span>` : ''}
       <span class="effet">${esc(avant)}<br>→ <span class="plus">${esc(apres)}</span></span>
-      <span class="px">${prix == null ? 'MAX' : prix + ' 💰'}</span></button>`;
+      <span class="px">${prix == null ? 'MAX' : prix + ' 💰'}</span>${manque ? `<span class="manque">il manque ${manque} 💰</span>` : ''}</button>`;
   };
 
   const rendre = () => {
@@ -430,6 +446,7 @@ export function afficherBilan(bilan, onPret) {
   const prioriteHtml = () => {
     const n = partie.moi.niveaux.priorite || 0, prix = prixAmelio('priorite');
     const sansTerrain = partie.moi.terrain === 'aucun';
+    if (sansTerrain) return ''; // pas de terrain de duel : le bouton ne servirait à rien
     return `<button class="btn second petit-btn" id="btnPriorite" ${sansTerrain || prix == null || prix > partie.argent ? 'disabled' : ''}
       title="${esc(PRIORITE.desc)}${sansTerrain ? ' (il faut avoir choisi un terrain de duel dans l\'atelier)' : ''}">
       🏟️ Priorité de terrain · ${prix == null ? 'MAX' : prix + ' 💰'}<br><span class="petit">${sansTerrain ? 'pas de terrain choisi' : PRIORITE.fmt(n)}</span></button>`;
@@ -437,7 +454,15 @@ export function afficherBilan(bilan, onPret) {
   $('bilanContenu').onclick = e => {
     const b = e.target.closest('[data-a]');
     // Acheter relance automatiquement les offres (gratuit)
-    if (b && acheter(b.dataset.a, b.dataset.r)) { rendre(); majHud(); }
+    if (b && acheter(b.dataset.a, b.dataset.r)) {
+      const a = STAT_ACHATS.find(x => x.id === b.dataset.a);
+      rendre(); majHud();
+      // Confirmation visible de l'achat (les offres viennent d'être relancées)
+      const t = document.createElement('div');
+      t.className = 'achat-ok'; t.textContent = `✅ ${a.icone} ${a.nom} amélioré !`;
+      $('bilanContenu').appendChild(t);
+      setTimeout(() => t.remove(), 1300);
+    }
   };
   // Temps limité pour la boutique : au bout du temps, on passe à la suite comme si on avait cliqué « Prêt »
   let fini = false, reste = REGLES_PARTIE.tempsBoutique;

@@ -14,6 +14,27 @@ export function popup(texte, x, z, classe = '') {
   textes.push({ el, x: x + (Math.random() - 0.5) * 0.04, z: z + (Math.random() - 0.5) * 0.03, t: 0 });
 }
 
+// Pièce qui s'envole du cafard écrasé jusqu'au compteur d'argent (en haut à droite), qui « pulse » à l'arrivée
+export function pieceVolante(x, z, n = 1) {
+  const cible = document.getElementById('argent');
+  if (!cible || document.hidden) return;
+  const rect = renderer.domElement.getBoundingClientRect(), r = cible.getBoundingClientRect();
+  v.set(x, 0.05, z).project(camera);
+  const x0 = (v.x * 0.5 + 0.5) * rect.width, y0 = (-v.y * 0.5 + 0.5) * rect.height;
+  for (let i = 0; i < Math.min(4, n); i++) {
+    const el = document.createElement('div');
+    el.className = 'piece-volante'; el.textContent = '🪙';
+    calque.appendChild(el);
+    const dx = (Math.random() - 0.5) * 40, haut = -30 - Math.random() * 30;
+    const a = el.animate([
+      { transform: `translate(${x0}px, ${y0}px) scale(.6)`, opacity: 0 },
+      { transform: `translate(${x0 + dx}px, ${y0 + haut}px) scale(1.1)`, opacity: 1, offset: 0.25 },
+      { transform: `translate(${r.left + r.width / 2}px, ${r.top + r.height / 2}px) scale(.7)`, opacity: 1 },
+    ], { duration: 650 + i * 90, easing: 'cubic-bezier(.5,0,.8,.4)' });
+    a.onfinish = () => { el.remove(); cible.classList.remove('pulse'); void cible.offsetWidth; cible.classList.add('pulse'); };
+  }
+}
+
 const tacheGeo = new THREE.CircleGeometry(1, 16);
 const taches = [];
 export function tache(x, z, r, couleur = 0x3a2a12) {

@@ -270,6 +270,17 @@
   #aide { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; }
   #minuteur { top: 82px; font-size: 14px; }
 }
+/* Gains et achats : pièces qui volent, compteur qui pulse, confirmation d'achat, prix manquant */
+.piece-volante { position: fixed; left: 0; top: 0; font-size: 20px; pointer-events: none; z-index: 25; margin: -10px 0 0 -10px; }
+#bilanContenu { position: relative; }
+#argent { display: inline-block; }
+#argent.pulse { animation: pulseArgent .35s ease-out; }
+@keyframes pulseArgent { 40% { transform: scale(1.25); color: #fff3b0; text-shadow: 0 0 12px #ffd36b; } }
+.offre .manque { font-size: 11px; font-weight: 800; color: #ff7a6a; }
+.offre:disabled .px { color: #ff7a6a; }
+.achat-ok { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); background: #1f6b3a; color: #eafff0; font-weight: 800; padding: 6px 14px;
+  border-radius: 10px; box-shadow: 0 6px 20px rgba(0,0,0,.4); animation: achatOk 1.3s ease-out forwards; pointer-events: none; z-index: 5; }
+@keyframes achatOk { 0% { opacity: 0; transform: translate(-50%, 8px) scale(.9); } 15% { opacity: 1; transform: translate(-50%, 0) scale(1.05); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -10px); } }
 /* Verdict du duel plein écran */
 #verdict { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none;
   opacity: 0; transition: opacity .2s; z-index: 30; }

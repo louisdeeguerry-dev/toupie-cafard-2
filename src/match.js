@@ -11,7 +11,7 @@ import { creerToupieJeu, viderToupies, retirerToupie, lancerToupie, majToupies, 
 import { creerBot, jouerLancerBot, finMancheBot, lancerDuelBot, duelSimule } from './bots.js';
 import { lanceur, lancerDirect, valeurJauge } from './launcher.js';
 import { railAdverse, decorTerrain } from './scene.js';
-import { popup, tache, viderTaches, etincelles, geler, ralentir } from './fx.js';
+import { popup, tache, viderTaches, etincelles, geler, ralentir, pieceVolante } from './fx.js';
 import { secouer } from './scene.js';
 import { son } from './audio.js';
 
@@ -150,6 +150,7 @@ const rappels = {
     const gain = Math.floor(partie.reste);
     partie.reste -= gain;
     partie.argent += gain; partie.gainsManche += gain; partie.tues++;
+    if (gain > 0) pieceVolante(c.x, c.z, gain > 3 ? 3 : 1);
     tache(c.x, c.z, c.r * 1.3, c.dore ? 0x8a6a10 : 0x3a2a12);
     etincelles(c.x, c.z, c.dore ? 14 : 7, c.dore ? 0xffd700 : 0xc9a46a, 0.6);
     secouer(c.dore ? 0.012 : 0.005);
