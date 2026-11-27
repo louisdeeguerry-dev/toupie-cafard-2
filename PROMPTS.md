@@ -758,3 +758,20 @@ Un commit et une publication par point.
 - Point 5 : halo au sol par camp (vert pour toi, rouge pour l'adversaire), toupies un peu plus hautes, % affiché seulement sous 50 %.
 - Point 6 : cafards à carapace texturée et vernie, avec pronotum et antennes courbes.
 - Point 7 : atelier, les pouvoirs qu'on ne possède pas sont masqués et le panneau tient en entier.
+
+---
+
+## 2026-11-27 — Lames sculptées, visuels par niveau, dégâts selon poids et vitesse
+
+**Prompt optimisé** : (rôle : artiste 3D technique et dev gameplay)
+- Donner plus de personnalité aux pièces de la toupie, et rendre esthétiques les lames de la couronne à lames (de simples rectangles jusqu'ici).
+- Faire évoluer le visuel d'une pièce avec son niveau (par exemple : 2 lames au niveau 1, puis de plus en plus).
+- Vérifier, puis garantir, que les dégâts d'un impact dépendent du poids, des lames, du critique et de la vitesse réelle de la toupie.
+
+**Réalisé** :
+- Lames de faucille extrudées, avec fil brillant et rivet, au nombre de 1 + niveau.
+- Dents de couronne : 6 + 3 × niveau.
+- Rivets dorés de niveau sur les bases et les autres couronnes ; lueur de l'âme selon le niveau.
+- L'atelier, la partie et l'écran d'inspection (onglets de niveau) suivent le niveau.
+- Dégâts sur les cafards : lames × élan absolu × poids × critique ; la toupie standard lancée à fond fait les mêmes dégâts qu'avant.
+- En duel, c'était déjà le cas : lames, vitesse d'approche, rapport des masses, critique.

@@ -45,7 +45,42 @@ const mat = (couleur, o = {}, motif = null) => {
   return m;
 };
 
-function pointe(p) {
+// Une lame de faucille : dos épais et courbe, fil tranchant brillant, talon riveté sur l'anneau.
+// Elle est inclinée vers l'avant dans le sens de rotation (elle « fauche »).
+let geoLame = null, geoFil = null;
+function lame(matLame, matFil) {
+  if (!geoLame) {
+    const sh = new THREE.Shape();
+    sh.moveTo(0, -0.0035); sh.lineTo(0.004, -0.004);
+    sh.quadraticCurveTo(0.017, -0.004, 0.026, 0.006); // tranchant extérieur, courbe
+    sh.quadraticCurveTo(0.014, 0.0015, 0.004, 0.0035); // dos
+    sh.lineTo(0, 0.0035); sh.closePath();
+    geoLame = new THREE.ExtrudeGeometry(sh, { depth: 0.0016, bevelEnabled: true, bevelThickness: 0.0005, bevelSize: 0.0004, bevelSegments: 2, curveSegments: 10 });
+    geoLame.translate(0, 0, -0.0008); geoLame.rotateX(Math.PI / 2);
+    const fil = new THREE.CurvePath();
+    fil.add(new THREE.QuadraticBezierCurve3(new THREE.Vector3(0.005, 0, -0.0042), new THREE.Vector3(0.017, 0, -0.0042), new THREE.Vector3(0.026, 0, 0.006)));
+    geoFil = new THREE.TubeGeometry(fil, 12, 0.0006, 4);
+  }
+  const g = new THREE.Group();
+  g.add(new THREE.Mesh(geoLame, matLame), new THREE.Mesh(geoFil, matFil));
+  const rivet = new THREE.Mesh(new THREE.CylinderGeometry(0.0018, 0.0018, 0.0034, 10), mat(0x2b2f36, { metalness: 0.9, roughness: 0.3 }));
+  rivet.position.set(0.0025, 0, 0);
+  g.add(rivet);
+  g.rotation.order = 'YXZ';
+  return g;
+}
+// Rivets dorés : un par niveau au-delà du premier (on voit d'un coup d'œil qu'une pièce est montée en niveau)
+const matRivetOr = new THREE.MeshStandardMaterial({ color: 0xffc531, metalness: 0.9, roughness: 0.25, emissive: 0x4a3000, emissiveIntensity: 0.3 });
+function rivetsNiveau(g, k, rayon, y) {
+  for (let i = 0; i < k - 1; i++) {
+    const a = (i / Math.max(1, k - 1)) * Math.PI * 2 + 0.3;
+    const r = new THREE.Mesh(new THREE.SphereGeometry(0.0022, 10, 8), matRivetOr);
+    r.position.set(Math.cos(a) * rayon, y, Math.sin(a) * rayon); r.scale.y = 0.6;
+    g.add(r);
+  }
+}
+
+function pointe(p, k = 1) {
   const g = new THREE.Group(), m = mat(p.couleur, {}, 'brosse');
   let h = 0.018;
   switch (p.forme) {
@@ -106,7 +141,7 @@ function pointe(p) {
   return { g, h };
 }
 
-function base(p, y) {
+function base(p, y, k = 1) {
   const g = new THREE.Group(), m = mat(p.couleur, {}, p.forme === 'lourde' ? 'martele' : 'tourne');
   let r = 0.026, h = 0.014;
   switch (p.forme) {
@@ -141,10 +176,11 @@ function base(p, y) {
   const c = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 0.8, h, 40), m);
   c.position.y = y + h / 2;
   g.add(c);
+  rivetsNiveau(g, k, r * 0.78, y + h + 0.0006);
   return { g, top: y + h };
 }
 
-function couronne(p, y) {
+function couronne(p, y, k = 1) {
   const g = new THREE.Group(), m = mat(p.couleur, {}, 'moletage');
   const R = 0.034;
   switch (p.forme) {
@@ -152,9 +188,10 @@ function couronne(p, y) {
       const t = new THREE.Mesh(new THREE.TorusGeometry(R, 0.005, 10, 40), m);
       t.rotation.x = Math.PI / 2; t.position.y = y;
       g.add(t);
-      for (let i = 0; i < 12; i++) {
+      const nd = 6 + 3 * k; // niveau 1 : 9 dents … niveau 5 : 21 dents
+      for (let i = 0; i < nd; i++) {
         const d = new THREE.Mesh(new THREE.ConeGeometry(0.004, 0.009, 4), m);
-        const a = (i / 12) * Math.PI * 2;
+        const a = (i / nd) * Math.PI * 2;
         d.position.set(Math.cos(a) * (R + 0.006), y, Math.sin(a) * (R + 0.006));
         d.rotation.z = -Math.PI / 2; d.rotation.y = -a;
         g.add(d);
@@ -173,11 +210,12 @@ function couronne(p, y) {
       const t = new THREE.Mesh(new THREE.TorusGeometry(R - 0.006, 0.003, 8, 32), m);
       t.rotation.x = Math.PI / 2; t.position.y = y;
       g.add(t);
-      for (let i = 0; i < 4; i++) {
-        const l = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.003, 0.009), mat(p.couleur, { metalness: 0.95, roughness: 0.15 }, 'brosse'));
-        const a = (i / 4) * Math.PI * 2;
-        l.position.set(Math.cos(a) * (R + 0.002), y, Math.sin(a) * (R + 0.002));
-        l.rotation.y = -a + 0.9;
+      // Niveau 1 : 2 lames, puis une lame de plus par niveau (niv 5 : 6 lames)
+      const n = 1 + k, matLame = mat(p.couleur, { metalness: 0.95, roughness: 0.18 }, 'brosse'), matFil = mat(0xf4f7fa, { metalness: 1, roughness: 0.08 });
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2, l = lame(matLame, matFil);
+        l.position.set(Math.cos(a) * (R - 0.009), y, Math.sin(a) * (R - 0.009));
+        l.rotation.y = -a;
         g.add(l);
       }
       break;
@@ -206,15 +244,16 @@ function couronne(p, y) {
   const disque = new THREE.Mesh(new THREE.CylinderGeometry(R, R, 0.003, 40), mat(0x2b2f36, { metalness: 0.3 }, 'tourne'));
   disque.position.y = y;
   g.add(disque);
+  if (p.forme !== 'lames' && p.forme !== 'dents') rivetsNiveau(g, k, R - 0.006, y + 0.002);
   return { g };
 }
 
-function ame(p, y) {
+function ame(p, y, k = 1) {
   const g = new THREE.Group();
   const pastille = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.012, 0.004, 32), mat(0x1b1e23, { metalness: 0.2 }));
   pastille.position.y = y + 0.002;
   g.add(pastille);
-  const lum = { emissive: p.couleur, emissiveIntensity: 0.9 };
+  const lum = { emissive: p.couleur, emissiveIntensity: 0.6 + 0.3 * k }; // l'âme brille plus fort à chaque niveau
   const s = y + 0.006;
   let sym;
   switch (p.forme) {
@@ -267,14 +306,15 @@ function ame(p, y) {
 
 // Renvoie { racine, inclinaison, rotor } : racine = position sur le bureau, inclinaison = penche quand la toupie faiblit,
 // rotor = ce qui tourne.
-export function creerToupie(equipe) {
+export function creerToupie(equipe, nivPieces = {}) {
   const racine = new THREE.Group(), inclinaison = new THREE.Group(), rotor = new THREE.Group();
   racine.add(inclinaison); inclinaison.add(rotor);
   const P = id => PIECE[id];
-  const pt = pointe(P(equipe.pointe));
-  const bs = base(P(equipe.base), pt.h);
-  const cr = couronne(P(equipe.couronne), pt.h + (bs.top - pt.h) * 0.45);
-  const am = ame(P(equipe.ame), bs.top);
+  const N = id => Math.max(1, nivPieces[id] || 1); // niveau de chaque pièce : il se voit (lames, dents, rivets, lueur)
+  const pt = pointe(P(equipe.pointe), N(equipe.pointe));
+  const bs = base(P(equipe.base), pt.h, N(equipe.base));
+  const cr = couronne(P(equipe.couronne), pt.h + (bs.top - pt.h) * 0.45, N(equipe.couronne));
+  const am = ame(P(equipe.ame), bs.top, N(equipe.ame));
   rotor.add(pt.g, bs.g, cr.g, am.g);
   // Un repère coloré pour qu'on voie la toupie tourner
   const repere = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.0025, 0.022), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x666666 }));
@@ -291,9 +331,9 @@ export function libererToupie(t) {
 }
 
 // Une seule pièce de toupie, centrée (écran d'inspection de la collection / de l'atelier)
-export function creerPieceToupie(id) {
+export function creerPieceToupie(id, k = 1) {
   const p = PIECE[id], g = new THREE.Group();
-  const part = p.slot === 'pointe' ? pointe(p).g : p.slot === 'base' ? base(p, 0).g : p.slot === 'couronne' ? couronne(p, 0).g : ame(p, 0).g;
+  const part = p.slot === 'pointe' ? pointe(p, k).g : p.slot === 'base' ? base(p, 0, k).g : p.slot === 'couronne' ? couronne(p, 0, k).g : ame(p, 0, k).g;
   g.add(part);
   g.traverse(o => { if (o.isMesh) o.castShadow = true; });
   return g;

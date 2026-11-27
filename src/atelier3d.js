@@ -150,13 +150,13 @@ function reprendreEtat(ancien, nouveau, objets) {
     p.scale.copy(q.scale); p.rotation.copy(q.rotation);
   }
 }
-export function majModeles(equipe, slotChange = null) {
+export function majModeles(equipe, slotChange = null, nivPieces = {}) {
   if (slotChange === 'terrain') return;
   const refaireT = !slotChange || !SLOTS_LANCEUR.includes(slotChange);
   const refaireL = !slotChange || SLOTS_LANCEUR.includes(slotChange);
   if (refaireT) {
     const ancien = etat.toupie;
-    etat.toupie = creerToupie(equipe);
+    etat.toupie = creerToupie(equipe, nivPieces);
     etat.toupie.racine.scale.setScalar(ECHELLE_T);
     etat.toupie.racine.position.y = 0.003;
     reprendreEtat(ancien, etat.toupie, ['racine', 'inclinaison', 'rotor']);

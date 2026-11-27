@@ -27,7 +27,7 @@ export const CHOC = { ref: 600, base: 0.01, parLames: 0.03, parVitesse: 0.12, at
 const HAUTEUR_VUE = 1.35;
 export function creerToupieJeu(equipe, achats, camp, nivPieces = {}, { duel = false } = {}) {
   const s = statsToupie(equipe, achats, nivPieces);
-  const mesh = creerToupie(equipe);
+  const mesh = creerToupie(equipe, nivPieces);
   const k = s.rayon / 0.042; // le diamètre se voit
   mesh.racine.scale.set(k, HAUTEUR_VUE, k);
   // Halo au sol de la couleur du camp (vert = toi, rouge = adversaire) : on repère sa toupie d'un coup d'œil.
@@ -210,9 +210,11 @@ export function majToupies(dt, cb) {
     }
 
     // Chocs avec les cafards
+    // Dégâts d'un impact sur un cafard = lames × élan RÉEL de la toupie (une toupie lancée fort frappe plus fort qu'une lente,
+    // en absolu) × poids (une toupie lourde écrase mieux) × critique éventuel (dans frapperCafard)
     const vitesse = Math.hypot(t.vx, t.vz);
-    const elan = 0.6 + Math.min(1, vitesse / s.vitesse) * 0.8;
-    const m = s.masse / 20;
+    const elan = 0.7 + 0.7 * Math.min(2.2, vitesse / 0.95); // toupie standard lancée à fond : ×1,4 (comme avant) ; très rapide : jusqu'à ×2,2
+    const m = s.masse / 20, poids = Math.min(1.5, Math.max(0.7, Math.sqrt(m)));
     for (const c of cafards) {
       if (c.mort || c.chute > 0) continue;
       const dx = c.x - t.x, dz = c.z - t.z, d = Math.hypot(dx, dz), min = r + c.r * 0.85;
@@ -220,7 +222,7 @@ export function majToupies(dt, cb) {
       if (c.coup <= 0) {
         c.coup = 0.12;
         t.rotation -= CHOC.ref * 0.012 * s.inertie; // frapper coûte un peu de rotation, en tr/min absolus (moins avec l'Inertie)
-        frapperCafard(t, c, DEGATS_BASE * s.lames * elan * (0.9 + Math.random() * 0.2), cb);
+        frapperCafard(t, c, DEGATS_BASE * s.lames * elan * poids * (0.9 + Math.random() * 0.2), cb);
       }
       if (d > 0 && d < min) { // on se sépare et on se repousse
         const nx = dx / d, nz = dz / d, chev = min - d, mc = 0.5 * c.masse;

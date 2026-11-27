@@ -20,7 +20,7 @@ const AIDE = window.matchMedia?.('(pointer: coarse)').matches
   : 'Déplace le lanceur, clique et garde appuyé pour viser, relâche pour lancer';
 let mode = 'atelier';
 function majVitrine(slotChange = null) {
-  majModeles(save.equipe, slotChange);
+  majModeles(save.equipe, slotChange, save.niveauxPieces);
   terrainVitrine(save.terrain);
 }
 

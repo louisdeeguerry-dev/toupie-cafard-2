@@ -33,17 +33,22 @@ function taille() {
 }
 
 // ctx : { save, onEquiper(id, niv) } — onEquiper seulement dans l'atelier
-export function inspecter(id, ctx) {
-  const p = PIECE[id];
-  st.piece = p; st.ctx = ctx;
-  st.niv = Math.max(1, Math.min(NIVEAU_PIECE_MAX, ctx.save.niveauxPieces?.[id] || 1));
+// Le modèle 3D suit l'onglet de niveau : au niveau 3, la couronne de lames a 4 lames, etc.
+function modelePiece() {
+  const p = st.piece;
   pivot.clear();
-  const m = p.slot === 'engrenage' || p.slot === 'ressort' ? creerPieceLanceur(id) : creerPieceToupie(id);
+  const m = p.slot === 'engrenage' || p.slot === 'ressort' ? creerPieceLanceur(p.id) : creerPieceToupie(p.id, st.niv);
   // On centre et on met à l'échelle pour que toutes les pièces aient la même taille à l'écran
   const boite = new THREE.Box3().setFromObject(m), c = boite.getCenter(new THREE.Vector3()), dim = boite.getSize(new THREE.Vector3());
   m.position.sub(c);
   const g = new THREE.Group(); g.add(m); g.scale.setScalar(1 / Math.max(dim.x, dim.y, dim.z, 0.001));
   pivot.add(g);
+}
+export function inspecter(id, ctx) {
+  const p = PIECE[id];
+  st.piece = p; st.ctx = ctx;
+  st.niv = Math.max(1, Math.min(NIVEAU_PIECE_MAX, ctx.save.niveauxPieces?.[id] || 1));
+  modelePiece();
   Object.assign(st, { ouvert: true, t: 0, fermeture: 0, rotX: 0.35, rotY: 0, vitY: 0.6, zoom: 1 });
   voile.classList.remove('cache', 'ferme');
   taille();
@@ -75,7 +80,7 @@ function panneau() {
 $('inspecteurPanneau').addEventListener('click', e => {
   const b = e.target.closest('[data-niv]');
   if (!b) return;
-  st.niv = +b.dataset.niv; son('toc', { volume: 0.4, hauteur: 1.2 + st.niv * 0.1 }); panneau();
+  st.niv = +b.dataset.niv; son('toc', { volume: 0.4, hauteur: 1.2 + st.niv * 0.1 }); modelePiece(); panneau();
   st.t = Math.min(st.t, 0.25); // petit rebond de la pièce quand on change de niveau
 });
 

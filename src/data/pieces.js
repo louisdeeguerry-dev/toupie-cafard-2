@@ -62,7 +62,7 @@ export const PIECES = [
   { id: 'couronne-bouclier', slot: 'couronne', nom: 'Couronne bouclier', rarete: 'rare', forme: 'bouclier', couleur: 0x2c6fbb,
     niveaux: { inertie: 6, diametre: 2, lames: -5, elan: -3 }, desc: 'Lisse et épaisse : encaisse les chocs, frappe peu.' },
   { id: 'couronne-lames', slot: 'couronne', nom: 'Couronne à lames', rarete: 'epique', forme: 'lames', couleur: 0xd8dde4,
-    niveaux: { lames: 8, critique: 4, equilibre: -6, endurance: -4, inertie: -2 }, desc: 'Quatre lames tranchantes. Dangereuse… pour tout le monde.' },
+    niveaux: { lames: 8, critique: 4, equilibre: -6, endurance: -4, inertie: -2 }, desc: 'Des lames de faucille : 2 au niveau 1, une de plus à chaque niveau. Dangereuse… pour tout le monde.' },
   { id: 'couronne-inertie', slot: 'couronne', nom: 'Anneau d\'inertie', rarete: 'legendaire', forme: 'inertie', couleur: 0xffc531,
     niveaux: { endurance: 5, poids: 3, puissance: 3, elan: -5, glisse: -3, lames: -3 }, desc: 'Un anneau d\'or massif qui garde l\'élan… une fois lancé.' },
 
