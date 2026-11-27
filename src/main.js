@@ -89,12 +89,12 @@ brancherInterface({
   minuteur: UI.minuteur,
   lance() { UI.aide(''); },
   finDuel(gagne) {
-    UI.bandeau(gagne ? '🏆 VICTOIRE !' : '💥 K.O. !', gagne ? 'La toupie adverse s\'est arrêtée la première' : 'Ta toupie s\'est arrêtée la première', 2200);
+    UI.verdict(gagne, gagne ? 'La toupie adverse s\'est arrêtée la première' : 'Ta toupie s\'est arrêtée la première');
   },
   bilan(b) {
     UI.majHud();
     UI.aide(''); UI.minuteur('');
-    setTimeout(() => UI.afficherBilan(b, () => commencerManche()), b.type === 'duel' ? 900 : 500);
+    setTimeout(() => UI.afficherBilan(b, () => commencerManche()), b.type === 'duel' ? 250 : 400);
   },
   fin(r) {
     UI.majHud();

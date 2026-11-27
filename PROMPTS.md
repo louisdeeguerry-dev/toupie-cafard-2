@@ -732,3 +732,20 @@ Résultats (5 parties par stratégie) : sacrifice 6,6, économie 4,8, mixte 5,8,
 5. Toupie plus lisible en partie.
 6. Cafards plus détaillés et animés.
 7. Stats de l'atelier allégées.
+
+---
+
+## 2026-11-27 — Points 1 à 7 des agents critiques, un par un
+
+**Prompt optimisé** : appliquer un par un les 7 points du plan des agents critiques.
+- 1 : fin de duel ;
+- 2 : téléphone ;
+- 3 : gains, achats et boutique ;
+- 4 : sons ;
+- 5 : toupie lisible ;
+- 6 : cafards ;
+- 7 : stats de l'atelier.
+
+Un commit et une publication par point.
+**Réalisé** :
+- Point 1 : verdict plein écran (VICTOIRE ou DÉFAITE) et passage à la boutique 2,5 s après, en temps réel ; durée maximale d'un duel 25 s.

@@ -304,6 +304,14 @@ export function rechercher(noms, mode, onPret) {
 
 // ---------------------------------------------------------------- HUD
 let bandeauT = null;
+// Verdict du duel : grand, plein écran, coloré ; il s'efface tout seul quand la boutique arrive
+export function verdict(gagne, sous) {
+  const v = $('verdict');
+  v.className = gagne ? 'gagne' : 'perdu';
+  v.innerHTML = `<b>${gagne ? '🏆 VICTOIRE' : '💥 DÉFAITE'}</b><small>${esc(sous)}</small>`;
+  void v.offsetWidth; v.classList.add('visible');
+  setTimeout(() => v.classList.remove('visible'), 2100);
+}
 export function bandeau(titre, sous = '', duree = 1800) {
   const b = $('bandeau');
   b.innerHTML = `${esc(titre)}${sous ? `<small>${esc(sous)}</small>` : ''}`;

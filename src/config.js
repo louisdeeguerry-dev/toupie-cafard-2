@@ -29,7 +29,7 @@ export const PARTIE = {
   accelererApres: 10, // s après le lancer : si une toupie tourne encore, le temps accélère…
   accelerationMax: 5, // …progressivement, jusqu'à ×5
   tempsBoutique: 25, // s pour faire ses achats entre deux manches ; au-delà, on passe à la suite
-  dureeMaxDuel: 30, // s : au-delà, la toupie qui tourne le plus fort gagne
+  dureeMaxDuel: 25, // s : au-delà, la toupie qui tourne le plus fort gagne
 };
 
 // Les cafards. Avant CHAQUE lancer, le bureau est rempli jusqu'à sa capacité (10 + Nid) : les survivants restent

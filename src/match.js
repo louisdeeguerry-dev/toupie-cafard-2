@@ -230,18 +230,16 @@ export function majPartie(dt, t) {
       // Le premier camp dont toutes les toupies se sont arrêtées a perdu
       const gagne = toutesTombees && saTombe ? force(mes, true) >= force(ses, true) : saTombe;
       partie.resultat = { gagne };
-      partie.finDans = 2.2;
+      partie.finReel = performance.now() + 1800 / (window.__tc2?.acceleration ?? 1);
       ralentir(0.25, 0.6);
       ui.finDuel?.(gagne);
     } else if (partie.chrono > PARTIE.dureeMaxDuel && !partie.resultat) {
       partie.resultat = { gagne: force(mes) >= force(ses), tempsEcoule: true };
-      partie.finDans = 2;
+      partie.finReel = performance.now() + 1500 / (window.__tc2?.acceleration ?? 1);
       ui.finDuel?.(partie.resultat.gagne);
     }
-    if (partie.resultat) {
-      partie.finDans -= dt;
-      if (partie.finDans <= 0) finDuel();
-    }
+    // Verdict rendu : on enchaîne vite, en temps RÉEL (le ralenti et un appareil lent n'allongent pas l'attente)
+    if (partie.resultat && performance.now() >= partie.finReel) finDuel();
   }
 }
 

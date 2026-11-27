@@ -265,6 +265,17 @@
 .barre-temps { height: 6px; border-radius: 3px; background: #1a130e; overflow: hidden; margin-top: -4px; }
 .barre-temps i { display: block; height: 100%; background: linear-gradient(90deg, #3fcf6e, #ffd36b); transition: width .25s linear; }
 .barre-temps i.urgent { background: #ff5a4a; }
+/* Verdict du duel plein écran */
+#verdict { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none;
+  opacity: 0; transition: opacity .2s; z-index: 30; }
+#verdict.visible { opacity: 1; }
+#verdict.gagne { background: radial-gradient(circle, rgba(63,207,110,.28), rgba(0,0,0,.55) 70%); }
+#verdict.perdu { background: radial-gradient(circle, rgba(255,70,50,.3), rgba(0,0,0,.6) 70%); }
+#verdict b { font-size: clamp(44px, 11vw, 110px); font-weight: 900; letter-spacing: .04em; text-shadow: 0 6px 30px #000; transform: scale(.6); }
+#verdict.gagne b { color: #8dffb0; } #verdict.perdu b { color: #ff8a7a; }
+#verdict.visible b { animation: verdictPop .45s cubic-bezier(.2,1.6,.4,1) forwards; }
+#verdict small { font-size: 18px; color: #fff; opacity: .85; margin-top: 6px; text-shadow: 0 2px 8px #000; }
+@keyframes verdictPop { to { transform: scale(1); } }
 /* Vignettage : bords assombris, l'œil va au centre */
 #jeu::after { content: ''; position: fixed; inset: 0; pointer-events: none;
   background: radial-gradient(ellipse 75% 70% at 50% 50%, transparent 55%, rgba(8, 4, 2, 0.5) 100%); }
@@ -376,6 +387,7 @@
   <div id="bandeau"></div>
   <div id="aide"></div>
   <div id="minuteur"></div>
+  <div id="verdict"></div>
   <div class="bas"><div class="pastille" id="objectif"></div><div class="pastille" id="lancers"></div></div>
 </div>
 <div id="jauge"><div class="remplie"></div><div class="zone"></div></div>
