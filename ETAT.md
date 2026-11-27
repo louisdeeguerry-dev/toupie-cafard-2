@@ -1,7 +1,7 @@
 # État du projet — Toupie Cafard 2
 
 > À lire au début de chaque session, **à la place** des longs documents. À mettre à jour à la fin de chaque session.
-> Dernière mise à jour : 2026-11-26.
+> Dernière mise à jour : 2026-11-27.
 
 ## Le jeu en bref
 - **Jeu de toupies en ligne façon auto-battler** (TFT) avec un côté **gacha / deck-building** (SPAM). Partie à **8 joueurs**
@@ -50,6 +50,7 @@
 - **Pièces adoucies** : niveaux ×0,6 (`FORCE_PIECES` dans `src/data/pieces.js`) ; les effets sont affichés en unités réelles
   (« +7 % de chance de critique », « −5 g »).
 
+- **Retours** : verdict de duel plein écran, pièces qui volent vers le compteur, sons procéduraux (ressort, PARFAIT, métal, tic-tac, jingles) dans `sfx` (`src/audio.js`), halo au sol des toupies.
 - **Rendu** : reflets « studio » sur tous les matériaux, halo lumineux (bloom, `vendor/jsm`) et vignettage ; réglages dans `src/scene.js` (`studio()`, `rendre()`).
 
 ## Où est quoi
@@ -103,14 +104,8 @@
   Économie et puissance sont à égalité, le sacrifice est puni ; le robot plafonne vers la 4e place (sa visée reste simple).
 
 ## Prochaines étapes possibles
-- **Plan issu des agents critiques (27/11)**, par ordre de priorité :
-  1. Fin de duel en 2,5 s au plus, avec un verdict plein écran.
-  2. Téléphone : plateau plus grand, aide sur une ligne, rareté sous le titre.
-  3. Gains : pièces qui volent jusqu'au compteur et compteur qui défile ; achat avec un pop et un « ding » ; boutique avec « il manque X 💰 » et « 0 % → 18 % », bouton Priorité masqué s'il ne sert à rien.
-  4. Sons : compresseur et panoramique ; ressort au lancer, « ding » PARFAIT, tic-tac du minuteur ; chocs de métal Kenney Impact (CC0) ; jingles victoire, défaite et fin.
-  5. Toupie plus grande et plus lisible en partie, avec un halo au sol.
-  6. Cafards : élytres, antennes, carapace brillante, pattes animées.
-  7. Atelier : masquer les stats grisées.
+- **Plan des agents critiques (27/11) : les 7 points sont faits** (fin de duel, téléphone, gains, sons, toupie lisible, cafards, atelier).
+  Suite possible : vrais échantillons de chocs de métal (Kenney Impact, CC0) ; musique différente en partie ; décor autour du plateau.
 - Faire jouer Louis à l'atelier refait, puis affiner la vitesse et les zooms.
 - Relire l'équilibrage avec les résultats ci-dessus (sacrifice, économie, mixte, puissance).
 - Questions ouvertes :

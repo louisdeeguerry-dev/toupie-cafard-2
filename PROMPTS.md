@@ -755,3 +755,6 @@ Un commit et une publication par point.
   - compresseur de sortie et panoramique ;
   - sons procéduraux : ressort au lancer, ding PARFAIT, choc de métal, tic-tac du minuteur, achat, carillon légendaire ;
   - jingles victoire, défaite et fin de partie, avec la musique baissée pendant le jingle.
+- Point 5 : halo au sol par camp (vert pour toi, rouge pour l'adversaire), toupies un peu plus hautes, % affiché seulement sous 50 %.
+- Point 6 : cafards à carapace texturée et vernie, avec pronotum et antennes courbes.
+- Point 7 : atelier, les pouvoirs qu'on ne possède pas sont masqués et le panneau tient en entier.
