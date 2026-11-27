@@ -128,9 +128,11 @@
 - **27/11, duels au simulateur** (après refonte) : victoires Défaut 76 %, Puissance 74 %, Agressivité 67 %, Élan 37 % (8 % sur le bureau rond, 67 % sur le terrain rebondissant), Lames 36 %, Critique 35 %, Endurance 25 % ; 4 à 8 contacts par duel. Avant : de 3 % (Élan) à 93 % (Endurance), 1 contact.
 - **27/11, parties complètes par build** (4 parties chacun, place moyenne sur 8) : Puissance 3,8, Agressivité 4,8, Élan + terrain rebondissant 5,0, Lames 5,5, Critique 6,3, Endurance 6,5, Élan sans terrain 7,0, Combo 7,8. Les duels décident presque tout ; le build Combo (économie) finit dernier : la Combo n'est pas trop forte.
 
+- **27/11, 2e passe (Élan, Puissance)** : poids d'impact mesurés (`IMPACT`), usure de duel 0,22, guidage de l'Agressivité 0,1. Duels au simulateur : Élan 44 % (79 % sur terrain rebondissant), Puissance 69 %, Lames 50 %, Critique 47 %, Agressivité 65 %, Défaut 68 %, Endurance 7 %. Parties complètes (3 par build) : Élan + terrain 3,7, Puissance 4,3, Lames 4,7, Agressivité 4,7, Critique 5,7, Élan sans terrain 6,3, Endurance 6,7, Combo 7,3.
+
 ## Prochaines étapes possibles
 - **Décidé le 27/11** : 2 vies par duel perdu dès l'étape 6 (fait) ; la Combo est gardée.
-- **À reprendre** : l'Élan sans terrain reste faible (7e) et la Puissance reste en tête (3,8) : deuxième passe au simulateur (`tests/duels-sim.js`).
+- **À reprendre** : la tortue pure (build Endurance, sans dégâts) perd presque tous ses duels ; l'Élan sans terrain reste faible sur le bureau rond (10 %). Piste écartée : frottement de glissement (`CHOC.glissementDuel`), il fige les toupies lentes.
 - Retours des agents non traités : liste des pièces qui cache les emplacements dans l'atelier (choix de Louis), argent qui s'emballe en fin de longue partie, barres de stats vides sans explication, texte du terrain trop long, boîte coupée à gauche à l'ouverture (à vérifier).
 - **À mesurer** : durée et nombre de contacts des duels depuis la fin de l'attraction forcée (bureau rond neutre surtout) ; si trop peu de contacts, passer aussi le bureau neutre en hexagone.
 - **Plan des agents critiques (27/11) : les 7 points sont faits** (fin de duel, téléphone, gains, sons, toupie lisible, cafards, atelier).
