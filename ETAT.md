@@ -13,6 +13,7 @@
 - **Temps limités** (jeu dynamique, en vue du jeu en ligne) : 15 s pour lancer contre les cafards, accélération jusqu'à ×5 si une toupie tourne encore 10 s après le lancer, 25 s de boutique ; réglages dans `PARTIE` (`src/config.js`).
 - **Duel** : il n'y a pas de vie ; chaque choc fait perdre de la rotation, et **la première toupie arrêtée perd**.
   L'usure ne démarre qu'une fois les deux toupies lancées.
+- **🎯 Entraînement** (menu) : mannequin immobile à vie infinie ; dégâts de chaque coup, meilleur coup et meilleur lancer ; sans chrono ni boutique.
 - **🤝 Défier un ami** (temps réel, `src/enligne.js` et la fin de `src/match.js`) :
   - code à 5 lettres ou lien `?ami=CODE` ;
   - par défaut, relais MQTT public (EMQX, puis HiveMQ, puis Mosquitto) : ça passe en 4G/5G et en Wi-Fi ; `?p2p` pour la connexion directe (PeerJS) ;
