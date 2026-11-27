@@ -456,7 +456,7 @@ export { TYPES };
 // ---------------------------------------------------------------- Défi entre amis (temps réel, pair à pair)
 // L'HÔTE calcule toute la physique et envoie l'état ~20 fois par seconde ; l'INVITÉ envoie seulement son lancer et
 // affiche des « fantômes » des toupies. Chacun se voit EN BAS du plateau : l'invité voit tout en miroir (x → −x, z → −z).
-// Partie : comme une vraie partie à 2 (3 lancers contre ses cafards, boutique, puis duel), 5 vies, 1 vie par duel perdu.
+// Partie : comme une vraie partie à 2 (3 lancers contre ses cafards, boutique, puis duel), 5 vies, 1 vie par duel perdu (2 à partir de l'étape 6).
 export function demarrerAmi({ hote, envoyer, moi, ami }) {
   nouvellePartie(moi.equipe, { pseudo: moi.pseudo || 'Toi', nivPieces: moi.nivPieces, terrain: moi.terrain });
   const joueurAmi = { nom: ami.pseudo || 'Ton ami', bot: false, vies: PARTIE.vies, equipe: ami.equipe, nivPieces: ami.nivPieces,

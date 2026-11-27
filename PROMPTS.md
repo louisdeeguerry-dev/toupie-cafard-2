@@ -1064,3 +1064,9 @@ chaque bande : +35 % de vitesse, plafond 1,9 × vitesse de lancer (Élan) ; au d
 **Réalisé** : 3 agents (menus, parties, duels) ; robot par build (`tests/builds.js`) et simulateur de duels (`tests/duels-sim.js`) ;
 bug de la charge corrigé, flair limité aux cafards, arène creusée, défense tassée, malus pondérés par impact (écart 3-93 % → 25-76 %) ;
 corrections d'interface. Combo : le build Combo finit dernier, elle n'est pas trop forte. Décisions laissées à Louis (durée de partie…).
+
+## 2026-11-27 — Décisions : 2 vies dès l'étape 6, Combo gardée
+**Prompt optimisé** (dev gameplay) : un duel perdu coûte 2 vies à partir de l'étape 6 (au lieu de 1) pour raccourcir les
+parties ; garder la stat Combo telle quelle ; mettre à jour textes, état et publication.
+**Réalisé** : `degatsDuel` = 1 vie, puis 2 dès l'étape 6 ; la boutique annonce « défaite : −N ❤️ » avant chaque duel ; textes du
+défi ami mis à jour ; 6 parties robot sans erreur ; Combo inchangée.

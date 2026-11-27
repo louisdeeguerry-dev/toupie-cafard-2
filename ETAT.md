@@ -7,7 +7,7 @@
 - **Jeu de toupies en ligne façon auto-battler** (TFT) avec un côté **gacha / deck-building** (SPAM). Partie à **8 joueurs**
   (bots pour l'instant), **5 vies**, **plateau rond**.
 - **Étape** = **3 lancers contre les cafards** (le bureau est rempli à 10 + Nid avant chaque lancer, les survivants restent),
-  puis **1 duel**. La boutique est ouverte entre chaque manche. Un duel perdu coûte 1 vie (5 vies = 5 défaites possibles) ;
+  puis **1 duel**. La boutique est ouverte entre chaque manche. Un duel perdu coûte 1 vie, puis **2 vies à partir de l'étape 6** (décision du 27/11, pour raccourcir les parties ; `degatsDuel` dans `src/config.js`) ;
   un duel ne rapporte ni ne coûte d'argent.
 - **Duels : lancers simultanés.** Chaque lancer (angle, puissance) est gardé en mémoire, et les deux toupies partent ensemble quand les deux ont lancé. On a 7 s pour lancer en duel (contre les bots comme contre un ami).
 - **Temps limités** (jeu dynamique, en vue du jeu en ligne) : 15 s pour lancer contre les cafards, accélération jusqu'à ×5 si une toupie tourne encore 10 s après le lancer, 25 s de boutique ; réglages dans `PARTIE` (`src/config.js`).
@@ -129,7 +129,8 @@
 - **27/11, parties complètes par build** (4 parties chacun, place moyenne sur 8) : Puissance 3,8, Agressivité 4,8, Élan + terrain rebondissant 5,0, Lames 5,5, Critique 6,3, Endurance 6,5, Élan sans terrain 7,0, Combo 7,8. Les duels décident presque tout ; le build Combo (économie) finit dernier : la Combo n'est pas trop forte.
 
 ## Prochaines étapes possibles
-- **Décisions à prendre avec Louis** : durée des parties (une partie testée a duré 54 manches : 2 vies par duel perdu à partir de l'étape 6 ?) ; garder ou retirer la Combo (les mesures disent qu'elle est faible) ; l'Élan sans terrain reste faible (7e) et la Puissance reste en tête (3,8).
+- **Décidé le 27/11** : 2 vies par duel perdu dès l'étape 6 (fait) ; la Combo est gardée.
+- **À reprendre** : l'Élan sans terrain reste faible (7e) et la Puissance reste en tête (3,8) : deuxième passe au simulateur (`tests/duels-sim.js`).
 - Retours des agents non traités : liste des pièces qui cache les emplacements dans l'atelier (choix de Louis), argent qui s'emballe en fin de longue partie, barres de stats vides sans explication, texte du terrain trop long, boîte coupée à gauche à l'ouverture (à vérifier).
 - **À mesurer** : durée et nombre de contacts des duels depuis la fin de l'attraction forcée (bureau rond neutre surtout) ; si trop peu de contacts, passer aussi le bureau neutre en hexagone.
 - **Plan des agents critiques (27/11) : les 7 points sont faits** (fin de duel, téléphone, gains, sons, toupie lisible, cafards, atelier).

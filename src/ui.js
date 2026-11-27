@@ -426,7 +426,7 @@ export function afficherBilan(bilan, onPret) {
   }
   if (bilan.elimines?.length) resultat += ` · 💀 ${bilan.elimines.map(esc).join(', ')}`;
   const ap = bilan.apercu, adv = bilan.adversaireSuivant;
-  const suite = adv ? `Prochain : ⚔️ duel contre <b>${esc(adv.nom)}</b>`
+  const suite = adv ? `Prochain : ⚔️ duel contre <b>${esc(adv.nom)}</b> (défaite : −${PARTIE.degatsDuel(etape())} ❤️)`
     : ap ? `Prochain : 🪳 lancer ${ap.lancer}/3 · ${ap.capacite} cafards${ap.evolution?.length ? ` · 🧬 nouveaux : ${ap.evolution.map(t => TYPES[t].icone + ' ' + TYPES[t].nom).join(', ')}` : ''}` : '';
 
   const carte = o => {
