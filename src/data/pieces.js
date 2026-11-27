@@ -173,8 +173,8 @@ export const PIECES = [
 // Pondération par IMPACT : un niveau d'Équilibre ou d'Endurance pèse bien plus lourd qu'un niveau d'Élan (mesuré en duel au
 // simulateur : node tests/duels-sim.js 150 avec MARGE=1 ; estimé contre les cafards). Les MALUS de chaque pièce sont
 // recalculés pour que bonus et malus pèsent autant en effet réel. Les stats et les signes ne changent pas (règle 5).
-export const IMPACT = { endurance: 1.3, lames: 1.3, poids: 1.2, inertie: 1.2, equilibre: 1.2, agressivite: 1.2, puissance: 1.1,
-  critique: 0.9, glisse: 0.8, elan: 0.8, diametre: 0.8, precision: 0.7, rebond: 0.6 };
+export const IMPACT = { endurance: 1.5, lames: 1.3, poids: 1.3, inertie: 1.3, equilibre: 1.3, agressivite: 1.3, puissance: 1.2,
+  critique: 0.8, diametre: 0.7, glisse: 0.6, precision: 0.6, elan: 0.5, rebond: 0.4 };
 export const poidsStat = s => (POIDS_EQUILIBRAGE[s] || 1) * (IMPACT[s] || 1);
 for (const p of PIECES) {
   let plus = 0, moins = 0;

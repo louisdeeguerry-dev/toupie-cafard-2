@@ -18,8 +18,8 @@ const BUILDS = {
   const p = await b.newPage({ viewport: { width: 400, height: 300 } });
   const errs = []; p.on('pageerror', e => errs.push(e.message));
   await p.goto('http://localhost:8123/'); await p.waitForTimeout(1500);
-  const REGLAGES = JSON.parse(process.env.CHOC || '{}'), MARGE = !!process.env.MARGE; // ex. CHOC='{"cuvette":0.4}' pour essayer des réglages sans toucher au code
-  const res = await p.evaluate(async ({ BUILDS, N, ACHATS, REGLAGES, MARGE }) => {
+  const REGLAGES = JSON.parse(process.env.CHOC || '{}'), MARGE = !!process.env.MARGE, DIAG = process.env.DIAG || ''; // ex. CHOC='{"cuvette":0.4}' pour essayer des réglages sans toucher au code
+  const res = await p.evaluate(async ({ BUILDS, N, ACHATS, REGLAGES, MARGE, DIAG }) => {
     __tc2.acceleration = 0; // le jeu affiché ne bouge plus pendant la simulation
     const ph = await import('./src/physics.js');
     Object.assign(ph.CHOC, REGLAGES);
@@ -51,8 +51,8 @@ const BUILDS = {
         const x = rnd(-0.8, 0.8) * RAIL_XMAX, z = railZ(x, haut) * 0.92, ang = Math.atan2(-z, -x) + rnd(-0.35, 0.35);
         ph.lancerToupie(t, x, z, Math.cos(ang), Math.sin(ang), rnd(0.75, 1));
       }
-      let contacts = 0, temps = 0;
-      const cb = { choc: () => { contacts++; } };
+      let contacts = 0, temps = 0, chocsA = 0, chocsC = 0;
+      const cb = { choc: (att, cible, perte) => { contacts++; if (cible === a) chocsA += perte / a.rotationMax; else chocsC += perte / c.rotationMax; } };
       const dt = 1 / 60;
       while (temps < 25) {
         ph.majToupies(dt, cb); temps += dt;
@@ -64,7 +64,19 @@ const BUILDS = {
       else if (!ph.enJeu(a) || !ph.enJeu(c)) gagneA = ph.enJeu(a);
       else gagneA = a.rotation / a.rotationMax >= c.rotation / c.rotationMax;
       const egalite = Math.abs(a.rotation / a.rotationMax - c.rotation / c.rotationMax) < 1e-6;
-      return { gagneA, egalite, contacts: contacts / 2, temps, chrono: temps >= 25 };
+      const fin = temps >= 25 ? 'chrono' : !ph.enJeu(a) && !ph.enJeu(c) ? 'les deux' : !ph.enJeu(a) ? 'A tombe' : 'B tombe';
+      return { gagneA, egalite, contacts: contacts / 2, temps, chrono: temps >= 25, fin, chocsA, chocsC, finA: a.rotation / a.rotationMax, finC: c.rotation / c.rotationMax };
+    }
+    // Mode DIAG (ex. DIAG=elan:defaut:neutre) : pourquoi A gagne ou perd contre B
+    if (DIAG) {
+      const [na, nb, tr] = DIAG.split(':'), terrain = tr === 'rebond' ? 'rebond' : null, r = { v: 0, fins: {}, contacts: 0, temps: 0, chocsA: 0, chocsC: 0, finA: 0, finC: 0 };
+      for (let k = 0; k < N; k++) {
+        const d = duel(B[na], B[nb], terrain);
+        r.v += d.gagneA ? 1 : 0; r.fins[d.fin] = (r.fins[d.fin] || 0) + 1;
+        for (const x of ['contacts', 'temps', 'chocsA', 'chocsC', 'finA', 'finC']) r[x] += d[x] / N;
+      }
+      ph.viderToupies(); ph.choisirTerrain(null); ph.modeDuel(false);
+      return { diag: r, stats: {}, equipes: {}, marges: {} };
     }
     for (const terrain of [null, 'rebond']) for (let i = 0; i < noms.length; i++) for (let j = 0; j < noms.length; j++) {
       if (i === j) continue;
@@ -95,7 +107,8 @@ const BUILDS = {
     }
     ph.viderToupies(); ph.choisirTerrain(null); ph.modeDuel(false);
     return { marges, stats, equipes: Object.fromEntries(noms.map(n => [n, B[n].eq])) };
-  }, { BUILDS, N, ACHATS, REGLAGES, MARGE });
+  }, { BUILDS, N, ACHATS, REGLAGES, MARGE, DIAG });
+  if (res.diag) { const d = res.diag; console.log(`DIAG ${DIAG} : A gagne ${Math.round(100 * d.v / N)} % · fins ${JSON.stringify(d.fins)} · contacts ${d.contacts.toFixed(1)} · durée ${d.temps.toFixed(1)} s · pertes par chocs A ${(100 * d.chocsA).toFixed(0)} % / B ${(100 * d.chocsC).toFixed(0)} % · rotation finale A ${(100 * d.finA).toFixed(0)} % / B ${(100 * d.finC).toFixed(0)} %`); await b.close(); return; }
   console.log(`| Build | Victoires | Bureau neutre | Terrain rebondissant | Contacts / duel | Durée moy. (s) | Fin au chrono |`);
   console.log('|---|---|---|---|---|---|---|');
   for (const [n, s] of Object.entries(res.stats)) {

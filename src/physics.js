@@ -25,13 +25,16 @@ export function modeDuel(oui) { duel = !!oui; }
 // finissent par se retrouver au milieu, comme dans une vraie arène de toupies (la Cuve est la version très creusée).
 // partRelative : 0 = pertes en tr/min absolus, 1 = en part de la rotation de la cible ; entre les deux, moyenne géométrique.
 // deriveDuel : part de la « danse » aléatoire gardée en duel (moins de danse = la toupie ralentie finit au fond de l'arène).
+// glissementDuel : 0 = frottement en traînée (la vitesse fond d'une même part chaque seconde) ; 1 = vrai frottement de
+// glissement (freinage constant : une toupie lancée 3× plus vite file 3× plus longtemps, ce qui donne sa valeur à l'Élan).
+// frottementDuel : part du frottement au sol gardée en duel (arène lisse : les toupies gardent leur élan plus longtemps).
 // approcheMax : vitesse d'approche (m/s) au-delà de laquelle une charge ne fait pas plus mal (évite les coups qui tuent d'un coup).
 // masseDuel : exposant du rapport de masses sur les pertes (1 = plein effet) ; seuilMaxDuel : seuil de chute maximal en duel.
 // inertieDuel : exposant de l'Inertie de la cible sur les pertes (1 = plein effet, 0,5 = effet adouci).
 // usureTassee : 0 = usure de duel selon l'Endurance seule ; 1 = même usure pour tous (les malus d'Endurance comptent moins).
-export const CHOC = { ref: 600, base: 0.01, parLames: 0.03, parVitesse: 0.12, attraction: 0.4, parAgressivite: 0.8, rebondBoost: 1.35, rebondPlafond: 1.9,
-  // Réglages calés au simulateur (tests/duels-sim.js, 27/11) : écart entre builds ramené de 3-93 % à 23-78 % de victoires
-  cuvette: 1.1, partRelative: 0.85, usureTassee: 0.5, deriveDuel: 0.2, inertieDuel: 0.5, masseDuel: 0.5, seuilMaxDuel: 0.3, approcheMax: 99, poussee: 0.12, delai: 0.2, rebond: 0.5, usureDuel: 0.3 };
+export const CHOC = { ref: 600, base: 0.01, parLames: 0.03, parVitesse: 0.12, attraction: 0.1, parAgressivite: 0.3, rebondBoost: 1.35, rebondPlafond: 1.9,
+  // Réglages calés au simulateur (tests/duels-sim.js, 27/11, 2e passe) : Élan 46 % (77 % sur terrain rebondissant), Puissance 69 %
+  cuvette: 1.1, partRelative: 0.85, usureTassee: 0.45, deriveDuel: 0.2, inertieDuel: 0.5, masseDuel: 0.5, seuilMaxDuel: 0.3, approcheMax: 99, frottementDuel: 1, glissementDuel: 0, poussee: 0.12, delai: 0.2, rebond: 0.5, usureDuel: 0.22 };
 
 // Les toupies sont un peu étirées en hauteur pour être lisibles vues de haut (la hauteur ne compte pas dans la physique)
 const HAUTEUR_VUE = 1.35;
@@ -185,8 +188,13 @@ export function majToupies(dt, cb) {
     if (terrain === 'cuve') { ax -= t.x * 1.1; az -= t.z * 1.1; }
     else if (duel && CHOC.cuvette) { ax -= t.x * CHOC.cuvette; az -= t.z * CHOC.cuvette; }
     t.vx += ax * dt; t.vz += az * dt;
-    const fr = Math.exp(-s.frottement * dt);
+    const frot = s.frottement * (duel ? CHOC.frottementDuel : 1), g = duel ? CHOC.glissementDuel : 0;
+    const fr = Math.exp(-frot * (1 - g) * dt);
     t.vx *= fr; t.vz *= fr;
+    if (g) { // part « glissement » : freinage constant (référence : 0,5 m/s, la vitesse d'une toupie standard en cours de duel)
+      const v = Math.hypot(t.vx, t.vz), k = v > 1e-6 ? Math.max(0, v - frot * g * 0.5 * dt) / v : 0;
+      t.vx *= k; t.vz *= k;
+    }
     t.x += t.vx * dt; t.z += t.vz * dt;
 
     // Rebonds sur les bords (Rebond ; en duel, le terrain peut changer les bords)
