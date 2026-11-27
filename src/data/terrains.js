@@ -9,7 +9,7 @@ export const TERRAINS = [
   { id: 'aucun', nom: 'Aucun terrain', icone: '🪵', rarete: null,
     desc: 'Bureau neutre en duel. Tu commences la partie avec plus d\'argent.' },
   { id: 'rebond', nom: 'Bords rebondissants', icone: '🤸', rarete: 'legendaire',
-    desc: 'Les bords relancent les toupies : duels rapides et chaotiques.' },
+    desc: 'Arène carrée : chaque bande accélère la toupie (+35 %, jusqu\'à presque 2× sa vitesse de lancer). Idéal pour les toupies d\'Élan.' },
   { id: 'collant', nom: 'Bords collants', icone: '🍯', rarete: 'legendaire',
     desc: 'Les bords engluent les toupies : celle qui touche un bord perd sa vitesse et de la rotation.' },
   { id: 'cuve', nom: 'Cuve', icone: '🥣', rarete: 'legendaire',

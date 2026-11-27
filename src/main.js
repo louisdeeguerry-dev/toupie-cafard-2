@@ -21,7 +21,7 @@ import { TYPES } from './data/cafards.js';
 
 let save = charger();
 const AIDE = window.matchMedia?.('(pointer: coarse)').matches
-  ? 'Touche le bas du bureau pour placer le lanceur, garde le doigt pour viser, lève-le pour lancer'
+  ? 'Glisse le doigt en bas pour placer le lanceur, puis touche le plateau pour viser et lève le doigt pour lancer'
   : 'Déplace le lanceur, clique et garde appuyé pour viser, relâche pour lancer';
 let mode = 'atelier';
 function majVitrine(slotChange = null) {

@@ -1049,3 +1049,10 @@ amélioration pour toute la partie (1 seule fois) ; 6) trouver une forme de terr
 **Réalisé** : bouton 🏳️ Abandonner / 🚪 Quitter (bas gauche, au-dessus de la boutique, confirmation, Échap) ; Âme de miel
 nid 2,8 (= 1 à 5 cafards) ; attraction de duel = Agressivité × 1,2 (0 sans Agressivité) ; 🚫 Bannir sur les offres
 (2 clics, 1 par partie) ; simulation des formes → terrain rebondissant hexagonal (27 % de duels sans contact en rond, 6 %).
+
+## 2026-11-27 — Terrain carré, élan sur les bandes, lancer au doigt
+**Prompt optimisé** (dev gameplay) : terrain rebondissant carré (duel + atelier) ; ses bandes doivent vraiment booster
+l'élan ; sur téléphone, pouvoir placer le lanceur d'abord, puis tirer.
+**Réalisé** : losange simulé (5 %) puis carré retenu (2 % de duels sans contact) ; arène carrée en duel et dans l'atelier ;
+chaque bande : +35 % de vitesse, plafond 1,9 × vitesse de lancer (Élan) ; au doigt : glisser sur la bande du bas = placer
+(sans tirer), toucher le plateau = viser + jauge, lever = tir.

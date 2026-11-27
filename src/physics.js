@@ -21,7 +21,7 @@ export function modeDuel(oui) { duel = !!oui; }
 // Pertes en tr/min ABSOLUS (référence : 600 tr/min) : une toupie qui tourne plus vite (Puissance) encaisse plus de chocs.
 // parVitesse porte sur la vitesse d'approche de l'ATTAQUANT : celui qui charge fait plus mal.
 // Mesures visées : ~4-6 % de barre par choc, plus de la moitié de la chute due aux chocs, 10-15 contacts, 10-20 s.
-export const CHOC = { ref: 600, base: 0.01, parLames: 0.03, parVitesse: 0.12, attraction: 0.7, parAgressivite: 1.2, poussee: 0.12, delai: 0.2, rebond: 0.5, usureDuel: 0.3 };
+export const CHOC = { ref: 600, base: 0.01, parLames: 0.03, parVitesse: 0.12, attraction: 0.7, parAgressivite: 1.2, rebondBoost: 1.35, rebondPlafond: 1.9, poussee: 0.12, delai: 0.2, rebond: 0.5, usureDuel: 0.3 };
 
 // Les toupies sont un peu étirées en hauteur pour être lisibles vues de haut (la hauteur ne compte pas dans la physique)
 const HAUTEUR_VUE = 1.35;
@@ -180,20 +180,22 @@ export function majToupies(dt, cb) {
     // Rebonds sur les bords (Rebond ; en duel, le terrain peut changer les bords)
     const r = s.rayon;
     const mur = () => {
-      if (terrain === 'rebond') { // bords rebondissants : relancent la toupie (vitesse plafonnée)
-        const v = Math.hypot(t.vx, t.vz), k = Math.min(1.25, (s.vitesse * 1.3) / Math.max(v, 1e-6));
+      if (terrain === 'rebond') { // bords rebondissants : chaque bande ACCÉLÈRE la toupie (+35 %), sans perte de rotation.
+        // Plafond proportionnel à sa vitesse de lancer (stat Élan) : une toupie d'élan va bien plus vite que les autres.
+        const v = Math.max(Math.hypot(t.vx, t.vz), 1e-6), cible = Math.min(v * CHOC.rebondBoost, s.vitesse * CHOC.rebondPlafond);
+        const k = Math.max(1, cible / v);
         t.vx *= k; t.vz *= k;
       } else if (terrain === 'collant') { // bords collants : la toupie s'englue
         t.vx *= 0.15; t.vz *= 0.15; t.rotation *= 0.96;
       } else { t.vx *= s.rebond; t.vz *= s.rebond; t.rotation *= 0.985; }
       cb.mur?.(t);
     };
-    // Terrain rebondissant : plateau HEXAGONAL (côtés plats face aux lanceurs, même distance au rail que le rond).
+    // Terrain rebondissant : plateau CARRÉ (côtés plats face aux lanceurs, même distance au rail que le rond).
     // Dans un rond, une toupie qui va tout droit garde le même angle à chaque rebond et « orbite » sans jamais passer
-    // au centre (27 % de duels sans contact en simulation) ; les coins de l'hexagone cassent ces orbites (6 %).
+    // au centre (24 % de duels sans contact en simulation) ; hexagone 7 %, losange 5 %, carré 2 %.
     if (duel && terrain === 'rebond') {
-      for (let k = 0; k < 6; k++) {
-        const nx = Math.cos(Math.PI / 2 + (k * Math.PI) / 3), nz = Math.sin(Math.PI / 2 + (k * Math.PI) / 3);
+      for (let k = 0; k < 4; k++) {
+        const nx = Math.round(Math.cos((k * Math.PI) / 2)), nz = Math.round(Math.sin((k * Math.PI) / 2));
         const d = t.x * nx + t.z * nz, lim = ARENE_R - r;
         if (d > lim) {
           t.x -= (d - lim) * nx; t.z -= (d - lim) * nz;

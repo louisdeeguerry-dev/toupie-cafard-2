@@ -24,7 +24,8 @@
 - **Quitter** : bouton 🏳️ Abandonner (partie), 🚪 Quitter (entraînement, sans confirmation) ou 🚪 Quitter le défi, en bas à gauche, toujours visible (même sur la boutique) ; Échap l'ouvre aussi.
 - **Bannir** : 🚫 sur une offre de la boutique (2 clics) : la stat ne sort plus de la partie ; 1 bannissement par partie (`BANNISSEMENTS_MAX`, `src/match.js`).
 - **Duel sans attraction forcée** : seule l'Agressivité attire vers l'adversaire (`CHOC.parAgressivite`) ; sans elle, la toupie suit son élan.
-- **Terrain rebondissant = plateau hexagonal** (côtés plats face aux lanceurs). Simulation de billard (`2 toupies tout droit`) : rond 27 % de duels sans contact, hexagone 6 %, triangle 2 %.
+- **Terrain rebondissant = arène carrée** (duel et atelier ; côtés plats face aux lanceurs). Simulation de billard (2 toupies tout droit) : rond 24 % de duels sans contact, hexagone 7 %, losange 5 %, carré 2 %. Chaque bande accélère de 35 %, jusqu'à 1,9 × la vitesse de lancer (Élan) : `CHOC.rebondBoost` et `CHOC.rebondPlafond`.
+- **Lancer au doigt** (téléphone) : glisser sur la bande du bas place le lanceur sans tirer ; toucher le plateau vise et charge la jauge ; lever le doigt tire (`src/launcher.js`).
 - **Paramètres** (menu ⚙️) : qualité d'image, ombres, halo, secousses, plein écran, volumes ; `src/parametres.js`.
 - **Aucun plafond, rendements dégressifs** : au-delà de 10 niveaux, chaque niveau compte de moins en moins (`degressif` dans `src/stats.js`). Le Nid (rare +1, épique +2, légendaire +3 cafards) et le combo (au-delà de ×2) sont dégressifs eux aussi.
 - **Améliorations sans plafond** (sauf Multi-lancer) ; une offre rare coûte plus cher, mais pas au prorata (rare ×1,25, épique ×1,5, légendaire ×2). Pondeuse et Éclairs en chaîne supprimés. Âme de miel : +1 cafard par niveau de pièce (1 à 5).

@@ -11,7 +11,7 @@ const jauge = document.getElementById('jauge'), jaugeRemplie = jauge.querySelect
 
 export const lanceur = {
   actif: false,
-  etat: 'libre', // libre | charge
+  etat: 'libre', // libre | place (au doigt : on fait glisser le lanceur, sans tirer) | charge
   x: 0,
   dir: new THREE.Vector2(0, -1),
   t: 0,
@@ -44,6 +44,8 @@ function versBureau(e) {
   ray.setFromCamera(ndc, camera);
   return ray.ray.intersectPlane(plan, hit) ? hit : null;
 }
+// Au doigt : bande de placement du lanceur, du rail jusqu'en bas de l'écran (en mètres de bureau au-dessus du rail)
+const ZONE_PLACEMENT = 0.1;
 const borneX = x => Math.max(-RAIL_XMAX, Math.min(RAIL_XMAX, x));
 // Point de départ de la toupie : un peu à l'intérieur du rail, vers le centre
 const depart = x => { const z = railZ(x), d = Math.hypot(x, z), k = (d - 0.04) / d; return { x: x * k, z: z * k }; };
@@ -60,19 +62,28 @@ const canvas = renderer.domElement;
 canvas.addEventListener('pointermove', e => {
   const h = versBureau(e);
   if (!h) return;
-  if (lanceur.etat === 'libre') lanceur.x = borneX(h.x);
-  else viser(h);
+  if (lanceur.etat === 'libre' && e.pointerType === 'mouse') lanceur.x = borneX(h.x);
+  else if (lanceur.etat === 'place') lanceur.x = borneX(h.x);
+  else if (lanceur.etat === 'charge') viser(h);
 });
 canvas.addEventListener('pointerdown', e => {
   if (!lanceur.actif || e.button > 0) return;
   const h = versBureau(e);
-  if (h && e.pointerType !== 'mouse') lanceur.x = borneX(h.x); // au doigt : le lanceur vient sous le doigt
+  canvas.setPointerCapture?.(e.pointerId);
+  // Au doigt, en 2 temps : 1) on pose le doigt sur la bande du bas (sur le rail ou en dessous) et on le fait glisser :
+  // le lanceur suit, rien ne part ; 2) on touche le plateau plus haut : on vise vers le doigt, la jauge oscille, on lève = tir.
+  if (e.pointerType !== 'mouse' && h && h.z > railZ(h.x) - ZONE_PLACEMENT) {
+    lanceur.etat = 'place';
+    lanceur.x = borneX(h.x);
+    return;
+  }
   lanceur.etat = 'charge';
   lanceur.t = 0;
   lanceur.dir.set(0, -1);
-  canvas.setPointerCapture?.(e.pointerId);
+  if (h && e.pointerType !== 'mouse') viser(h);
 });
 function relacher() {
+  if (lanceur.etat === 'place') { lanceur.etat = 'libre'; return; } // lanceur placé : on attend le tir
   if (lanceur.etat !== 'charge') return;
   lanceur.etat = 'libre';
   if (!lanceur.actif) return;

@@ -87,7 +87,20 @@ for (const r of [0.05, 0.1, 0.15]) {
   a.rotation.x = -Math.PI / 2; a.position.y = 0.0005;
   anneaux.add(a);
 }
-arene.add(disque, rebord, anneaux);
+// Terrain rebondissant : arène carrée (comme en duel, voir scene.js), 4 bandes droites
+const carre = new THREE.Group();
+{
+  const p = new THREE.Mesh(new THREE.BoxGeometry(2 * R, 0.016, 2 * R), bois);
+  p.position.y = -0.008; p.receiveShadow = true; carre.add(p);
+  for (let k = 0; k < 4; k++) {
+    const a = (k * Math.PI) / 2, b = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 2 * R + 0.028, 12), rebordMat);
+    b.rotation.z = Math.PI / 2; b.rotation.y = -a + Math.PI / 2;
+    b.position.set(Math.cos(a) * (R + 0.006), 0.002, Math.sin(a) * (R + 0.006));
+    carre.add(b);
+  }
+  carre.visible = false;
+}
+arene.add(disque, rebord, anneaux, carre);
 vitrine.add(arene);
 // Cache l'ancien socle de la vitrine (remplacé par l'arène)
 vitrine.children.forEach(o => { if (o.isMesh && o !== disque && o.geometry?.type === 'CylinderGeometry' && o.parent === vitrine) o.visible = false; });
@@ -96,6 +109,7 @@ export function terrainVitrine(id) {
   const c = id === 'rebond' ? [0x2f80ed, 0x0b3b8a] : id === 'collant' ? [0x7dbb3a, 0x1f3d05] : [0x3b2516, 0x000000];
   rebordMat.color.setHex(c[0]); rebordMat.emissive.setHex(c[1]);
   anneaux.visible = id === 'cuve';
+  carre.visible = id === 'rebond'; disque.visible = rebord.visible = id !== 'rebond';
 }
 
 // ---------------------------------------------------------------- Modèles et vue éclatée

@@ -100,24 +100,23 @@ rebordRond.rotation.x = Math.PI / 2;
 rebordRond.position.y = 0.012;
 rebordRond.castShadow = rebordRond.receiveShadow = true;
 scene.add(rebordRond);
-// Terrain rebondissant : plateau hexagonal (côtés plats face aux lanceurs, distance au centre = ARENE_R),
-// avec 6 bandes rebondissantes droites (comme des bandes de billard) ; voir les rebonds dans physics.js
-const HEX_R = ARENE_R / Math.cos(Math.PI / 6); // rayon aux coins
-const hexagone = new THREE.Group();
+// Terrain rebondissant : plateau carré (côtés plats face aux lanceurs, demi-côté = ARENE_R),
+// avec 4 bandes rebondissantes droites (comme des bandes de billard) ; voir les rebonds dans physics.js
+const carre = new THREE.Group();
 {
-  const p = new THREE.Mesh(new THREE.CylinderGeometry(HEX_R, HEX_R, 0.04, 6), bois);
-  p.rotation.y = Math.PI / 6; p.position.y = -0.019; p.receiveShadow = true;
-  hexagone.add(p);
-  for (let k = 0; k < 6; k++) {
-    const a = Math.PI / 2 + (k * Math.PI) / 3;
-    const b = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, HEX_R + 0.02, 16), rebordMat);
+  const p = new THREE.Mesh(new THREE.BoxGeometry(2 * ARENE_R, 0.04, 2 * ARENE_R), bois);
+  p.position.y = -0.019; p.receiveShadow = true;
+  carre.add(p);
+  for (let k = 0; k < 4; k++) {
+    const a = (k * Math.PI) / 2;
+    const b = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 2 * ARENE_R + 0.064, 16), rebordMat);
     b.rotation.z = Math.PI / 2; b.rotation.y = -a + Math.PI / 2; // bande couchée, parallèle au côté
     b.position.set(Math.cos(a) * (ARENE_R + 0.014), 0.012, Math.sin(a) * (ARENE_R + 0.014));
     b.castShadow = b.receiveShadow = true;
-    hexagone.add(b);
+    carre.add(b);
   }
-  hexagone.visible = false;
-  scene.add(hexagone);
+  carre.visible = false;
+  scene.add(carre);
 }
 
 // Table et sol autour
@@ -159,7 +158,7 @@ export function decorTerrain(id) {
     : REBORD_NEUTRE;
   rebordMat.color.setHex(c.color); rebordMat.emissive.setHex(c.emissive); rebordMat.roughness = c.roughness;
   cuve.visible = id === 'cuve';
-  hexagone.visible = id === 'rebond'; plateau.visible = rebordRond.visible = id !== 'rebond';
+  carre.visible = id === 'rebond'; plateau.visible = rebordRond.visible = id !== 'rebond';
 }
 
 // ---------------------------------------------------------------- Caméra adaptée à l'écran
