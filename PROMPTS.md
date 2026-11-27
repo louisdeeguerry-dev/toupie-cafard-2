@@ -794,3 +794,9 @@ Un commit et une publication par point.
 - Surcoût de rareté 1 + (effet − 1) × 0,5 : rare ×1,25, épique ×1,5, légendaire ×2.
 - Dégâts sur les cafards : élan de ×1 à ×2,1, rotation de ×0,6 à ×1.
 - Écran Paramètres : qualité d'image, ombres, halo, secousses, plein écran, volume des effets et de la musique (sauvegardés).
+
+---
+
+## 2026-11-27 — Tests après la nouvelle économie
+
+**Prompt optimisé** : jouer 5 parties robot par stratégie (×100) après le retrait de la pondeuse, la fin des plafonds et le surcoût de rareté.
