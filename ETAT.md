@@ -13,7 +13,7 @@
 - **Temps limités** (jeu dynamique, en vue du jeu en ligne) : 15 s pour lancer contre les cafards, accélération jusqu'à ×5 si une toupie tourne encore 10 s après le lancer, 25 s de boutique ; réglages dans `PARTIE` (`src/config.js`).
 - **Duel** : il n'y a pas de vie ; chaque choc fait perdre de la rotation, et **la première toupie arrêtée perd**.
   L'usure ne démarre qu'une fois les deux toupies lancées.
-- **📦 Boutique 3D** (`src/magasin3d.js`) : la caméra va à un comptoir ; petit paquet (1 pièce, 100 🔩) et gros carton (5 pièces, 450 🔩) à cliquer ; les boîtes (façon jouet, 4 clics) s'ouvrent à la suite.
+- **📦 Boutique 3D** (`src/magasin3d.js`) : la caméra va à un comptoir ; petit paquet (1 pièce, 100 🔩) et gros carton (5 pièces, 450 🔩) à cliquer ; les boîtes s'ouvrent **en 3D** (`src/ouverture3d.js`) : vue plongeante sur une table, jusqu'à 5 boîtes ensemble, 4 clics, la vraie pièce 3D sort et brille, puis récapitulatif.
 - **🎯 Entraînement** (menu) : mannequin immobile à vie infinie ; dégâts de chaque coup, meilleur coup et meilleur lancer ; sans chrono ni boutique.
 - **🤝 Défier un ami** (temps réel, `src/enligne.js` et la fin de `src/match.js`) :
   - code à 5 lettres ou lien `?ami=CODE` ;
