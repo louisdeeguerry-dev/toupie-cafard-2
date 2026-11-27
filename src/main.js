@@ -63,6 +63,7 @@ function demarrer() {
   modeleLanceur(save.equipe);
   for (const e of ECRANS) UI.montrer(e, false);
   controlesActifs(false);
+  partie.lancesFaits = 0;
   UI.rechercher(partie.joueurs.map(j => j.nom), save.mode, () => {
     mode = 'partie';
     UI.montrer('hud');
@@ -78,16 +79,16 @@ brancherInterface({
       const sous = T ? `Terrain : ${T.icone} ${T.nom} (${td.de === partie.moi ? 'le tien' : 'celui de ' + partie.adversaire.nom})`
         : td.egalite ? 'Égalité de priorité de terrain : bureau neutre' : 'Bureau neutre';
       UI.bandeau(`⚔️ DUEL contre ${partie.adversaire.nom}`, sous, 2600);
-      UI.aide(AIDE);
+      UI.aide((partie.lancesFaits || 0) < 2 ? AIDE : ''); // l'aide disparaît après 2 lancers
     } else {
       if (partie.evolution?.length) UI.bandeau('🧬 Les cafards ont évolué !', 'Nouveaux : ' + partie.evolution.map(t => TYPES[t].icone + ' ' + TYPES[t].nom).join(', '), 2600);
       else UI.bandeau(`🪳 Lancer ${lancerDansEtape()}/3`, `${partie.renfort ? `+${partie.renfort} cafards : ` : ''}${capacite()} cafards sur le bureau`);
-      UI.aide(AIDE);
+      UI.aide((partie.lancesFaits || 0) < 2 ? AIDE : ''); // l'aide disparaît après 2 lancers
     }
   },
   hud: UI.majHud,
   minuteur: UI.minuteur,
-  lance() { UI.aide(''); },
+  lance() { UI.aide(''); partie.lancesFaits = (partie.lancesFaits || 0) + 1; },
   finDuel(gagne) {
     UI.verdict(gagne, gagne ? 'La toupie adverse s\'est arrêtée la première' : 'Ta toupie s\'est arrêtée la première');
   },

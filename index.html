@@ -253,7 +253,7 @@
 /* Rareté des offres : bordure et étiquette colorées */
 .offre { border-color: var(--rar, var(--bord)) !important; position: relative; }
 .offre:not(.rarete-commune) { box-shadow: 0 0 14px color-mix(in srgb, var(--rar) 45%, transparent); }
-.offre .badge-rarete { position: absolute; top: 6px; left: 8px; font-size: 11px; font-weight: 700; color: var(--rar); letter-spacing: .02em; }
+.offre .badge-rarete { font-size: 11px; font-weight: 800; color: var(--rar); letter-spacing: .04em; text-transform: uppercase; }
 .offre.rarete-legendaire { background: linear-gradient(160deg, rgba(255,181,46,.18), transparent 60%); }
 .offre.rarete-epique { background: linear-gradient(160deg, rgba(179,107,255,.16), transparent 60%); }
 .offre.rarete-rare { background: linear-gradient(160deg, rgba(63,167,255,.13), transparent 60%); }
@@ -265,6 +265,11 @@
 .barre-temps { height: 6px; border-radius: 3px; background: #1a130e; overflow: hidden; margin-top: -4px; }
 .barre-temps i { display: block; height: 100%; background: linear-gradient(90deg, #3fcf6e, #ffd36b); transition: width .25s linear; }
 .barre-temps i.urgent { background: #ff5a4a; }
+/* Téléphone : aide sur une ligne, minuteur en dessous */
+@media (max-width: 720px) {
+  #aide { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; }
+  #minuteur { top: 82px; font-size: 14px; }
+}
 /* Verdict du duel plein écran */
 #verdict { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none;
   opacity: 0; transition: opacity .2s; z-index: 30; }

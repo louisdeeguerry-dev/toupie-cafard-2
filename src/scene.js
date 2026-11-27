@@ -168,8 +168,9 @@ export function cadrer() {
   // En portrait, on recule assez pour que tout le bureau tienne en largeur
   const demiLargeurVue = Math.atan(Math.tan((camera.fov * Math.PI) / 360) * (w / h));
   const distLargeur = (DESK_X + 0.08) / Math.tan(demiLargeurVue) / 1.06;
-  const dist = portrait ? Math.max(2.0, distLargeur) : 1.68;
-  base.pos.set(0, dist * 0.86, dist * 0.62);
+  // Portrait (téléphone) : vue plus plongeante, le plateau rond remplit toute la largeur de l'écran
+  const dist = portrait ? distLargeur * 1.02 : 1.68;
+  if (portrait) base.pos.set(0, dist * 0.96, dist * 0.28); else base.pos.set(0, dist * 0.86, dist * 0.62);
   if (!cam.pos.lengthSq()) cam.pos.copy(base.pos);
   camera.position.copy(cam.pos);
   camera.lookAt(cam.cible);
