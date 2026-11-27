@@ -833,3 +833,16 @@ navigateurs différents, trouver la cause et corriger.
   - reconnexion au serveur s'il coupe ;
   - paramètre `?serveur=` pour un autre serveur de mise en relation.
 - Résultat : connexion, lancers, fantômes, fin de duel et vies cohérentes des deux côtés, aucune erreur.
+
+---
+
+## 2026-11-27 — Défi entre amis : ça ne marche pas sur téléphone
+
+**Prompt optimisé** : (rôle : dev réseau mobile) le défi entre amis échoue sur téléphone ; trouver la cause probable et la corriger.
+**Réalisé** :
+- L'interface sur téléphone a été vérifiée (émulation iPhone 13) : elle fonctionne.
+- Cause probable : un réseau mobile (4G/5G) qui bloque la connexion directe. Ajout de relais TURN gratuits (PeerJS,
+  Open Relay) et de serveurs STUN Google et Cloudflare.
+- Diagnostic affiché à l'écran : connexion en cours, échec à cause du réseau, connexion perdue.
+- Bouton « Envoyer le lien » avec la feuille de partage du téléphone.
+- Le test sur deux navigateurs séparés passe toujours.

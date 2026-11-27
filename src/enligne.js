@@ -5,11 +5,18 @@ const PREFIXE = 'toupiecafard2-';
 const params = new URLSearchParams(location.search);
 const local = params.has('local');
 // ?serveur=hote:port : un serveur de mise en relation à nous (tests, ou si le serveur public est en panne)
+// Sur réseau mobile (4G/5G), la connexion directe est souvent bloquée par l'opérateur : il faut un relais (TURN).
+// On en propose plusieurs, gratuits ; le navigateur prend le premier qui marche.
+const ICE = { iceServers: [
+  { urls: ['stun:stun.l.google.com:19302', 'stun:stun.cloudflare.com:3478'] },
+  { urls: ['turn:eu-0.turn.peerjs.com:3478', 'turn:us-0.turn.peerjs.com:3478'], username: 'peerjs', credential: 'peerjsp' },
+  { urls: ['turn:openrelay.metered.ca:80', 'turn:openrelay.metered.ca:443', 'turns:openrelay.metered.ca:443?transport=tcp'], username: 'openrelayproject', credential: 'openrelayproject' },
+] };
 const optionsPeer = () => {
   const s = params.get('serveur');
-  if (!s) return { debug: 1 };
+  if (!s) return { debug: 1, config: ICE };
   const [host, port] = s.split(':');
-  return { host, port: +port || 443, path: '/', secure: location.protocol === 'https:' && !/^(localhost|127\.)/.test(host), debug: 1 };
+  return { host, port: +port || 443, path: '/', secure: location.protocol === 'https:' && !/^(localhost|127\.)/.test(host), debug: 1, config: ICE };
 };
 const DELAI = 15000; // au-delà, on explique ce qui bloque
 

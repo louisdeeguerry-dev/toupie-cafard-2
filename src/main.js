@@ -247,6 +247,12 @@ function brancher(c, hote) {
     else statut('Connexion fermée.');
   });
   c.on('error', e => statut('Erreur de connexion : ' + (e?.type || e?.message || e)));
+  // État de la connexion directe : on dit clairement si le réseau la bloque
+  c.on('iceStateChanged', etat => {
+    if (etat === 'checking') statut('Connexion directe en cours…');
+    if (etat === 'failed') statut('La connexion directe a échoué : un des réseaux la bloque (souvent la 4G/5G ou un Wi-Fi d\'entreprise). Essayez tous les deux sur le même Wi-Fi, ou réessayez.');
+    if (etat === 'disconnected' && mode !== 'partie') statut('Connexion perdue, nouvelle tentative…');
+  });
   const direBonjour = () => c.send({ type: 'bonjour', joueur: moi });
   if (c.open) direBonjour(); else c.on('open', direBonjour);
 }
@@ -257,9 +263,12 @@ $('creerDefi').onclick = async () => {
       code(code) {
         $('codeDefi').classList.remove('cache'); $('codeTexte').textContent = code;
         statut('En attente de ton ami…');
+        const lien = location.origin + location.pathname + '?ami=' + code;
+        $('copierLien').textContent = navigator.share ? '📤 Envoyer le lien' : '📋 Copier le lien';
         $('copierLien').onclick = () => {
-          const lien = location.origin + location.pathname + '?ami=' + code;
-          navigator.clipboard?.writeText(lien).then(() => statut('Lien copié : ' + lien), () => statut(lien));
+          // Sur téléphone : la feuille de partage (SMS, WhatsApp…) ; sinon, copie dans le presse-papiers
+          if (navigator.share) navigator.share({ title: 'Toupie Cafard 2', text: 'Je te défie à Toupie Cafard 2 ! Code : ' + code, url: lien }).catch(() => {});
+          else navigator.clipboard?.writeText(lien).then(() => statut('Lien copié : ' + lien), () => statut(lien));
         };
       },
       connecte: c => brancher(c, true),
