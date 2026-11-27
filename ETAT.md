@@ -23,7 +23,8 @@
   - test local : `?local` (deux onglets).
 - **Quitter** : bouton 🏳️ Abandonner (partie), 🚪 Quitter (entraînement, sans confirmation) ou 🚪 Quitter le défi, en bas à gauche, toujours visible (même sur la boutique) ; Échap l'ouvre aussi.
 - **Bannir** : 🚫 sur une offre de la boutique (2 clics) : la stat ne sort plus de la partie ; 1 bannissement par partie (`BANNISSEMENTS_MAX`, `src/match.js`).
-- **Duel sans attraction forcée** : seule l'Agressivité attire vers l'adversaire (`CHOC.parAgressivite`) ; sans elle, la toupie suit son élan.
+- **Duels (refonte 27/11, calée au simulateur)** : seule l'Agressivité attire vers l'adversaire (plafond `CHOC.attraction` 0,4) ; sans elle, la toupie part tout droit. L'arène de duel est légèrement creusée (`CHOC.cuvette`, cercles légers au sol) et la « danse » réduite : une toupie ralentie finit au centre, d'où des contacts. La charge compte la vitesse AVANT le rebond (bug corrigé : l'Élan ne frappait pas plus fort). Défense tassée en duel (`partRelative`, `usureTassee`, `inertieDuel`, `masseDuel`, `seuilMaxDuel` dans `CHOC`, `src/physics.js`). Un rebond élastique (stat Rebond) coûte moins de rotation.
+- **Malus des pièces pondérés par impact** (`IMPACT` dans `src/data/pieces.js`) : un niveau d'Endurance, de Lames, de Poids, d'Inertie ou d'Équilibre pèse plus qu'un niveau d'Élan, de Glisse ou de Rebond ; les malus sont recalculés pour que bonus et malus pèsent autant (test `tests/equilibre.mjs`).
 - **Terrain rebondissant = arène carrée** (duel et atelier ; côtés plats face aux lanceurs). Simulation de billard (2 toupies tout droit) : rond 24 % de duels sans contact, hexagone 7 %, losange 5 %, carré 2 %. Chaque bande accélère de 35 %, jusqu'à 1,9 × la vitesse de lancer (Élan) : `CHOC.rebondBoost` et `CHOC.rebondPlafond`.
 - **Lancer au doigt** (téléphone) : glisser sur la bande du bas place le lanceur sans tirer ; toucher le plateau vise et charge la jauge ; lever le doigt tire (`src/launcher.js`).
 - **Paramètres** (menu ⚙️) : qualité d'image, ombres, halo, secousses, plein écran, volumes ; `src/parametres.js`.
@@ -83,6 +84,8 @@
 ## Outils
 - `node tests/equilibre.mjs` : équilibrage des pièces, terrains et boîtes (rapide).
 - `tests/lancer-strategies.sh 5 2` : 5 parties par stratégie jouées par un robot, avec synthèse (environ 45 min, en arrière-plan).
+- `node tests/duels-sim.js 100` (serveur `python3 -m http.server 8123` d'abord) : milliers de duels sans affichage, build contre build, en quelques secondes. `CHOC='{"cuvette":1.2}'` essaie un réglage sans toucher au code ; `MARGE=1` mesure la valeur de ±2 niveaux de chaque stat.
+- Builds en partie complète : `STRATS="elan elanTerrain puissance lames endurance critique agressivite combo" SCRIPT=builds.js tests/lancer-strategies.sh 4 3 dossier` (environ 40 min).
 - Dans la console du jeu : `__tc2.demarrerTest(3)` lance directement un duel, `__tc2.demarrerTest(0)` un lancer contre les cafards,
   `__tc2.acceleration = 4` accélère le jeu.
 - Menu → **🧪 Mode test** : toutes les pièces au niv 5 et tous les terrains ; la vraie sauvegarde est mise de côté et revient avec « Quitter le mode test ».
@@ -122,7 +125,12 @@
 - **27/11, nouvelle économie** (sans pondeuse ni plafonds, rareté plus chère) : sacrifice 6,2, économie 5,6, mixte 5,4, puissance 6,0.
   Les stratégies sont groupées (écart de 0,8), l'argent ne s'emballe plus (10 à 18 💰 au maximum) ; le robot reste un peu sous les bots.
 
+- **27/11, duels au simulateur** (après refonte) : victoires Défaut 76 %, Puissance 74 %, Agressivité 67 %, Élan 37 % (8 % sur le bureau rond, 67 % sur le terrain rebondissant), Lames 36 %, Critique 35 %, Endurance 25 % ; 4 à 8 contacts par duel. Avant : de 3 % (Élan) à 93 % (Endurance), 1 contact.
+- **27/11, parties complètes par build** (4 parties chacun, place moyenne sur 8) : Puissance 3,8, Agressivité 4,8, Élan + terrain rebondissant 5,0, Lames 5,5, Critique 6,3, Endurance 6,5, Élan sans terrain 7,0, Combo 7,8. Les duels décident presque tout ; le build Combo (économie) finit dernier : la Combo n'est pas trop forte.
+
 ## Prochaines étapes possibles
+- **Décisions à prendre avec Louis** : durée des parties (une partie testée a duré 54 manches : 2 vies par duel perdu à partir de l'étape 6 ?) ; garder ou retirer la Combo (les mesures disent qu'elle est faible) ; l'Élan sans terrain reste faible (7e) et la Puissance reste en tête (3,8).
+- Retours des agents non traités : liste des pièces qui cache les emplacements dans l'atelier (choix de Louis), argent qui s'emballe en fin de longue partie, barres de stats vides sans explication, texte du terrain trop long, boîte coupée à gauche à l'ouverture (à vérifier).
 - **À mesurer** : durée et nombre de contacts des duels depuis la fin de l'attraction forcée (bureau rond neutre surtout) ; si trop peu de contacts, passer aussi le bureau neutre en hexagone.
 - **Plan des agents critiques (27/11) : les 7 points sont faits** (fin de duel, téléphone, gains, sons, toupie lisible, cafards, atelier).
   Suite possible : vrais échantillons de chocs de métal (Kenney Impact, CC0) ; musique différente en partie ; décor autour du plateau.

@@ -1056,3 +1056,11 @@ l'élan ; sur téléphone, pouvoir placer le lanceur d'abord, puis tirer.
 **Réalisé** : losange simulé (5 %) puis carré retenu (2 % de duels sans contact) ; arène carrée en duel et dans l'atelier ;
 chaque bande : +35 % de vitesse, plafond 1,9 × vitesse de lancer (Élan) ; au doigt : glisser sur la bande du bas = placer
 (sans tirer), toucher le plateau = viser + jauge, lever = tir.
+
+## 2026-11-27 — Agents testeurs critiques et équilibrage des builds
+**Prompt optimisé** (directeur QA + game designer) : lancer plusieurs agents critiques qui explorent tous les menus et jouent
+à tous les modes ; faire jouer toutes les stratégies de toupie (Élan, Puissance, Lames…) en ×100 ; appliquer les retours,
+équilibrer, et dire s'il faut retirer la Combo ; faire un topo de tous les retours.
+**Réalisé** : 3 agents (menus, parties, duels) ; robot par build (`tests/builds.js`) et simulateur de duels (`tests/duels-sim.js`) ;
+bug de la charge corrigé, flair limité aux cafards, arène creusée, défense tassée, malus pondérés par impact (écart 3-93 % → 25-76 %) ;
+corrections d'interface. Combo : le build Combo finit dernier, elle n'est pas trop forte. Décisions laissées à Louis (durée de partie…).
