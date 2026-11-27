@@ -121,6 +121,10 @@ et [jwagner/simplex-noise.js](https://github.com/jwagner/simplex-noise.js) (brui
 
 ---
 
+### Multijoueur en temps réel (ajouté le 27/11)
+- **PeerJS** : https://github.com/peers/peerjs (MIT). WebRTC simplifié, avec un serveur de mise en relation public et gratuit (0.peerjs.com). **Utilisé** pour « Défier un ami » (`vendor/peerjs.min.js`).
+- **PeerServer** : https://github.com/peers/peerjs-server (MIT). Pour héberger notre propre serveur de mise en relation si le serveur public ne suffit plus.
+
 ## 2. Modélisation 3D & assets graphiques
 
 ### 2.1 Logiciels de création
