@@ -859,3 +859,18 @@ quel que soit le réseau.
 - Canal de jeu avec poignée de main, battement de cœur toutes les secondes et détection de coupure au-delà de 12 s.
 - La connexion directe PeerJS reste disponible avec `?p2p`.
 - Testé avec deux navigateurs séparés via un relais local (aedes) : partie lancée, duel joué, vies cohérentes, aucune erreur.
+
+---
+
+## 2026-11-27 — Duels : lancers gardés en mémoire, départ simultané, 7 s pour lancer
+
+**Prompt optimisé** : (rôle : dev gameplay) en duel, contre un bot comme contre un ami, le lancer (angle et puissance) est
+gardé en mémoire : la toupie ne part pas tant que l'adversaire n'a pas lancé. Les deux toupies partent ensemble quand les
+deux joueurs ont lancé. On a 7 s pour lancer, sinon le lancer part tout seul.
+**Réalisé** :
+- `monLancer`, `sonLancer` et `tenterLacher()` dans `src/match.js` ; `tempsLancerDuel = 7`.
+- Le bot choisit son lancer entre 1 et 5 s, sans voir le tien.
+- Message « ⏳ Lancer prêt — en attente de … ».
+- Contre un ami, l'hôte lâche les deux toupies ; si le lancer de l'invité n'arrive pas, lancer par défaut au bout de 10 s.
+
+Testé : contre un bot (départ ensemble, lancer automatique à 7 s) et entre deux navigateurs (relais local) ; aucune erreur.

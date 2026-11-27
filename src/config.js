@@ -25,7 +25,8 @@ export const PARTIE = {
   argentSansTerrain: 8,
   argentAvecTerrain: 0,
   // Temps limités (le jeu sera en ligne : personne ne doit attendre)
-  tempsLancer: 15, // s pour lancer ; au-delà, la toupie part toute seule
+  tempsLancer: 15, // s pour lancer (cafards) ; au-delà, la toupie part toute seule
+  tempsLancerDuel: 7, // s pour lancer en duel : les deux lancers partent ENSEMBLE quand les deux joueurs ont lancé
   accelererApres: 10, // s après le lancer : si une toupie tourne encore, le temps accélère…
   accelerationMax: 5, // …progressivement, jusqu'à ×5
   tempsBoutique: 25, // s pour faire ses achats entre deux manches ; au-delà, on passe à la suite

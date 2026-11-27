@@ -62,7 +62,8 @@ export function commencerManche() {
   partie.mancheAffichee = null;
   partie.type = typeManche();
   Object.assign(partie, { gainsManche: 0, resultat: null, chrono: 0, combo: 0, renfortT: 0, tues: 0, contacts: 0, attenteRelance: 0,
-    tempsLancer: 0, depuisLancer: 0, acceleration: 1, horloge: null, lanceEnvoye: false });
+    tempsLancer: 0, depuisLancer: 0, acceleration: 1, horloge: null, lanceEnvoye: false,
+    monLancer: null, sonLancer: null, lachees: false });
   if (partie.ami) { partie.ami.fantomes.clear(); partie.ami.etat = null; }
   // Le plateau : on retire les toupies ; les cafards survivants restent d'un lancer à l'autre dans une même étape
   const nouvelleEtape = partie.manche % PARTIE.cycle.length === 0;
@@ -92,7 +93,7 @@ export function commencerManche() {
     modeDuel(true);
     railAdverse.visible = true;
     partie.botLance = false;
-    partie.botLanceDans = 0;
+    partie.botLanceDans = partie.ami ? 0 : 1 + Math.random() * 4; // le bot choisit son lancer pendant tes 7 s
   }
   partie.lancers = 1; // un seul lancer par manche
   partie.phase = 'jeu';
@@ -117,32 +118,45 @@ function lancerGroupe(joueur, camp, x, z, dx, dz, puiss) {
 
 // Appelé par le lanceur
 export function lancer({ x, z, dx, dz, puissance: puiss, parfait }) {
-  if (partie.phase !== 'jeu' || partie.lancers <= 0 || partie.mesToupies.some(enJeu)) return;
-  if (partie.ami && !partie.ami.hote) { // invité : l'hôte fait la physique, on lui envoie juste le lancer
-    partie.lancers--; partie.lanceEnvoye = true; lanceur.actif = false;
-    partie.ami.envoyer({ type: 'lancer', x, z, dx, dz, puiss: Math.min(1.08, puiss) });
-    sfx.lancer(puiss); if (parfait) { popup('PARFAIT !', x, z - 0.06, 'parfait'); sfx.parfait(); }
-    ui.lance?.();
-    return;
-  }
-  partie.lancers--;
-  partie.mesToupies = lancerGroupe(partie.moi, 'joueur', x, z, dx, dz, Math.min(1.08, puiss));
-  lanceur.actif = false;
+  if (partie.phase !== 'jeu' || partie.lancers <= 0 || partie.mesToupies.some(enJeu) || partie.monLancer) return;
+  partie.lancers--; lanceur.actif = false;
   sfx.lancer(puiss);
   if (parfait) { popup('PARFAIT !', x, z - 0.06, 'parfait'); sfx.parfait(); }
-  if (partie.type === 'duel' && !partie.ami) partie.botLanceDans = 0.25 + Math.random() * 0.3;
-  ui.hud?.();
   ui.lance?.();
+  const l = { x, z, dx, dz, puiss: Math.min(1.08, puiss) };
+  if (partie.type === 'duel') {
+    // Duel : le lancer est GARDÉ EN MÉMOIRE (angle, puissance) ; les deux toupies partent ensemble quand l'adversaire a lancé
+    partie.monLancer = l;
+    if (partie.ami && !partie.ami.hote) partie.ami.envoyer({ type: 'lancer', ...l }); // invité : c'est l'hôte qui lâche les toupies
+    else tenterLacher();
+    ui.hud?.();
+    return;
+  }
+  partie.mesToupies = lancerGroupe(partie.moi, 'joueur', x, z, dx, dz, l.puiss);
+  ui.hud?.();
 }
 
+// Les deux lancers sont prêts : les deux toupies partent en même temps
+function tenterLacher() {
+  if (partie.lachees || !partie.monLancer || !partie.sonLancer || partie.phase !== 'jeu') return;
+  partie.lachees = true;
+  const m = partie.monLancer, s = partie.sonLancer;
+  partie.mesToupies = lancerGroupe(partie.moi, 'joueur', m.x, m.z, m.dx, m.dz, m.puiss);
+  partie.sesToupies = lancerGroupe(partie.adversaire, 'adverse', s.x, s.z, s.dx, s.dz, s.puiss);
+  partie.botLance = true;
+  sfx.lancer(Math.max(m.puiss, s.puiss));
+  ui.minuteur?.('', false);
+}
+// Lancer par défaut de l'adversaire (en haut, tout droit) si son lancer n'arrive jamais
+const lancerParDefaut = () => ({ x: 0, z: railZ(0, true) * 0.92, dx: 0, dz: 1, puiss: 0.55 });
+
 function lancerBot() {
-  const adv = partie.adversaire, cible = partie.mesToupies.find(enJeu);
+  const adv = partie.adversaire;
   const x = (Math.random() * 2 - 1) * RAIL_XMAX * 0.8;
   const z = railZ(x, true) * 0.92; // sur l'arc du haut, un peu vers l'intérieur
-  const { tx, tz, puiss } = lancerDuelBot(adv, cible);
-  partie.sesToupies = lancerGroupe(adv, 'adverse', x, z, tx - x, tz - z, puiss);
-  partie.botLance = true;
-  son('toc', { hauteur: 0.7 });
+  const { tx, tz, puiss } = lancerDuelBot(adv, null); // il ne voit pas ton lancer : il vise le centre, avec son habileté
+  partie.sonLancer = { x, z, dx: tx - x, dz: tz - z, puiss };
+  tenterLacher();
 }
 
 const rappels = {
@@ -195,16 +209,25 @@ const rappels = {
 function minuteurs(dt, lancees) {
   const now = performance.now(), d = Math.min(1, (now - (partie.horloge ?? now)) / 1000) * (window.__tc2?.acceleration ?? 1);
   partie.horloge = now;
-  if (!lancees) {
-    partie.tempsLancer += d;
-    const reste = Math.ceil(PARTIE.tempsLancer - partie.tempsLancer);
-    ui.minuteur?.(`⏱️ ${Math.max(0, reste)} s pour lancer`, reste <= 5);
+  const duel = partie.type === 'duel', limite = duel ? PARTIE.tempsLancerDuel : PARTIE.tempsLancer;
+  const pret = duel ? !!partie.monLancer : lancees; // j'ai fait mon lancer
+  const parti = duel ? !!partie.lachees : lancees; // les toupies sont parties
+  if (!parti) partie.tempsLancer += d;
+  if (!pret) {
+    const reste = Math.ceil(limite - partie.tempsLancer);
+    ui.minuteur?.(`⏱️ ${Math.max(0, reste)} s pour lancer`, reste <= 3);
     if (reste <= 3 && reste > 0 && reste !== partie.dernierTic) { partie.dernierTic = reste; sfx.tic(1 - reste / 3); }
-    if (partie.tempsLancer >= PARTIE.tempsLancer && lanceur.actif) {
+    if (partie.tempsLancer >= limite && lanceur.actif) {
       const puiss = lanceur.etat === 'charge' ? valeurJauge() : 0.55;
       lanceur.etat = 'libre';
       lancerDirect(lanceur.x, lanceur.dir.x, lanceur.dir.y, puiss);
     }
+    return;
+  }
+  if (!parti) { // duel : mon lancer est prêt, j'attends celui d'en face
+    ui.minuteur?.(`⏳ Lancer prêt — en attente de ${partie.adversaire?.nom || 'l\'adversaire'}…`, false);
+    if (partie.ami?.hote && !partie.sonLancer && partie.tempsLancer > limite + 3) { partie.sonLancer = lancerParDefaut(); tenterLacher(); }
+    if (!partie.ami && !partie.sonLancer && partie.tempsLancer > limite) lancerBot(); // le bot ne traîne jamais plus que toi
     return;
   }
   partie.depuisLancer += d;
@@ -433,11 +456,10 @@ function envoyerEtat() {
 export function messageAmi(m) {
   const A = partie.ami;
   if (!A) return;
-  if (A.hote && m.type === 'lancer' && partie.type === 'duel' && partie.phase === 'jeu' && !partie.botLance) {
-    // Le lancer de l'invité arrive dans SON repère : on le retourne (il est en face de nous)
-    partie.sesToupies = lancerGroupe(A.joueur, 'adverse', -m.x, -m.z, -m.dx, -m.dz, m.puiss);
-    partie.botLance = true;
-    sfx.lancer(m.puiss);
+  if (A.hote && m.type === 'lancer' && partie.type === 'duel' && partie.phase === 'jeu' && !partie.sonLancer) {
+    // Le lancer de l'invité arrive dans SON repère : on le retourne (il est en face de nous), et on attend le nôtre
+    partie.sonLancer = { x: -m.x, z: -m.z, dx: -m.dx, dz: -m.dz, puiss: m.puiss };
+    tenterLacher();
   } else if (!A.hote && m.type === 'manche') {
     partie.manche = m.manche; commencerManche();
   } else if (!A.hote && m.type === 'etat') {
@@ -457,7 +479,7 @@ export function messageAmi(m) {
 // Invité : pas de physique, on suit l'état envoyé par l'hôte (fantômes lissés)
 function majInvite(dt) {
   const A = partie.ami;
-  if (partie.phase === 'jeu') minuteurs(dt, !!partie.lanceEnvoye);
+  if (partie.phase === 'jeu') minuteurs(dt, !!partie.lachees);
   const e = A.etat;
   if (!e) return;
   const vus = new Set();
@@ -470,7 +492,7 @@ function majInvite(dt) {
       f = creerToupieJeu(j.equipe, j.niveaux, camp, j.nivPieces, { duel: true });
       lancerToupie(f, -x, -z, 0, -1, 0.5);
       A.fantomes.set(cle, f);
-      if (camp === 'adverse') partie.botLance = true; // la caméra suit le duel
+      partie.lachees = true; if (camp === 'adverse') partie.botLance = true; // la caméra suit le duel
       (camp === 'joueur' ? partie.mesToupies : partie.sesToupies).push(f);
     }
     const k = 1 - Math.exp(-18 * dt);
