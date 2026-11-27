@@ -957,3 +957,18 @@ aucune marque, très colorée. Elle s'ouvre un peu plus à chaque clic ; une foi
   2. le couvercle s'entrouvre ;
   3. il s'ouvre et laisse passer des rayons de la couleur de la rareté (indice) ;
   4. la pièce sort en brillant, puis la carte du lot apparaît.
+
+---
+
+## 2026-11-27 — Boutique 3D : petit paquet (1 pièce, 100) et gros carton (5 pièces, 450)
+
+**Prompt optimisé** : (rôle : dev 3D et designer UI) quand on va dans la boutique, la caméra se déplace jusqu'à un comptoir.
+On y voit deux produits : un petit paquet d'1 pièce pour 100 écrous et un gros carton de 5 pièces pour 450. Cliquer sur un
+produit propose l'achat.
+**Réalisé** :
+- `src/magasin3d.js` : comptoir en bois, mur violet, enseigne néon « BOUTIQUE », deux emballages texturés dans le style de la
+  boîte mystère (×5, prix sur pastille).
+- La caméra glisse vers le comptoir ; au survol, le produit se soulève et pivote ; un clic ouvre la confirmation (prix,
+  solde, « il manque X »).
+- Après l'achat, les boîtes s'ouvrent à la suite : 1 ou 5 révélations.
+- `acheterProduit` dans `progression.js`.

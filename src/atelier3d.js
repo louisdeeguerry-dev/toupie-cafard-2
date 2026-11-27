@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { vitrine, vitrineCam, supportVitrine } from './scene.js';
 import { creerToupie, libererToupie } from './topMesh.js';
 import { creerLanceur, libererLanceur, tournerEngrenages } from './lanceurMesh.js';
+import { majMagasin, vueBoutique } from './magasin3d.js';
 
 const R = 0.2; // rayon de la mini-arène
 
@@ -285,7 +286,9 @@ export function majAtelier(dt, t) {
 
   // Caméra : vue d'ensemble, zoom sur la pièce choisie, ou vue large de l'arène (onglet Terrain)
   let pos, cible;
-  if (etat.onglet === 'terrain') { pos = new THREE.Vector3(0, 0.34, 0.38); cible = new THREE.Vector3(0, 0, 0); }
+  majMagasin(dt, t, etat.onglet === 'boutique');
+  if (etat.onglet === 'boutique') ({ pos, cible } = vueBoutique()); // la caméra glisse jusqu'au comptoir de la boutique
+  else if (etat.onglet === 'terrain') { pos = new THREE.Vector3(0, 0.34, 0.38); cible = new THREE.Vector3(0, 0, 0); }
   // Zoom : la pièce choisie au centre, mais assez de recul pour voir toute la vue éclatée
   else if (eclateT) ({ pos, cible } = cibleDe(T.parts, etat.slot, ECHELLE_T, [0.05, 0.05, 0.32], new THREE.Vector3(0, T.racine.position.y + 0.02, 0)));
   else if (eclateL) ({ pos, cible } = cadrerLanceur(L, etat.slot)); // tout le lanceur éclaté tient entre les panneaux

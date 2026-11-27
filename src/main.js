@@ -44,7 +44,8 @@ function allerA(ecran) {
   for (const e of ECRANS) UI.montrer(e, e === ecran);
   controlesActifs(ecran === 'atelier'); // dans l'atelier : glisser pour pivoter, molette pour zoomer
   if (ecran === 'collection') UI.rendreCollection(save);
-  if (ecran !== 'atelier') selectionAtelier('toupie', null); // hors atelier : la toupie tourne, montée
+  if (ecran === 'boutiqueMeta') selectionAtelier('boutique', null); // la caméra va au comptoir
+  else if (ecran !== 'atelier') selectionAtelier('toupie', null); // hors atelier : la toupie tourne, montée
   else { const et = atelier.etat(); selectionAtelier(et.onglet, et.slot); }
   atelier.rendre();
 }
@@ -58,8 +59,10 @@ document.addEventListener('click', e => {
 allerA('menu');
 
 function boite() {
-  UI.ouvrirBoite(save, { onFini() { sauver(save); atelier.rendre(); majVitrine(); } });
+  // Ouvre les boîtes l'une après l'autre (un gros carton = 5 boîtes à la suite)
+  UI.ouvrirBoite(save, { onFini() { sauver(save); atelier.rendre(); majVitrine(); if (aOuvrir > 0 && save.boites > 0) { aOuvrir--; setTimeout(boite, 250); } } });
 }
+let aOuvrir = 0;
 
 function demarrer() {
   activerAudio();
@@ -310,4 +313,33 @@ document.getElementById('entrainement').addEventListener('click', () => {
   mode = 'partie';
   UI.montrer('hud');
   UI.majHud();
+});
+
+// ---------------------------------------------------------------- Boutique 3D : on clique sur un paquet du comptoir
+import { PRODUITS, produitSous } from './magasin3d.js';
+import { acheterProduit, MONNAIE } from './progression.js';
+const enBoutique = () => !document.getElementById('boutiqueMeta').classList.contains('cache') && mode === 'atelier';
+const ndc = e => { const r = renderer.domElement.getBoundingClientRect(); return { x: ((e.clientX - r.left) / r.width) * 2 - 1, y: -((e.clientY - r.top) / r.height) * 2 + 1 }; };
+renderer.domElement.addEventListener('pointermove', e => {
+  if (!enBoutique()) return;
+  renderer.domElement.style.cursor = produitSous(ndc(e), vitrineCam) ? 'pointer' : '';
+});
+renderer.domElement.addEventListener('click', e => {
+  if (!enBoutique()) return;
+  const id = produitSous(ndc(e), vitrineCam);
+  if (!id) return;
+  activerAudio(); UI.son?.('choix', { volume: 0.6 });
+  const p = PRODUITS[id], ok = save.ecrous >= p.prix, el = $('achatPaquet');
+  el.innerHTML = `<div class="grand">${p.pieces > 1 ? '📦📦' : '📦'} ${p.nom}</div><div>${p.desc}</div>
+    <div class="petit" style="margin:6px 0">Prix : <b>${p.prix} ${MONNAIE.icone}</b> · tu as ${save.ecrous} ${MONNAIE.icone}</div>
+    <div class="actions"><button class="btn second" id="annulerAchat">Annuler</button>
+    <button class="btn" id="confirmerAchat" ${ok ? '' : 'disabled'}>${ok ? 'Acheter et ouvrir' : `Il manque ${p.prix - save.ecrous} ${MONNAIE.icone}`}</button></div>`;
+  el.classList.remove('cache');
+  $('annulerAchat').onclick = () => el.classList.add('cache');
+  $('confirmerAchat').onclick = () => {
+    if (!acheterProduit(save, p)) return;
+    el.classList.add('cache'); sauver(save); atelier.rendre();
+    UI.son?.('piece');
+    aOuvrir = p.pieces - 1; boite();
+  };
 });

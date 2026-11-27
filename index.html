@@ -330,6 +330,14 @@
 .parametres label { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .parametres label.case { justify-content: flex-start; }
 .parametres select, .parametres input[type=range] { flex: 1; max-width: 200px; }
+/* Boutique 3D : panneau sur le côté, confirmation d'achat au centre */
+#boutiqueMeta { pointer-events: none; }
+#boutiqueMeta .panneau { pointer-events: auto; }
+.boutique-meta { position: absolute; left: 14px; top: 14px; width: min(300px, 86vw); display: flex; flex-direction: column; gap: 8px; }
+.boutique-meta .solde { font-size: 22px; font-weight: 900; color: var(--or); }
+.achat-paquet { position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%); width: min(360px, 92vw); text-align: center; animation: apparait .35s cubic-bezier(.2,1.6,.4,1); }
+.achat-paquet .grand { font-size: 22px; font-weight: 900; }
+@media (max-width: 720px) { .boutique-meta { top: auto; bottom: 10px; } .achat-paquet { bottom: auto; top: 12px; } }
 /* Défi entre amis */
 .defi { display: flex; flex-direction: column; gap: 10px; min-width: min(380px, 90vw); text-align: center; }
 .defi label { display: flex; gap: 10px; align-items: center; justify-content: center; }
@@ -441,15 +449,18 @@
 </div>
 
 <div id="boutiqueMeta" class="ecran cache">
-  <div class="menu-centre panneau">
+  <div class="panneau boutique-meta">
     <button class="retour-menu" data-ecran="menu">← Menu</button>
     <h2>📦 Boutique</h2>
+    <div class="solde" id="soldeEcrous"></div>
+    <div class="petit">👆 Clique sur un paquet du comptoir pour l'acheter.</div>
     <div class="actions">
       <button class="btn" id="ouvrirBoite">📦 Ouvrir</button>
-      <button class="btn second" id="acheterBoite">+1 📦</button>
+      <button class="btn second cache" id="acheterBoite">+1 📦</button>
     </div>
     <div class="petit" id="garantie"></div>
   </div>
+  <div class="panneau achat-paquet cache" id="achatPaquet"></div>
 </div>
 
 <!-- Collection : tout ce qu'on possède -->

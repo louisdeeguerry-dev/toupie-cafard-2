@@ -91,6 +91,7 @@ export function creerAtelier(save, { onChange, onJouer, onBoite, onSelection = (
     rendreStats();
     $('bilanCollection').textContent = `${Object.keys(save.collection).length}/${PIECES.length} pièces`;
     $('ouvrirBoite').textContent = `📦 Ouvrir (${save.boites})`;
+    $('soldeEcrous').textContent = `${save.ecrous} ${MONNAIE.icone} ${MONNAIE.nom}`;
     const reste = GARANTIE_LEGENDAIRE - save.boitesSansLegendaire;
     $('garantie').innerHTML = `✨ Lot légendaire garanti ${reste <= 1 ? '<b>à la prochaine boîte</b>' : `dans <b>${reste}</b> boîtes au plus`}
       — pièce légendaire, coffre d'écrous ou terrain de duel (${TERRAINS.filter(t => t.rarete && !save.terrains.includes(t.id)).length} terrain(s) à trouver, même chance chacun).`;

@@ -52,6 +52,13 @@ export function recompenser(save, place, mode) {
   return r;
 }
 
+// Boutique : un produit = N boîtes mystère pour un prix (petit paquet 1 pour 100, gros carton 5 pour 450)
+export function acheterProduit(save, { pieces, prix }) {
+  if (save.ecrous < prix) return false;
+  save.ecrous -= prix;
+  save.boites += pieces;
+  return true;
+}
 export function acheterBoite(save) {
   if (save.ecrous < PRIX_BOITE) return false;
   save.ecrous -= PRIX_BOITE;
