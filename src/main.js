@@ -159,6 +159,7 @@ const CLE_AVANT_TEST = 'toupie-cafard-2-avant-test';
 const btnTest = document.getElementById('btnTest');
 const enTest = () => { try { return !!localStorage.getItem(CLE_AVANT_TEST); } catch { return false; } };
 btnTest.textContent = enTest() ? '🧪 Quitter le mode test' : '🧪 Mode test (tout débloqué)';
+if (enTest() && save.ecrous < 100000) { save.ecrous = 100000; sauver(save); } // mode test : écrous toujours rechargés
 btnTest.addEventListener('click', async e => {
   e.stopPropagation();
   try {
@@ -170,6 +171,7 @@ btnTest.addEventListener('click', async e => {
       const { PIECES } = await import('./data/pieces.js');
       for (const p of PIECES) { save.collection[p.id] = 5; save.niveauxPieces[p.id] = 5; }
       save.terrains = Object.keys(TERRAIN).filter(t => t !== 'aucun');
+      save.ecrous = 100000; // de quoi acheter des boîtes à volonté
     }
     sauver(save);
   } catch { /* stockage bloqué */ }

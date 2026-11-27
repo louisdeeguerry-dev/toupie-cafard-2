@@ -972,3 +972,16 @@ produit propose l'achat.
   solde, « il manque X »).
 - Après l'achat, les boîtes s'ouvrent à la suite : 1 ou 5 révélations.
 - `acheterProduit` dans `progression.js`.
+
+---
+
+## 2026-11-27 — Boutons de retour visibles et en surbrillance ; mode test avec beaucoup d'écrous
+
+**Prompt optimisé** : (rôle : designer UI)
+- Rendre les boutons de retour (menu, atelier, boutique…) bien plus visibles en couleur, avec une surbrillance au survol.
+- Préparer une partie test avec beaucoup d'écrous pour acheter des boîtes.
+
+**Réalisé** :
+- `.retour-menu` en cyan vif avec bordure claire, et un halo au survol (atelier, boutique, collection, paramètres, défi, inspection).
+- Surbrillance au survol sur tous les boutons, les cartes d'offre, les onglets et les emplacements ; ✖ Quitter en rouge.
+- Mode test : 100 000 écrous, rechargés à chaque chargement tant que le mode test est actif.
