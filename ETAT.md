@@ -130,9 +130,11 @@
 
 - **27/11, 2e passe (Élan, Puissance)** : poids d'impact mesurés (`IMPACT`), usure de duel 0,22, guidage de l'Agressivité 0,1. Duels au simulateur : Élan 44 % (79 % sur terrain rebondissant), Puissance 69 %, Lames 50 %, Critique 47 %, Agressivité 65 %, Défaut 68 %, Endurance 7 %. Parties complètes (3 par build) : Élan + terrain 3,7, Puissance 4,3, Lames 4,7, Agressivité 4,7, Critique 5,7, Élan sans terrain 6,3, Endurance 6,7, Combo 7,3.
 
+- **27/11, 3e passe (Élan sans terrain, Endurance)** : recul contre les toupies stables (`CHOC.recul` 0,2), `parLames` 0,04, poids Élan 0,35. Simulateur : tous les builds entre 29 et 69 % (Endurance 29 %, Élan bureau rond 19 %). Parties complètes (2 par build, échantillon faible) : Élan + terrain 4,0, Puissance 4,5, Élan 5,0, Critique 5,5, Endurance 6,0, Lames 6,5, Agressivité 6,5, Combo 8,0.
+
 ## Prochaines étapes possibles
 - **Décidé le 27/11** : 2 vies par duel perdu dès l'étape 6 (fait) ; la Combo est gardée.
-- **À reprendre** : la tortue pure (build Endurance, sans dégâts) perd presque tous ses duels ; l'Élan sans terrain reste faible sur le bureau rond (10 %). Piste écartée : frottement de glissement (`CHOC.glissementDuel`), il fige les toupies lentes.
+- **À reprendre** : le build Combo (économie pure) perd tous ses duels ; confirmer l'équilibrage avec plus de parties (5 par build). Piste écartée : frottement de glissement (`CHOC.glissementDuel`), il fige les toupies lentes.
 - Retours des agents non traités : liste des pièces qui cache les emplacements dans l'atelier (choix de Louis), argent qui s'emballe en fin de longue partie, barres de stats vides sans explication, texte du terrain trop long, boîte coupée à gauche à l'ouverture (à vérifier).
 - **À mesurer** : durée et nombre de contacts des duels depuis la fin de l'attraction forcée (bureau rond neutre surtout) ; si trop peu de contacts, passer aussi le bureau neutre en hexagone.
 - **Plan des agents critiques (27/11) : les 7 points sont faits** (fin de duel, téléphone, gains, sons, toupie lisible, cafards, atelier).
