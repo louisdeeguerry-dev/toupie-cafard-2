@@ -38,7 +38,7 @@ export function modeDuel(oui) { duel = !!oui; }
 const RAYON_STANDARD = 0.046; // rayon d'une toupie standard (stats.js)
 export const CHOC = { ref: 600, base: 0.01, parLames: 0.0375, parVitesse: 0.12, attraction: 0.1, parAgressivite: 0.3, rebondBoost: 1.35, rebondPlafond: 1.9,
   // Réglages calés au simulateur (tests/duels-sim.js, 27/11, 2e passe) : Élan 46 % (77 % sur terrain rebondissant), Puissance 69 %
-  cuvette: 1.1, partRelative: 0.85, usureTassee: 0.45, deriveDuel: 0.2, inertieDuel: 0.5, masseDuel: 0.5, seuilMaxDuel: 0.3, approcheMax: 99, frottementDuel: 1, glissementDuel: 0, glissant: 0, recul: 0.2, tornadeToupie: 0.5, poussee: 0.12, delai: 0.2, rebond: 0.5, usureDuel: 0.22 };
+  cuvette: 1.1, partRelative: 0.85, usureTassee: 0.45, deriveDuel: 0.2, inertieDuel: 0.5, masseDuel: 0.5, seuilMaxDuel: 0.3, approcheMax: 99, frottementDuel: 1, glissementDuel: 0, glissant: 0, recul: 0.2, tornadeToupie: 0.5, poussee: 0.12, delai: 0.2, rebond: 0.5, usureDuel: 0.22, enduranceChoc: 0, lamesSurplus: 0, lamesMult: 0, critDuel: 1.5 };
 
 // Les toupies sont un peu étirées en hauteur pour être lisibles vues de haut (la hauteur ne compte pas dans la physique)
 const HAUTEUR_VUE = 1.35;
@@ -384,10 +384,13 @@ export function majToupies(dt, cb) {
 // approche : vitesse à laquelle l'attaquant fonce sur la cible (m/s)
 function frapperToupie(att, cible, approche, cb, contact) {
   const ref = CHOC.ref ** (1 - CHOC.partRelative) * cible.rotationMax ** CHOC.partRelative;
-  let perte = ref * (CHOC.base + CHOC.parLames * att.s.lames + CHOC.parVitesse * Math.min(approche, CHOC.approcheMax))
+  let perte = ref * (CHOC.base + CHOC.parLames * att.s.lames + CHOC.lamesSurplus * Math.max(0, att.s.lames - 1) + CHOC.parVitesse * Math.min(approche, CHOC.approcheMax))
     * (2 * att.s.masse / (att.s.masse + cible.s.masse)) ** CHOC.masseDuel * cible.s.inertie ** CHOC.inertieDuel * (0.5 + 0.5 * att.rotation / att.rotationMax);
+  if (CHOC.lamesMult) perte *= att.s.lames ** CHOC.lamesMult; // Lames : chaque niveau multiplie les dégâts infligés
+  // Endurance : une toupie endurante encaisse aussi mieux les coups (un malus d'Endurance, lui, ne fait qu'user la toupie plus vite)
+  if (CHOC.enduranceChoc) perte *= Math.min(1, cible.s.usure / 0.12) ** CHOC.enduranceChoc;
   let crit = false;
-  if (att.s.crit && Math.random() < att.s.crit * 0.5) { perte *= 1.5; crit = true; } // critiques moins forts en duel
+  if (att.s.crit && Math.random() < att.s.crit * 0.5) { perte *= CHOC.critDuel; crit = true; } // critiques moins forts en duel
   if (CHOC.glissant) perte /= 1 + CHOC.glissant * Math.max(0, Math.hypot(cible.vx, cible.vz) - 0.5);
   if (CHOC.recul) att.rotation -= (perte / cible.rotationMax) * att.rotationMax * CHOC.recul * Math.min(2, Math.max(0, att.s.seuilChute / cible.s.seuilChute - 1)); // une toupie plus stable que son attaquant ne bronche pas : c'est lui qui recule
   if (cible.carapace && perte / cible.rotationMax > 0.04) { cible.carapace = false; cb.choc?.(att, cible, 0, true, false, contact); return; }
