@@ -1180,3 +1180,7 @@ ronronnement des toupies dès la fin d'un lancer ou d'un duel (boutique, bilan, 
 départ : « Pièce de départ », sans onglets de niveaux ; téléphone : barres de stats toujours visibles en haut de l'atelier,
 toupie au milieu, un seul retour, boutons ≥ 40 px, aide sur 2 lignes ; PC : menu en grille, raccourcis clavier (Échap,
 Entrée, 1-4, R), offres numérotées, panneaux élargis sur grand écran, Abandonner discret. Robots de test : tutoriel sauté.
+
+## 2026-11-28 — Refonte des menus + tutoriel obligatoire
+**Prompt optimisé** : (rôle : dev UI/UX Three.js) Réorganiser totalement les menus : bandeau de navigation en haut sur PC (barre d'onglets en bas sur téléphone), accueil exploitant l'espace avec un maximum d'infos lisibles. Créer un tutoriel guidé obligatoire (6 lancers contre les cafards, 2 duels contre des bots, apprendre acheter/relancer/bannir), récompensé par 3 pièces de toupie, qui débloque les vraies parties. Retirer les niveaux sur les pièces de départ. Vérifier PC 1000×650 et Pixel 7.
+**Fait** : #nav (onglets + profil + JOUER), accueil en 2 colonnes avec toupie à gauche (PC) / remontée au-dessus de la carte (téléphone), src/tutoriel.js (10 étapes), récompense, bouton « Refaire le tutoriel », niveaux masqués pour estDepart. Tutoriel testé de bout en bout.

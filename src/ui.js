@@ -17,6 +17,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 
 export function montrer(id, oui = true) {
   $(id).classList.toggle('cache', !oui);
+  if (id === 'hud') $('nav')?.classList.toggle('cache', oui); // la barre de navigation disparaît en partie
   if (id === 'hud') $('quitter').classList.toggle('cache', !oui); // le bouton Abandonner / Quitter suit le HUD
 }
 export { son };
@@ -105,11 +106,13 @@ export function creerAtelier(save, { onChange, onJouer, onBoite, onSelection = (
     $('acheterBoite').disabled = save.ecrous < PRIX_BOITE;
     const rang = rangDe(save.rangPoints), suivant = RANGS[RANGS.indexOf(rang) + 1];
     const xpMax = xpPourNiveau(save.niveau);
+    if ($('navProfil')) $('navProfil').innerHTML = `<span title="Niveau">⭐ ${save.niveau}</span><span title="${MONNAIE.nom}">${MONNAIE.icone} ${save.ecrous}</span>${save.boites ? `<span title="Boîtes à ouvrir">📦 ${save.boites}</span>` : ''}`;
     $('profil').innerHTML = `
       <div class="ligne"><span>⭐ Niveau <b>${save.niveau}</b></span><span>${MONNAIE.icone} <b>${save.ecrous}</b> ${MONNAIE.nom}</span></div>
       <div class="barre xp"><i style="width:${(save.xp / xpMax) * 100}%"></i></div><div class="petit">${save.xp}/${xpMax} XP — chaque niveau offre une boîte mystère</div>
       <div class="ligne"><span>${rang.icone} Rang <b>${rang.nom}</b> · ${save.rangPoints} pts</span><span class="petit">${suivant ? `${suivant.icone} ${suivant.nom} à ${suivant.min}` : 'rang maximum'}</span></div>
-      <div class="petit">Parties : ${save.parties} · Victoires : ${save.victoires}${save.meilleure ? ' · Meilleure place : ' + save.meilleure + 'e' : ''}</div>`;
+      <div class="petit">Parties : ${save.parties} · Victoires : ${save.victoires}${save.meilleure ? ' · Meilleure place : ' + save.meilleure + 'e' : ''}</div>
+      <div class="ligne"><span>📚 Collection <b>${PIECES.filter(p => save.collection[p.id]).length}/${PIECES.length}</b></span><span>📦 <b>${save.boites}</b> boîte${save.boites > 1 ? 's' : ''} à ouvrir</span></div>`;
     $('modes').innerHTML = Object.entries(MODES).map(([id, m]) =>
       `<button class="mode ${save.mode === id ? 'choisi' : ''}" data-mode="${id}" title="${esc(m.desc)}">${m.icone} ${m.nom}</button>`).join('');
     $('terrains').innerHTML = TERRAINS.map(t => {

@@ -273,6 +273,38 @@
   /* Bouton Abandonner / Quitter : hors du HUD pour rester visible au-dessus de la boutique et du bilan */
   #quitter { position: fixed; left: 12px; bottom: 14px; z-index: 13; cursor: pointer; background: #3a2a22; color: #ffb4a8; border: 1px solid #a5463a; font-weight: 800; } /* discret (Échap l'ouvre aussi) */
   #pause { z-index: 26; }
+  /* ---------------------------------------------------------------- Navigation (refonte du 28/11)
+     PC : bandeau en haut (logo, onglets, profil, JOUER) ; téléphone : barre d'onglets en bas. Elle remplace les « ← Menu ». */
+  #nav { position: fixed; left: 0; right: 0; top: 0; height: 58px; z-index: 11; display: flex; align-items: center; gap: 14px; padding: 0 16px;
+    background: linear-gradient(#1d1410f2, #140e0be6); border-bottom: 1px solid var(--bord); box-shadow: 0 4px 18px #0008; }
+  .nav-logo { font-weight: 900; font-size: 18px; letter-spacing: .04em; color: #ffe3b0; white-space: nowrap; }
+  .nav-onglets { display: flex; gap: 4px; flex: 1; justify-content: center; }
+  .nav-onglets button { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 10px; background: none; border: 1px solid transparent;
+    color: var(--doux); font-weight: 800; font-size: 14px; cursor: pointer; min-height: 42px; }
+  .nav-onglets button:hover { background: #2a1f17; color: #fff; }
+  .nav-onglets button.on { background: #3a2617; border-color: var(--accent); color: #fff; }
+  .nav-onglets i { font-style: normal; font-size: 17px; }
+  .nav-profil { display: flex; gap: 10px; font-weight: 800; font-size: 14px; white-space: nowrap; }
+  .nav-jouer { min-height: 42px; padding: 8px 18px; font-size: 16px; }
+  #menu h1, .retour-menu[data-ecran="menu"], #raccourcisMenu, #atelier .titre { display: none !important; }
+  .ecran { padding-top: 72px; }
+  #atelier .cote, #atelier .gauche { margin-top: 72px; }
+  /* Accueil sur PC : deux colonnes (jouer à gauche, profil et progression à droite) */
+  @media (min-width: 721px) {
+    #menu .menu-centre { width: min(780px, 52vw); display: grid; grid-template-columns: 1.15fr 1fr; gap: 12px 22px; align-content: start; }
+    #menu #modes, #menu #jouer, #menu .menu-boutons.deux { grid-column: 1; }
+    #menu #profil { grid-column: 2; grid-row: 1 / span 3; }
+    #menu .pied-menu { grid-column: 1 / -1; }
+  }
+  @media (max-width: 720px) {
+    #nav { top: auto; bottom: 0; height: calc(60px + env(safe-area-inset-bottom)); padding: 0 4px env(safe-area-inset-bottom); border-top: 1px solid var(--bord); border-bottom: 0; }
+    .nav-logo, .nav-profil, .nav-jouer { display: none; }
+    .nav-onglets { justify-content: space-around; gap: 0; }
+    .nav-onglets button { flex-direction: column; gap: 1px; padding: 4px 2px; font-size: 10px; min-width: 52px; border-radius: 8px; }
+    .ecran { padding-top: 14px; padding-bottom: calc(70px + env(safe-area-inset-bottom)); }
+    #atelier .cote { margin-top: 54vh; padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+    .stats-mobile { top: 8px; }
+  }
   /* Tutoriel : bulle de guidage, au-dessus de la boutique, sans bloquer le jeu */
   #guide { position: fixed; left: 50%; top: 8px; transform: translateX(-50%); width: min(560px, 94vw); z-index: 27; pointer-events: auto;
     background: linear-gradient(#2c1f4a, #1e1533); border: 2px solid #b79cff; border-radius: 14px; padding: 12px 14px; box-shadow: 0 8px 28px #0009;
@@ -472,6 +504,20 @@
 </div>
 
 <!-- Menu principal -->
+<!-- Navigation (hors partie) : bandeau en haut sur PC, barre d'onglets en bas sur téléphone -->
+<nav id="nav">
+  <div class="nav-logo">TOUPIE CAFARD 2</div>
+  <div class="nav-onglets">
+    <button data-ecran="menu" data-nav="menu"><i>🏠</i><span>Accueil</span></button>
+    <button data-ecran="atelier" data-nav="atelier"><i>🛠️</i><span>Atelier</span></button>
+    <button data-ecran="boutiqueMeta" data-nav="boutiqueMeta"><i>📦</i><span>Boutique</span></button>
+    <button data-ecran="collection" data-nav="collection"><i>📚</i><span>Collection</span></button>
+    <button data-ecran="ami" data-nav="ami"><i>🤝</i><span>Défi</span></button>
+    <button data-ecran="parametres" data-nav="parametres"><i>⚙️</i><span>Réglages</span></button>
+  </div>
+  <div class="nav-profil" id="navProfil"></div>
+  <button class="btn nav-jouer" id="navJouer">JOUER ▶</button>
+</nav>
 <div id="menu" class="ecran">
   <div class="menu-centre panneau">
     <h1>TOUPIE CAFARD 2</h1>
@@ -481,7 +527,7 @@
       <button class="btn second" data-ecran="ami">🤝 Défier un ami</button>
       <button class="btn second" id="entrainement">🎯 Entraînement</button>
     </div>
-    <div class="menu-boutons deux">
+    <div class="menu-boutons deux" id="raccourcisMenu">
       <button class="btn second" data-ecran="atelier">🛠️ Atelier</button>
       <button class="btn second" data-ecran="boutiqueMeta">📦 Boutique</button>
       <button class="btn second" data-ecran="collection">📚 Collection</button>
@@ -628,7 +674,7 @@
   <div class="actions"><button class="btn" id="pauseReprendre">▶ Reprendre</button><button class="btn" id="pauseQuitter" style="background:linear-gradient(#ff6b5b,#c0392b);color:#fff">🏳️ Abandonner</button></div>
 </div></div>
 
-<script type="importmap">{"imports":{"three":"./vendor/three.module.js?v=a762b858","./src/atelier3d.js":"./src/atelier3d.js?v=ca0507a6","./src/audio.js":"./src/audio.js?v=a66add9e","./src/bots.js":"./src/bots.js?v=1a0021fd","./src/bugs.js":"./src/bugs.js?v=89265498","./src/config.js":"./src/config.js?v=6ce0de2e","./src/data/boutique.js":"./src/data/boutique.js?v=c715de5e","./src/data/cafards.js":"./src/data/cafards.js?v=4e07a535","./src/data/pieces.js":"./src/data/pieces.js?v=a1ef85c8","./src/data/terrains.js":"./src/data/terrains.js?v=432a674d","./src/enligne.js":"./src/enligne.js?v=2338143c","./src/fx.js":"./src/fx.js?v=911fec12","./src/inspecteur.js":"./src/inspecteur.js?v=d9944222","./src/lanceurMesh.js":"./src/lanceurMesh.js?v=43daea2e","./src/launcher.js":"./src/launcher.js?v=5caff3e9","./src/magasin3d.js":"./src/magasin3d.js?v=0af5946b","./src/main.js":"./src/main.js?v=b8d31c69","./src/match.js":"./src/match.js?v=1367bffc","./src/ouverture3d.js":"./src/ouverture3d.js?v=ddfe4f83","./src/parametres.js":"./src/parametres.js?v=a8dab31a","./src/physics.js":"./src/physics.js?v=107eeac8","./src/progression.js":"./src/progression.js?v=81194ffc","./src/save.js":"./src/save.js?v=45a68a57","./src/scene.js":"./src/scene.js?v=65278f4c","./src/stats.js":"./src/stats.js?v=66772d0f","./src/topMesh.js":"./src/topMesh.js?v=06215461","./src/tutoriel.js":"./src/tutoriel.js?v=a7fd601b","./src/ui.js":"./src/ui.js?v=c9a6c93a","./vendor/jsm/loaders/BufferGeometryUtils.js":"./vendor/jsm/loaders/BufferGeometryUtils.js?v=00ecb96b","./vendor/jsm/loaders/GLTFLoader.js":"./vendor/jsm/loaders/GLTFLoader.js?v=aee0c31f","./vendor/jsm/loaders/RGBELoader.js":"./vendor/jsm/loaders/RGBELoader.js?v=7626b55b","./vendor/jsm/postprocessing/EffectComposer.js":"./vendor/jsm/postprocessing/EffectComposer.js?v=eccf8177","./vendor/jsm/postprocessing/MaskPass.js":"./vendor/jsm/postprocessing/MaskPass.js?v=10b721db","./vendor/jsm/postprocessing/OutputPass.js":"./vendor/jsm/postprocessing/OutputPass.js?v=8ca54f44","./vendor/jsm/postprocessing/Pass.js":"./vendor/jsm/postprocessing/Pass.js?v=a5ec37ce","./vendor/jsm/postprocessing/RenderPass.js":"./vendor/jsm/postprocessing/RenderPass.js?v=89aaff34","./vendor/jsm/postprocessing/ShaderPass.js":"./vendor/jsm/postprocessing/ShaderPass.js?v=f145da64","./vendor/jsm/postprocessing/UnrealBloomPass.js":"./vendor/jsm/postprocessing/UnrealBloomPass.js?v=a60d7378","./vendor/jsm/shaders/CopyShader.js":"./vendor/jsm/shaders/CopyShader.js?v=6088e45f","./vendor/jsm/shaders/LuminosityHighPassShader.js":"./vendor/jsm/shaders/LuminosityHighPassShader.js?v=05b8a6dd","./vendor/jsm/shaders/OutputShader.js":"./vendor/jsm/shaders/OutputShader.js?v=251fcfe4"}}</script>
-<script type="module" src="src/main.js?v=b40a0a01"></script>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js?v=a762b858","./src/atelier3d.js":"./src/atelier3d.js?v=ca0507a6","./src/audio.js":"./src/audio.js?v=a66add9e","./src/bots.js":"./src/bots.js?v=1a0021fd","./src/bugs.js":"./src/bugs.js?v=89265498","./src/config.js":"./src/config.js?v=6ce0de2e","./src/data/boutique.js":"./src/data/boutique.js?v=c715de5e","./src/data/cafards.js":"./src/data/cafards.js?v=4e07a535","./src/data/pieces.js":"./src/data/pieces.js?v=a1ef85c8","./src/data/terrains.js":"./src/data/terrains.js?v=432a674d","./src/enligne.js":"./src/enligne.js?v=2338143c","./src/fx.js":"./src/fx.js?v=911fec12","./src/inspecteur.js":"./src/inspecteur.js?v=d9944222","./src/lanceurMesh.js":"./src/lanceurMesh.js?v=43daea2e","./src/launcher.js":"./src/launcher.js?v=5caff3e9","./src/magasin3d.js":"./src/magasin3d.js?v=0af5946b","./src/main.js":"./src/main.js?v=d2f39e9b","./src/match.js":"./src/match.js?v=1367bffc","./src/ouverture3d.js":"./src/ouverture3d.js?v=ddfe4f83","./src/parametres.js":"./src/parametres.js?v=a8dab31a","./src/physics.js":"./src/physics.js?v=107eeac8","./src/progression.js":"./src/progression.js?v=81194ffc","./src/save.js":"./src/save.js?v=45a68a57","./src/scene.js":"./src/scene.js?v=c7529c24","./src/stats.js":"./src/stats.js?v=66772d0f","./src/topMesh.js":"./src/topMesh.js?v=06215461","./src/tutoriel.js":"./src/tutoriel.js?v=a7fd601b","./src/ui.js":"./src/ui.js?v=593f6a68","./vendor/jsm/loaders/BufferGeometryUtils.js":"./vendor/jsm/loaders/BufferGeometryUtils.js?v=00ecb96b","./vendor/jsm/loaders/GLTFLoader.js":"./vendor/jsm/loaders/GLTFLoader.js?v=aee0c31f","./vendor/jsm/loaders/RGBELoader.js":"./vendor/jsm/loaders/RGBELoader.js?v=7626b55b","./vendor/jsm/postprocessing/EffectComposer.js":"./vendor/jsm/postprocessing/EffectComposer.js?v=eccf8177","./vendor/jsm/postprocessing/MaskPass.js":"./vendor/jsm/postprocessing/MaskPass.js?v=10b721db","./vendor/jsm/postprocessing/OutputPass.js":"./vendor/jsm/postprocessing/OutputPass.js?v=8ca54f44","./vendor/jsm/postprocessing/Pass.js":"./vendor/jsm/postprocessing/Pass.js?v=a5ec37ce","./vendor/jsm/postprocessing/RenderPass.js":"./vendor/jsm/postprocessing/RenderPass.js?v=89aaff34","./vendor/jsm/postprocessing/ShaderPass.js":"./vendor/jsm/postprocessing/ShaderPass.js?v=f145da64","./vendor/jsm/postprocessing/UnrealBloomPass.js":"./vendor/jsm/postprocessing/UnrealBloomPass.js?v=a60d7378","./vendor/jsm/shaders/CopyShader.js":"./vendor/jsm/shaders/CopyShader.js?v=6088e45f","./vendor/jsm/shaders/LuminosityHighPassShader.js":"./vendor/jsm/shaders/LuminosityHighPassShader.js?v=05b8a6dd","./vendor/jsm/shaders/OutputShader.js":"./vendor/jsm/shaders/OutputShader.js?v=251fcfe4"}}</script>
+<script type="module" src="src/main.js?v=fe93a37d"></script>
 </body>
 </html>

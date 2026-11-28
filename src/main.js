@@ -10,7 +10,7 @@ import { majCamera, rendre } from './scene.js';
 import { tutoriel } from './tutoriel.js';
 import { PIECES, estDepart } from './data/pieces.js';
 import { creerToupie, libererToupie, chargerModeles, geometriesModele, modeleDetaille, modeleBrut } from './topMesh.js';
-import { habiller } from './scene.js';
+import { habiller, placerVitrine } from './scene.js';
 import { adopterModeleCafard } from './bugs.js';
 import { activerAudio, ronron, musique, basculerMusique, musiqueActive, sfx, baisserMusique } from './audio.js';
 import * as UI from './ui.js';
@@ -54,6 +54,8 @@ initControles(renderer.domElement);
 initParametres();
 function allerA(ecran) {
   for (const e of ECRANS) UI.montrer(e, e === ecran);
+  document.querySelectorAll('#nav [data-nav]').forEach(b => b.classList.toggle('on', b.dataset.nav === ecran));
+  placerVitrine(ecran === 'menu' ? 0.24 : 0); // accueil (PC) : la toupie à gauche, la carte à droite
   controlesActifs(ecran === 'atelier'); // dans l'atelier : glisser pour pivoter, molette pour zoomer
   if (ecran === 'collection') UI.rendreCollection(save);
   if (ecran === 'boutiqueMeta') selectionAtelier('boutique', null); // la caméra va au comptoir
@@ -144,7 +146,8 @@ function finTutoriel() {
   UI.finTutoriel(gains);
 }
 // Le bouton JOUER dit clairement que le tutoriel est obligatoire tant qu'il n'est pas fait
-function majJouer() { const b = document.getElementById('jouer'); if (b) b.textContent = save.tutoFait ? 'JOUER ▶' : '🎓 TUTORIEL ▶'; }
+function majJouer() { for (const id of ['jouer', 'navJouer']) { const b = document.getElementById(id); if (b) b.textContent = save.tutoFait ? 'JOUER ▶' : '🎓 TUTORIEL ▶'; } }
+document.getElementById('navJouer')?.addEventListener('click', () => document.getElementById('jouer').click());
 function demarrer() {
   activerAudio();
   const tuto = !save.tutoFait; // tant que le tutoriel n'est pas fait, « Jouer » lance le tutoriel guidé
@@ -274,8 +277,7 @@ addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     const retourPiece = document.querySelector('#atelier .retour-piece');
     if (vu(retourPiece)) { retourPiece.click(); return; }
-    const retour = [...document.querySelectorAll('.ecran:not(.cache) .retour-menu[data-ecran="menu"]')].find(vu);
-    retour?.click();
+    if (!vu(document.getElementById('menu'))) { allerA('menu'); UI.son?.('choix', { volume: 0.5 }); } // la barre de navigation remplace les « ← Menu »
   } else if (e.key === 'Enter' && vu(document.getElementById('jouer'))) document.getElementById('jouer').click();
 });
 addEventListener('keydown', e => { if (e.key === 'Escape' && mode === 'partie' && !document.getElementById('quitter').classList.contains('cache')) document.getElementById(document.getElementById('pause').classList.contains('cache') ? 'quitter' : 'pauseReprendre').click(); });

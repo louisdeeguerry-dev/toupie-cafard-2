@@ -235,6 +235,9 @@ export function majCamera(dt, suivi) {
   camera.lookAt(cam.cible);
 }
 
+// Décalage horizontal de la vitrine (part de la largeur) : à l'accueil, la toupie se place dans la moitié gauche de l'écran
+export const decalageVitrine = { x: 0 };
+export function placerVitrine(x) { decalageVitrine.x = x; cadrer(); }
 export function cadrer() {
   const w = conteneur.clientWidth || window.innerWidth, h = conteneur.clientHeight || window.innerHeight;
   renderer.setSize(w, h, false);
@@ -256,8 +259,8 @@ export function cadrer() {
   vitrineCam.aspect = w / h;
   // La toupie s'affiche à côté du panneau de l'atelier (à droite en paysage, en bas en portrait)
   vitrineCam.fov = portrait ? 52 : 35;
-  if (w > 720) vitrineCam.setViewOffset(w, h, Math.min(40, w * 0.03), 0, w, h); // entre les deux panneaux
-  else vitrineCam.setViewOffset(w, h, 0, h * 0.11, w, h); // téléphone : toupie entre le bandeau de stats (haut) et le panneau (bas)
+  if (w > 720) vitrineCam.setViewOffset(w, h, Math.min(40, w * 0.03) + w * decalageVitrine.x, 0, w, h); // entre les deux panneaux (accueil : toupie à gauche)
+  else vitrineCam.setViewOffset(w, h, 0, h * (0.11 + decalageVitrine.x * 0.6), w, h); // accueil : la toupie remonte au-dessus de la carte // téléphone : toupie entre le bandeau de stats (haut) et le panneau (bas)
   vitrineCam.updateProjectionMatrix();
 }
 
