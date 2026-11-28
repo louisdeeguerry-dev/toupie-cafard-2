@@ -1194,3 +1194,7 @@ Entrée, 1-4, R), offres numérotées, panneaux élargis sur grand écran, Aband
 **Fait** : confirmé (usure « tassée » + endurance sans effet sur les coups). Nouveau modèle de choc : l'Endurance protège et renvoie les coups, les lames percent et multiplient les dégâts mais freinent, l'Agressivité use la toupie, l'Élan use moins ; triangle mesuré Endurance > Puissance > Lames > Endurance. Critique 5 %/niv, Feu renforcé. Base tirelire modélisée (fente + pièce, hublots, médailles moletées, cerclage). Qualité « Auto » adaptative, anticrénelage coupé sur téléphone dense, modèles fusionnés par matière (moins d'appels de dessin).
 
 - 28/11 suite : série de vérification 2×build (nouveaux duels), écart resserré 3,0 à 6,5 sauf Puissance 8,0 → rotation par niveau de Puissance 0,18 → 0,22.
+
+## 2026-11-28 — Textures des pièces
+**Prompt optimisé** : (rôle : artiste 3D / intégrateur) Plus de texture sur toutes les pièces, cohérente avec leur fabrication (règle 5).
+**Fait** : motifs plus contrastés et relief par motif ; nouveaux motifs roche, craquelure (tirelire émaillée), grené (pièces sombres), anodisé (alu) ; acier des modèles brossé, or martelé. Roche du noyau encore peu visible.

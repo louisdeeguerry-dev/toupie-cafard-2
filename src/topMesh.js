@@ -49,7 +49,12 @@ export function chargerModeles() {
     FUSION[nom] = fusionner(parts);
   }).catch(() => { /* modèle absent : formes simples */ }))));
 }
-let matAcierM = null, matSombreM = null, matBlancM = null;
+let matAcierM = null, matSombreM = null, matBlancM = null, matOrM = null;
+// Ajoute un motif (relief + rugosité) à un matériau partagé des modèles
+function detailler(m, motif) {
+  const t = textures(motif);
+  return Object.assign(m, { bumpMap: t.relief, bumpScale: RELIEF[motif] * 0.7, roughnessMap: t.relief, roughness: Math.min(1, m.roughness * 1.3) });
+}
 const PIERRES_ROLES = ['rubis', 'saphir', 'emeraude', 'perle'];
 const ROLES = ['acier', 'sombre', 'or', 'blanc', 'rubis', 'saphir', 'emeraude', 'perle'];
 // Le rôle est le SUFFIXE du nom (« vis0_acier ») : chercher le mot n'importe où trouvait « or » dans « c-or-ps » (tout devenait doré)
@@ -74,13 +79,14 @@ export const modeleDetaille = (nom, matCorps, y = 0) => modele(nom, matCorps, y)
 function modele(nom, matCorps, y) {
   const parts = FUSION[nom] || MODELES[nom];
   if (!parts) return null;
-  matAcierM ||= new THREE.MeshStandardMaterial({ color: 0xc9d0d8, metalness: 0.95, roughness: 0.22 });
-  matSombreM ||= new THREE.MeshStandardMaterial({ color: 0x23272e, metalness: 0.4, roughness: 0.45 });
+  matAcierM ||= detailler(new THREE.MeshStandardMaterial({ color: 0xc9d0d8, metalness: 0.95, roughness: 0.22 }), 'brosse');
+  matSombreM ||= detailler(new THREE.MeshStandardMaterial({ color: 0x23272e, metalness: 0.4, roughness: 0.5 }), 'grene');
+  matOrM ||= detailler(matRivetOr.clone(), 'martele');
   matBlancM ||= new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x555555, roughness: 0.3 });
   const g = new THREE.Group();
   g.position.y = y;
   for (const p of parts) {
-    const m = new THREE.Mesh(p.geo, p.role === 'acier' ? matAcierM : p.role === 'sombre' ? matSombreM : p.role === 'or' ? matRivetOr : p.role === 'blanc' ? matBlancM : PIERRES_ROLES.includes(p.role) ? pierre(p.role) : matCorps);
+    const m = new THREE.Mesh(p.geo, p.role === 'acier' ? matAcierM : p.role === 'sombre' ? matSombreM : p.role === 'or' ? matOrM : p.role === 'blanc' ? matBlancM : PIERRES_ROLES.includes(p.role) ? pierre(p.role) : matCorps);
     p.matrice.decompose(m.position, m.quaternion, m.scale);
     m.userData.geoPartagee = true; // géométrie partagée entre toutes les toupies : ne pas la détruire
     m.userData.matPartage = p.role !== 'corps';
@@ -100,9 +106,29 @@ function dessiner(nom) {
   const c = document.createElement('canvas'); c.width = c.height = 256;
   const g = c.getContext('2d'), img = g.createImageData(256, 256), d = img.data;
   const ecrire = f => { for (let y = 0; y < 256; y++) for (let x = 0; x < 256; x++) { const v = Math.max(0, Math.min(255, f(x, y) * 255)), i = (y * 256 + x) * 4; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255; } };
+  // Bruit de valeur raccordable (la texture se répète sans couture), sommé sur plusieurs octaves
+  const grille = n => { const t = Array.from({ length: n * n }, () => alea()); return (x, y) => {
+    const fx = x * n / 256, fy = y * n / 256, x0 = Math.floor(fx), y0 = Math.floor(fy), tx = fx - x0, ty = fy - y0, sx = tx * tx * (3 - 2 * tx), sy = ty * ty * (3 - 2 * ty);
+    const v = (i, j) => t[((j % n + n) % n) * n + ((i % n + n) % n)];
+    return (v(x0, y0) * (1 - sx) + v(x0 + 1, y0) * sx) * (1 - sy) + (v(x0, y0 + 1) * (1 - sx) + v(x0 + 1, y0 + 1) * sx) * sy; }; };
+  const fbm = (...tailles) => { const gs = tailles.map(grille); return (x, y) => gs.reduce((s, f, i) => s + f(x, y) / 2 ** i, 0) / gs.reduce((s, _, i) => s + 1 / 2 ** i, 0); };
+  // Cellules (Voronoï raccordable) : distance au bord de cellule le plus proche
+  const cellules = n => { const pts = Array.from({ length: n }, () => [alea() * 256, alea() * 256]); return (x, y) => {
+    let d1 = 1e9, d2 = 1e9;
+    for (const [px, py] of pts) for (let ox = -256; ox <= 256; ox += 256) for (let oy = -256; oy <= 256; oy += 256) {
+      const dd = Math.hypot(x - px - ox, y - py - oy); if (dd < d1) { d2 = d1; d1 = dd; } else if (dd < d2) d2 = dd; }
+    return d2 - d1; }; };
   if (nom === 'tourne') { const l = Array.from({ length: 256 }, () => alea()); ecrire((x, y) => 0.72 + 0.18 * Math.sin(y * 1.6) * Math.sin(y * 0.23) + 0.1 * l[y]); }
   else if (nom === 'moletage') ecrire((x, y) => { const k = (Math.PI * 2 * 16) / 256, a = Math.abs(Math.sin(x * k + y * k)), b = Math.abs(Math.sin(x * k - y * k)); return 0.45 + 0.55 * Math.min(a, b) ** 0.6; });
-  else if (nom === 'brosse') { const l = Array.from({ length: 256 }, () => alea()); ecrire((x, y) => 0.75 + 0.2 * l[y] + 0.05 * alea()); }
+  else if (nom === 'brosse') { const l = Array.from({ length: 256 }, () => alea()); ecrire((x, y) => 0.68 + 0.27 * l[y] + 0.05 * alea()); }
+  // « roche » : météorite (noyau) — bosses et creux irréguliers
+  else if (nom === 'roche') { const n = fbm(4, 8, 16, 32); ecrire((x, y) => 0.25 + 0.95 * n(x, y) ** 1.4); }
+  // « craquelure » : émail de céramique (tirelire) — fines fissures du vernis
+  else if (nom === 'craquelure') { const c1 = cellules(26), n = grille(32); ecrire((x, y) => 0.95 - 0.35 * Math.max(0, 1 - c1(x, y) / 1.6) + 0.06 * n(x, y)); }
+  // « grene » : plastique grené (pièces sombres, lanceur) — grain fin et serré
+  else if (nom === 'grene') { const n = fbm(64, 128); ecrire((x, y) => 0.55 + 0.45 * n(x, y) + 0.08 * alea()); }
+  // « anodise » : aluminium anodisé (base légère) — très fin brossage + piqûres
+  else if (nom === 'anodise') { const l = Array.from({ length: 256 }, () => alea()), n = grille(96); ecrire((x, y) => 0.86 + 0.05 * l[y] - 0.1 * (n(x, y) > 0.86 ? 1 : 0)); }
   else if (nom === 'martele') {
     ecrire(() => 0.85);
     g.putImageData(img, 0, 0);
@@ -116,7 +142,9 @@ function dessiner(nom) {
   g.putImageData(img, 0, 0);
   return c;
 }
-const REPET = { tourne: [1, 1], moletage: [10, 1], brosse: [1, 1], martele: [2, 1] };
+const REPET = { tourne: [1, 1], moletage: [10, 1], brosse: [1, 1], martele: [2, 1], roche: [2, 1], craquelure: [3, 1], grene: [4, 2], anodise: [1, 1] };
+// Profondeur du relief selon le motif (un moletage ou une roche se sentent davantage qu'un brossage)
+const RELIEF = { tourne: 0.0014, moletage: 0.0022, brosse: 0.0012, martele: 0.0018, roche: 0.006, craquelure: 0.0012, grene: 0.0008, anodise: 0.0005 };
 function textures(nom) {
   if (motifs[nom]) return motifs[nom];
   const c = dessiner(nom);
@@ -128,7 +156,7 @@ const mat = (couleur, o = {}, motif = null) => {
   const m = new THREE.MeshPhysicalMaterial({ color: couleur, roughness: 0.35, metalness: 0.55, clearcoat: 0.6, clearcoatRoughness: 0.18, ...o });
   if (motif) {
     const t = textures(motif);
-    Object.assign(m, { map: t.map, bumpMap: t.relief, bumpScale: motif === 'moletage' ? 0.0012 : 0.0006, roughnessMap: t.relief, roughness: Math.min(1, m.roughness * 1.4) });
+    Object.assign(m, { map: t.map, bumpMap: t.relief, bumpScale: RELIEF[motif], roughnessMap: t.relief, roughness: Math.min(1, m.roughness * 1.4) });
   }
   return m;
 };
@@ -237,9 +265,12 @@ function pointe(p, k = 1) {
 }
 
 function base(p, y, k = 1) {
-  const g = new THREE.Group(), m = mat(p.couleur, {}, p.forme === 'lourde' ? 'martele' : 'tourne');
+  // Chaque base montre comment elle est faite : acier martelé (lourde), alu anodisé (légère), émail craquelé (tirelire),
+  // or martelé (trésor), roche (météorite), métal tourné (les autres)
+  const motif = { lourde: 'martele', legere: 'anodise', tirelire: 'craquelure', tresor: 'martele', noyau: 'roche' }[p.forme] || 'tourne';
+  const g = new THREE.Group(), m = mat(p.couleur, p.forme === 'tirelire' ? { metalness: 0.05, roughness: 0.25, clearcoat: 1 } : {}, motif);
   let r = 0.026, h = 0.014;
-  const matN = p.forme === 'noyau' ? mat(p.couleur, { emissive: 0x4a1a7a, emissiveIntensity: 0.5, flatShading: true }) : m;
+  const matN = p.forme === 'noyau' ? mat(p.couleur, { emissive: 0x4a1a7a, emissiveIntensity: 0.5, flatShading: true }, 'roche') : m;
   const md = modele('base-' + p.forme, matN, y);
   if (md) {
     g.add(md);
