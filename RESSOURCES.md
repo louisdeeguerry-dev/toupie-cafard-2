@@ -139,6 +139,13 @@ et [jwagner/simplex-noise.js](https://github.com/jwagner/simplex-noise.js) (brui
 - [mapeditor/tiled](https://github.com/mapeditor/tiled) · [deepnight/ldtk](https://github.com/deepnight/ldtk) — éditeurs de niveaux 2D
 - [FreeCAD/FreeCAD](https://github.com/FreeCAD/FreeCAD) — modélisation technique · [Ultimaker/Cura](https://github.com/Ultimaker/Cura) — impression 3D (goodies)
 
+### 2.1 bis Améliorer la 3D du jeu (pistes du 28/11)
+- ⭐ **Blender en module Python** ([`bpy` sur PyPI](https://pypi.org/project/bpy/), outil sous licence GPL ; les modèles créés restent à nous) : Claude peut modéliser les toupies par script (biseaux, gravures, dents, ressorts) dans le conteneur cloud et exporter des `.glb`, sans rien installer sur le PC (installation à autoriser dans la session).
+- ⭐ [Poly Haven](https://polyhaven.com) — HDRI, textures PBR et modèles, **CC0** : un HDRI de studio donne de vrais reflets aux métaux.
+- [ambientCG](https://ambientcg.com) — textures PBR (métal brossé, bois, plastique), **CC0**.
+- Three.js déjà embarqué (MIT) : `MeshPhysicalMaterial` (vernis, irisation, anisotropie du métal brossé), `PMREMGenerator` + HDRI, ombres de contact, occlusion ambiante (SSAO / GTAO) en post-traitement.
+- Unity / Unreal : **non recommandés** pour ce projet (réécriture complète, jeu web plus lourd) ; Blender + glTF garde tout le code actuel.
+
 ### 2.2 Pipeline glTF / optimisation (poids des jeux web & mobile)
 - ⭐ [donmccurdy/glTF-Transform](https://github.com/donmccurdy/glTF-Transform) — compresser/optimiser les `.glb` en une commande
 - [zeux/meshoptimizer](https://github.com/zeux/meshoptimizer) — compression maillage (gltfpack)

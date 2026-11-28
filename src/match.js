@@ -41,10 +41,19 @@ export function nouvellePartie(equipe, { pseudo = 'Toi', mode = 'normale', nivPi
   return partie;
 }
 
-export const etape = () => Math.floor(partie.manche / PARTIE.cycle.length) + 1;
-export const typeManche = (m = partie.manche) => partie.entrainement ? 'cafards' : PARTIE.cycle[m % PARTIE.cycle.length];
+// Découpe d'une manche : étape, rang dans l'étape, nombre de manches de l'étape (3 lancers + duel, puis 2 + duel
+// à partir de PARTIE.etapeCourte)
+const lancersEtape = e => (e >= PARTIE.etapeCourte ? 2 : 3);
+export function decoupe(m = partie.manche) {
+  let e = 1, debut = 0;
+  while (m >= debut + lancersEtape(e) + 1) { debut += lancersEtape(e) + 1; e++; }
+  return { etape: e, rang: m - debut, n: lancersEtape(e) + 1, lancers: lancersEtape(e), debut };
+}
+export const etape = () => decoupe().etape;
+export const typeManche = (m = partie.manche) => { if (partie.entrainement) return 'cafards'; const d = decoupe(m); return d.rang === d.n - 1 ? 'duel' : 'cafards'; };
 // Numéro du lancer dans l'étape (1 à 3) pour une manche de cafards
-export const lancerDansEtape = (m = partie.manche) => (m % PARTIE.cycle.length) + 1;
+export const lancerDansEtape = (m = partie.manche) => decoupe(m).rang + 1;
+export const lancersDansEtape = (m = partie.manche) => decoupe(m).lancers;
 export const vivants = () => partie.joueurs.filter(j => !j.elimine);
 export const mesStats = () => statsToupie(partie.moi.equipe, partie.moi.niveaux, partie.moi.nivPieces);
 const niv = id => partie.moi.niveaux[id] || 0;
@@ -71,7 +80,7 @@ export function commencerManche() {
     monLancer: null, sonLancer: null, lachees: false });
   if (partie.ami) { partie.ami.fantomes.clear(); partie.ami.etat = null; }
   // Le plateau : on retire les toupies ; les cafards survivants restent d'un lancer à l'autre dans une même étape
-  const nouvelleEtape = partie.manche % PARTIE.cycle.length === 0;
+  const nouvelleEtape = decoupe().rang === 0;
   viderToupies(); partie.mesToupies = []; partie.sesToupies = [];
   if (partie.type === 'cafards') {
     if (nouvelleEtape) { viderCafards(); viderTaches(); }
@@ -173,7 +182,7 @@ const rappels = {
     const st = mesStats(), fenetre = st.comboFenetre, bonusCombo = st.comboBonus;
     partie.combo = partie.tempsJeu - partie.dernierKill < fenetre ? partie.combo + 1 : 1;
     partie.dernierKill = partie.tempsJeu;
-    const brut = CAFARDS.prime * CAFARDS.primeEtape(etape()) * (c.t?.prime || 1) * st.prime * (c.dore ? 4 : 1) * multCombo(1 + bonusCombo * (partie.combo - 1));
+    const brut = CAFARDS.prime * CAFARDS.primeEtape(etape()) * (c.t?.prime || 1) * st.prime * (c.dore ? CAFARDS.multDore : 1) * multCombo(1 + bonusCombo * (partie.combo - 1));
     // On garde les centimes : une Prime ×1,2 finit vraiment par rapporter plus
     partie.reste = (partie.reste || 0) + brut;
     const gain = Math.floor(partie.reste);
@@ -301,7 +310,7 @@ function finLancer() {
   if (partie.entrainement) return finLancerEntrainement();
   partie.phase = 'bilan';
   lanceur.actif = false;
-  terminerManche({ type: 'cafards', tues: partie.tues, restants: cafards.filter(c => !c.mort).length, lancer: lancerDansEtape() });
+  terminerManche({ type: 'cafards', tues: partie.tues, restants: cafards.filter(c => !c.mort).length, lancer: lancerDansEtape(), sur: lancersDansEtape() });
 }
 
 function finDuel() {
@@ -345,9 +354,9 @@ function terminerManche(bilan) {
   bilan.prochaine = typeManche();
   // Aperçu du prochain lancer (et de l'évolution des cafards après un duel)
   if (bilan.prochaine === 'cafards') {
-    const nouvelle = partie.manche % PARTIE.cycle.length === 0;
+    const nouvelle = decoupe().rang === 0;
     bilan.apercu = {
-      lancer: lancerDansEtape(),
+      lancer: lancerDansEtape(), sur: lancersDansEtape(),
       capacite: capacite(),
       restants: nouvelle ? 0 : cafards.filter(c => !c.mort).length,
       vie: CAFARDS.vieCafard(partie.lancerCafards + 1, etape()),

@@ -19,8 +19,10 @@ export const PARTIE = {
   vies: 5,
   // Une étape = 3 LANCERS contre les cafards (un lancer par manche, boutique entre chaque), puis 1 duel.
   cycle: ['cafards', 'cafards', 'cafards', 'duel'],
-  // Un duel perdu coûte 1 vie, puis 2 vies à partir de l'étape 6 (décision de Louis, 27/11 : une partie testée durait 54 manches)
-  degatsDuel: e => (e >= 6 ? 2 : 1),
+  // À partir de l'étape 8, l'économie est en place : plus que 2 lancers contre les cafards avant le duel (Louis, 28/11)
+  etapeCourte: 8,
+  // Un duel perdu coûte 1 vie, 2 vies à partir de l'étape 6, 3 à partir de l'étape 10 (Louis, 27-28/11 : parties trop longues)
+  degatsDuel: e => (e >= 10 ? 3 : e >= 6 ? 2 : 1),
   // Argent de départ : choisir un terrain de duel coûte tout l'argent de départ (à équilibrer)
   argentSansTerrain: 8,
   argentAvecTerrain: 0,
@@ -38,6 +40,7 @@ export const PARTIE = {
 // etape = 1 + nombre de duels passés. Après chaque duel, les cafards ÉVOLUENT (voir src/data/cafards.js).
 export const CAFARDS = {
   capacite: 10, // cafards sur le bureau au début de chaque lancer (+ Nid)
+  multDore: 2, // un cafard doré (stat Chance 🍀) rapporte ×2 (×4 avant le 28/11 : trop d'argent)
   // +12 % de vie par étape jusqu'à l'étape 3, puis +6 % (les parties durent maintenant 7 étapes et plus)
   vieCafard: (n, etape) => 1.7 * Math.pow(1.03, n - 1) * Math.pow(1.12, Math.min(etape, 3) - 1) * Math.pow(1.06, Math.max(0, etape - 3)),
   prime: 1.5, // 💰 par cafard normal (les autres espèces rapportent plus ; les centimes sont gardés)
@@ -58,9 +61,13 @@ export const RARETES_OFFRE = [
   { id: 'epique', nom: 'Épique', mult: 2, poids: 5, couleur: '#b36bff' },
   { id: 'legendaire', nom: 'Légendaire', mult: 3, poids: 1, couleur: '#ffb52e' },
 ];
+// Mythique : réservée au Multi-lancer (une toupie de plus, c'est énorme) ; jamais tirée pour les autres offres (poids 0)
+RARETES_OFFRE.push({ id: 'mythique', nom: 'Mythique', mult: 1, poids: 0, couleur: '#ff4fd8' });
 export const RARETE_OFFRE = Object.fromEntries(RARETES_OFFRE.map(r => [r.id, r]));
+// Chance qu'une offre de la boutique soit le Multi-lancer mythique : 1,5 % par offre, ×(1 + 0,25 par niveau de Chance 🎲)
+export const chanceMythique = (veine = 0) => 0.015 * (1 + 0.25 * Math.min(25, Math.max(0, veine)));
 // Chaque niveau de Chance : les raretés hautes pèsent plus, la commune moins (plafonné, rendements décroissants)
-const BONUS_CHANCE = [-0.06, 0.15, 0.3, 0.5];
+const BONUS_CHANCE = [-0.06, 0.15, 0.3, 0.5, 0];
 export function poidsRaretes(veine = 0) {
   const L = Math.min(25, Math.max(0, veine));
   return RARETES_OFFRE.map((r, i) => r.poids * Math.max(0.15, 1 + BONUS_CHANCE[i] * L));

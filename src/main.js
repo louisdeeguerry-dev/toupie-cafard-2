@@ -3,7 +3,7 @@ import { renderer, scene, camera, vitrine, vitrineCam } from './scene.js';
 import { majModeles, selection as selectionAtelier, majAtelier, terrainVitrine, initControles, controlesActifs } from './atelier3d.js';
 import { charger, sauver, reinitialiser } from './save.js';
 import { lanceur, majLanceur, lancerDirect, modeleLanceur } from './launcher.js';
-import { lancerDansEtape, capacite } from './match.js';
+import { lancerDansEtape, lancersDansEtape, capacite } from './match.js';
 import { partie, nouvellePartie, commencerManche, majPartie, brancherInterface, lancer, abandonner, acheter, _interne } from './match.js';
 import { majFx, majBarres, majEtincelles, facteurTemps } from './fx.js';
 import { majCamera, rendre } from './scene.js';
@@ -148,7 +148,7 @@ brancherInterface({
       UI.aide((partie.lancesFaits || 0) < 2 ? AIDE : ''); // l'aide disparaît après 2 lancers
     } else {
       if (partie.evolution?.length) UI.bandeau('🧬 Les cafards ont évolué !', 'Nouveaux : ' + partie.evolution.map(t => TYPES[t].icone + ' ' + TYPES[t].nom).join(', '), 2600);
-      else UI.bandeau(`🪳 Lancer ${lancerDansEtape()}/3`, `${partie.renfort ? `+${partie.renfort} cafards : ` : ''}${capacite()} cafards sur le bureau`);
+      else UI.bandeau(`🪳 Lancer ${lancerDansEtape()}/${lancersDansEtape()}`, `${partie.renfort ? `+${partie.renfort} cafards : ` : ''}${capacite()} cafards sur le bureau`);
       UI.aide((partie.lancesFaits || 0) < 2 ? AIDE : ''); // l'aide disparaît après 2 lancers
     }
   },

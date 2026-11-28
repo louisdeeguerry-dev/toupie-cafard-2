@@ -4,7 +4,7 @@ import { TERRAINS, TERRAIN } from './data/terrains.js';
 import { STAT_ACHATS, PRIORITE, MANCHE_PRIORITE } from './data/boutique.js';
 import { PARTIE } from './config.js';
 import { STATS, STAT, GROUPES, niveauxToupie, calculer as calcul, tempsRotation, effet, BORNES } from './stats.js';
-import { partie, etape, prixAmelio, acheter, prioriteDispo, lancerDansEtape, relancerOffres, prixRelance, bannir, peutBannir, interetsPrevus, niveauxAchat, mesStats as mesStatsUI } from './match.js';
+import { partie, etape, decoupe, lancersDansEtape, prixAmelio, acheter, prioriteDispo, lancerDansEtape, relancerOffres, prixRelance, bannir, peutBannir, interetsPrevus, niveauxAchat, mesStats as mesStatsUI } from './match.js';
 import { ECONOMIE, RARETE_OFFRE, PARTIE as REGLES_PARTIE } from './config.js';
 import { PIECE as PIECES_PAR_ID } from './data/pieces.js';
 import { TYPES } from './data/cafards.js';
@@ -364,8 +364,9 @@ export function majHud() {
   $('salon').style.display = partie.entrainement ? 'none' : '';
   if (partie.entrainement) $('manches').innerHTML = `<span>🎯 Entraînement · ${partie.entrainement.lancers} lancer${partie.entrainement.lancers > 1 ? 's' : ''}</span>`;
   compteurArgent(partie.argent);
-  const n = PARTIE.cycle.length, mm = partie.mancheAffichee ?? partie.manche, et = Math.floor(mm / n) + 1, debut = (et - 1) * n;
-  if (!partie.entrainement) $('manches').innerHTML = `<span class="petit">${etroit ? 'É' : 'Étape '}${et}</span>` + PARTIE.cycle.map((t, i) => {
+  const mm = partie.mancheAffichee ?? partie.manche, D = decoupe(mm), et = D.etape, debut = D.debut;
+  const types = [...Array(D.lancers).fill('cafards'), 'duel']; // 3 lancers + duel, puis 2 + duel en fin de partie
+  if (!partie.entrainement) $('manches').innerHTML = `<span class="petit">${etroit ? 'É' : 'Étape '}${et}</span>` + types.map((t, i) => {
     const m = debut + i, cls = m < mm ? 'fait' : m === mm ? 'cours' : '';
     return `<i class="${cls}" title="${t === 'duel' ? 'Duel' : 'Cafards'}">${t === 'duel' ? '⚔️' : '🪳'}</i>`;
   }).join('');
@@ -376,7 +377,7 @@ export function majHud() {
     $('objectif').textContent = '🎯 Vise le mannequin : il ne bouge pas et ne meurt jamais';
     $('lancers').classList.add('cache');
   } else if (partie.type === 'cafards') {
-    $('objectif').textContent = `🪳 Lancer ${lancerDansEtape()}/3 · ${partie.tues} écrasé${partie.tues > 1 ? 's' : ''}`;
+    $('objectif').textContent = `🪳 Lancer ${lancerDansEtape()}/${lancersDansEtape()} · ${partie.tues} écrasé${partie.tues > 1 ? 's' : ''}`;
     $('objectif').style.color = '';
     $('lancers').textContent = `💰 +${partie.gainsManche}`;
     $('lancers').classList.remove('cache');
@@ -419,7 +420,7 @@ let dernieresOffres = null;
 export function afficherBilan(bilan, onPret) {
   let resultat;
   if (bilan.type === 'cafards') {
-    resultat = `🪳 Lancer ${bilan.lancer}/3 : <b>${bilan.tues}</b> cafard${bilan.tues > 1 ? 's' : ''} écrasé${bilan.tues > 1 ? 's' : ''} · +${bilan.gains} 💰`;
+    resultat = `🪳 Lancer ${bilan.lancer}/${bilan.sur || 3} : <b>${bilan.tues}</b> cafard${bilan.tues > 1 ? 's' : ''} écrasé${bilan.tues > 1 ? 's' : ''} · +${bilan.gains} 💰`;
   } else {
     resultat = bilan.gagne ? `⚔️ <b class="plus">Victoire</b> contre ${esc(bilan.adversaire)} (−${bilan.degats} ❤️ pour lui)`
       : `⚔️ <b class="moins">Défaite</b> contre ${esc(bilan.adversaire)} (−${bilan.degats} ❤️)`;
@@ -427,7 +428,7 @@ export function afficherBilan(bilan, onPret) {
   if (bilan.elimines?.length) resultat += ` · 💀 ${bilan.elimines.map(esc).join(', ')}`;
   const ap = bilan.apercu, adv = bilan.adversaireSuivant;
   const suite = adv ? `Prochain : ⚔️ duel contre <b>${esc(adv.nom)}</b> (défaite : −${PARTIE.degatsDuel(etape())} ❤️)`
-    : ap ? `Prochain : 🪳 lancer ${ap.lancer}/3 · ${ap.capacite} cafards${ap.evolution?.length ? ` · 🧬 nouveaux : ${ap.evolution.map(t => TYPES[t].icone + ' ' + TYPES[t].nom).join(', ')}` : ''}` : '';
+    : ap ? `Prochain : 🪳 lancer ${ap.lancer}/${ap.sur || 3} · ${ap.capacite} cafards${ap.evolution?.length ? ` · 🧬 nouveaux : ${ap.evolution.map(t => TYPES[t].icone + ' ' + TYPES[t].nom).join(', ')}` : ''}` : '';
 
   const carte = o => {
     const { id, rarete = 'commune' } = typeof o === 'string' ? { id: o } : o;

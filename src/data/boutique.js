@@ -2,13 +2,13 @@
 // ou dans la TOUPIE / le LANCEUR (plus fort tout de suite). Mêmes améliorations que l'atelier du jeu 1.
 // On n'y change PAS de pièces : la toupie choisie avant la partie reste la même jusqu'à la fin.
 import { STATS } from '../stats.js';
-import { RARETE_OFFRE, BOUTIQUE, tirerRarete } from '../config.js';
+import { RARETE_OFFRE, BOUTIQUE, tirerRarete, chanceMythique } from '../config.js';
 
 // Prix et plafonds des améliorations de partie. Le BUREAU (économie) est un groupe de stats comme la toupie et le lanceur
 // (voir src/stats.js) : certaines pièces en donnent ou en retirent aussi.
 // Les prix montent de plus en plus vite (n² ) : impossible de tout acheter d'un coup en fin de partie.
 const REGLES = {
-  multi: { prix: n => 60 + n * 50 }, // très cher : une toupie de plus, c'est énorme (et chaque toupie en plus tourne 30 % moins fort)
+  multi: { prix: () => 220, max: 1 }, // rareté mythique, un seul achat : une toupie de plus, c'est énorme (60 💰 avant le 28/11)
   nid: { prix: n => 5 + n * 4 + n * n }, // 5, 10, 17, 26, 37… : chaque cafard de plus coûte plus cher prime: { prix: n => 4 + n * 3 + n * n }, chance: { prix: n => 6 + n * 4 + n * n },
   combo: { prix: n => 4 + n * 3 + n * n },
   tirelire: { prix: n => 6 + n * 5 + n * n },
@@ -56,10 +56,14 @@ export function paquet(a, n, rarete = 'commune') {
 // bannies : stats exilées par le joueur pour toute la partie (elles ne sortent plus jamais en offre)
 export function tirerOffresPour(achats = {}, veine = 0, bannies = []) {
   const dispo = STAT_ACHATS.filter(a => (achats[a.id] || 0) < a.max && !bannies.includes(a.id));
-  const poids = a => (a.id === 'multi' ? 0.3 : a.prix(0) >= 6 ? 0.6 : 1);
+  const multiDispo = dispo.some(a => a.id === 'multi');
+  const poids = a => (a.prix(0) >= 6 ? 0.6 : 1);
   const offres = [];
   while (offres.length < BOUTIQUE.offres && offres.length < dispo.length) {
-    const l = dispo.filter(a => !offres.some(o => o.id === a.id));
+    // Multi-lancer : seulement en rareté MYTHIQUE, très rare (la Chance 🎲 aide), un seul achat par partie
+    if (multiDispo && !offres.some(o => o.id === 'multi') && Math.random() < chanceMythique(veine)) { offres.push({ id: 'multi', rarete: 'mythique' }); continue; }
+    const l = dispo.filter(a => a.id !== 'multi' && !offres.some(o => o.id === a.id));
+    if (!l.length) break;
     let r = Math.random() * l.reduce((x, a) => x + poids(a), 0), choisi = l[0];
     for (const a of l) if ((r -= poids(a)) < 0) { choisi = a; break; }
     let rarete = SANS_RARETE(choisi.id) ? 'commune' : tirerRarete(veine);

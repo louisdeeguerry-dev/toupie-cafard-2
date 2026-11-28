@@ -68,6 +68,7 @@ export const STAT = Object.fromEntries(STATS.map(s => [s.id, s]));
 const f = (a, L) => (L >= 0 ? 1 + a * L : 1 / (1 + a * -L));
 
 export const SEUIL_DEGRESSIF = 10;
+export const nidCafards = n => (n <= 5 ? n : 5 + 5 * Math.log(1 + (n - 5) / 5));
 export const degressif = x => (x <= SEUIL_DEGRESSIF ? x : SEUIL_DEGRESSIF * (1 + Math.log(1 + (x - SEUIL_DEGRESSIF) / SEUIL_DEGRESSIF)));
 export function calculer(niv) {
   // Rendements DÉGRESSIFS : jusqu'à 10 niveaux, chaque niveau compte en entier ; au-delà, chaque niveau compte de moins
@@ -95,10 +96,11 @@ export function calculer(niv) {
     tours: 600 * f(0.18, L('puissance')),
     vitesse: 0.95 * f(0.1, L('elan')),
     parfait: Math.max(0.03, Math.min(0.4, 0.1 + 0.02 * L('precision'))),
-    toupies: 1 + Math.round(P('multi')), // nombre entier de toupies : pièce (≤ 1) + achats (1 par achat)
+    toupies: Math.min(2, 1 + Math.round(P('multi'))), // au plus 2 toupies : pièce (≤ 1) ou un seul achat (rareté mythique)
     // Bureau
-    // Nid : 1 cafard de plus par niveau (arrondi en dessous), 15 au maximum : un bureau plein reste jouable et l'argent ne s'emballe pas
-    nid: Math.max(-4, Math.floor(L('nid') + 1e-6)),
+    // Nid : +1 cafard par niveau jusqu'à 5 (Âme de miel : 1 à 5), puis de moins en moins (5 + 5·ln(1 + (n − 5)/5)) :
+    // au 30e niveau, un Nid légendaire (+3 niveaux) n'ajoute plus qu'environ un demi-cafard (demande de Louis, 28/11)
+    nid: Math.max(-4, Math.floor(nidCafards(niv.nid || 0) + 1e-6)),
     prime: f(0.12, L('prime')),
     chanceDore: P('chance') ? 1 - Math.exp(-(0.02 + 0.02 * P('chance'))) : 0, // probabilité : se rapproche de 100 % sans l'atteindre
     comboFenetre: Math.max(0.6, 1.0 + 0.15 * L('combo')),

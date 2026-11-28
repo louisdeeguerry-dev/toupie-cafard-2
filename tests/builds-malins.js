@@ -59,7 +59,7 @@ const VEUT = BUILDS[STRAT];
         const resume = document.querySelector('#bilanContenu .resume')?.textContent || '';
         if (M.vu !== P.manche) {
           M.vu = P.manche;
-          const k = resume.match(/Lancer \d\/3 : (\d+)/); if (k) M.tues.push(+k[1]);
+          const k = resume.match(/Lancer \d\/\d : (\d+)/); if (k) M.tues.push(+k[1]);
           if (/Victoire/.test(resume)) M.duels.push(1); else if (/Défaite/.test(resume)) M.duels.push(0);
         }
         const moyTues = M.tues.length >= 3 ? M.tues.slice(-3).reduce((x, y) => x + y, 0) / 3 : 9;

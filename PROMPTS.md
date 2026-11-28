@@ -1096,3 +1096,11 @@ pour les barres de vie, étincelles réutilisées, shaders précompilés, vérif
 Feu faibles ; vérifier au simulateur puis en parties avec le robot malin ; publier.
 **Réalisé** : pièces : si les bonus pèsent plus que les malus, on réduit les bonus (au lieu de tripler des malus d'Élan) ;
 `parLames` 0,0375 ; robot malin : la compensation passe avant la spécialité. Simulateur : builds spécialisés de 31 à 60 %.
+
+## 2026-11-28 — Économie, rythme, Multi-lancer mythique, pistes 3D
+**Prompt optimisé** (game designer + DA technique) : trèfle doré moins rentable ; Nid nettement dégressif (≈ +0,5 cafard
+pour un légendaire à haut niveau) ; 3 vies par duel perdu en fin de partie et 2 lancers au lieu de 3 à partir de l'étape 8 ;
+Multi-lancer limité à 1 achat, rareté mythique très rare (Chance), très cher ; recherche pour une 3D plus détaillée.
+**Réalisé** : doré ×4 → ×2 ; Nid = n jusqu'à 5 puis 5 + 5·ln(1+(n−5)/5) ; 2 vies dès l'étape 6, 3 dès l'étape 10 ; étapes
+courtes (2 lancers) dès l'étape 8 ; Multi-lancer mythique 220 💰, 1 achat, ~6 % des boutiques (17 % avec Chance 8) ;
+recommandation 3D : Blender (module Python dans le cloud) + glTF + HDRI Poly Haven, pas Unity (installation bloquée, à autoriser).
