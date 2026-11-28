@@ -132,9 +132,11 @@
 
 - **27/11, 3e passe (Élan sans terrain, Endurance)** : recul contre les toupies stables (`CHOC.recul` 0,2), `parLames` 0,04, poids Élan 0,35. Simulateur : tous les builds entre 29 et 69 % (Endurance 29 %, Élan bureau rond 19 %). Parties complètes (2 par build, échantillon faible) : Élan + terrain 4,0, Puissance 4,5, Élan 5,0, Critique 5,5, Endurance 6,0, Lames 6,5, Agressivité 6,5, Combo 8,0.
 
+- **28/11, builds spécialisés avec robot malin** (`tests/builds-malins.js` : garde sa spécialité, achète des dégâts s'il écrase moins de 3 cafards par lancer, de la survie s'il perd ses duels ; 3 parties chacun) : Lames 2,0 (19/25 duels), Agressivité 4,0, Élan 5,3, Endurance 5,7, Critique 6,0, Puissance 6,0 (0,5 cafard par lancer), Nid 6,3, Combo 6,7, Feu 7,0, Chance 7,3. Les Lames dominent (les compensations achètent aussi des Lames) ; les builds d'économie (Nid, Combo, Chance) gagnent de l'argent mais perdent leurs duels.
+
 ## Prochaines étapes possibles
 - **Décidé le 27/11** : 2 vies par duel perdu dès l'étape 6 (fait) ; la Combo est gardée.
-- **À reprendre** : le build Combo (économie pure) perd tous ses duels ; confirmer l'équilibrage avec plus de parties (5 par build). Piste écartée : frottement de glissement (`CHOC.glissementDuel`), il fige les toupies lentes.
+- **À reprendre** : Lames trop fortes depuis `parLames` 0,04 (essayer 0,035) ; builds d'économie (Nid, Combo, Chance) qui ne convertissent pas leur argent en duels ; Puissance inutile contre les cafards (0,5 par lancer) ; Feu faible. Piste écartée : frottement de glissement (`CHOC.glissementDuel`), il fige les toupies lentes.
 - Retours des agents non traités : liste des pièces qui cache les emplacements dans l'atelier (choix de Louis), argent qui s'emballe en fin de longue partie, barres de stats vides sans explication, texte du terrain trop long, boîte coupée à gauche à l'ouverture (à vérifier).
 - **À mesurer** : durée et nombre de contacts des duels depuis la fin de l'attraction forcée (bureau rond neutre surtout) ; si trop peu de contacts, passer aussi le bureau neutre en hexagone.
 - **Plan des agents critiques (27/11) : les 7 points sont faits** (fin de duel, téléphone, gains, sons, toupie lisible, cafards, atelier).

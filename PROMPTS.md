@@ -1084,3 +1084,9 @@ messages « fin » supprimés : verdicts, vies et manche suivante OK. Mode `?loc
 **Réalisé** : poids d'impact Élan 0,35 / Rebond 0,3 / Glisse 0,5 (mesurés) ; « recul » : frapper une toupie plus stable que
 soi fait perdre de la rotation (`CHOC.recul` 0,2) ; lames un peu plus tranchantes (`parLames` 0,04). Simulateur : 29 à 69 %
 pour tous les builds (Endurance 29 %, Élan bureau rond 19 %, 27 % avec Endurance achetée). Coup glissant testé, sans effet.
+
+## 2026-11-28 — Tableau des raretés, builds spécialisés malins, fluidité
+**Prompt optimisé** (game designer + optimisation) : redonner le tableau rareté → niveaux/prix ; faire jouer des builds
+très spécialisés (Nid, Élan…) avec un robot qui compense ses faiblesses (dégâts, survie) ; rendre le jeu plus fluide.
+**Réalisé** : tableau redonné ; `tests/builds-malins.js` (10 builds × 3 parties) ; fluidité : taille du canvas en cache
+pour les barres de vie, étincelles réutilisées, shaders précompilés, vérification synchrone des shaders coupée.
