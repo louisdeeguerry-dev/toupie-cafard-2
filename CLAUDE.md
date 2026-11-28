@@ -68,6 +68,13 @@ Projet : **Toupie Cafard 2**, suite du jeu « Toupie contre Cafards »
 - Pas de pièce décorative qui ne sert à rien ; les vues éclatées suivent l'axe réel de montage de chaque pièce.
 - Toute nouvelle pièce ou stat : sa forme 3D (taille, poids, dents, spires…) doit être cohérente avec ses bonus et ses malus.
 
+## Règle 6 — Jeu multiplateforme (PC et téléphone)
+- Le jeu est **cross-platform** : il doit être aussi jouable et lisible sur **PC** (souris, clavier, grand écran) que sur
+  **téléphone** (doigt, portrait étroit, environ 390 × 800 px).
+- Toute nouvelle interface est vérifiée sur les deux : capture PC (1000×650) **et** téléphone (`devices['Pixel 7']`).
+- Sur téléphone : l'élément 3D principal (toupie, lanceur) reste visible quand on agit dessus ; les infos essentielles
+  (barres de stats) restent affichées, quitte à réduire le reste ; cibles tactiles d'au moins 40 px.
+
 ## Contexte technique de l'utilisateur (déduit des projets existants)
 - Jeux web en **Three.js** (modules ES, GLTFLoader, modèles `.glb`), HTML/JS sans framework lourd.
 - Portage mobile via **Capacitor** (Android / iOS), desktop via **Electron + Steam** (SteamPipe),

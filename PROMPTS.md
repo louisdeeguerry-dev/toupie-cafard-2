@@ -1158,3 +1158,9 @@ passer à un vrai éclairage HDRI de studio (Poly Haven, CC0), avec repli et san
 ## 2026-11-28 — Éclairage de la vitrine adouci
 **Prompt optimisé** (éclairagiste) : adoucir la vitrine de l'atelier (plateau saturé, reflet rose) sans perdre la lisibilité des pièces.
 **Réalisé** : lumière ambiante 0,55, projecteur 2,6 plus diffus, projecteurs colorés 0,4, bois du plateau mat (reflets du studio ×0,35).
+
+## 2026-11-28 — Équilibrage (5 parties par build), puis ergonomie PC et téléphone
+**Prompt optimisé** (game designer + directeur UX multiplateforme) : appliquer les ajustements tirés de la série de référence
+(5 parties par build) ; puis agents testeurs PC et téléphone et réorganisation des écrans (atelier sur téléphone : voir la
+toupie changer, barres de stats visibles) ; retenir que le jeu est multiplateforme.
+**Réalisé (en cours)** : règle 6 « multiplateforme » ajoutée à CLAUDE.md ; série de 50 parties lancée.
