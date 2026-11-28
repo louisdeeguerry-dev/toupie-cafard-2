@@ -191,6 +191,8 @@ export const DEPART = {
   base: 'base-standard', couronne: 'couronne-standard', pointe: 'pointe-standard', ame: 'ame-vide',
   engrenage: 'engrenage-standard', ressort: 'ressort-standard',
 };
+// Pièces de départ : elles ne sortent jamais des boîtes et n'ont donc PAS de niveaux (pas de « niv 1 à 5 » frustrant)
+export const estDepart = id => Object.values(DEPART).includes(id);
 
 // ---------------------------------------------------------------- Boîte mystère
 // 1. On tire une rareté (55 / 30 / 12 / 3 %).

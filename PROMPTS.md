@@ -1171,3 +1171,12 @@ en duel, attraction des toupies adverses comme une gravité (accélération ÷ m
 ronronnement des toupies dès la fin d'un lancer ou d'un duel (boutique, bilan, défi).
 **Réalisé** : physics.js (`portee`, `CHOC.tornadeToupie` 0,5, réglé au simulateur : build Tourbillon 63 → 66 %) ; affichage
 « X cm autour du bord » ; ronronnement limité à la phase de jeu ; série de référence relancée sur cette version.
+
+## 2026-11-28 — Tutoriel obligatoire, pièces de départ sans niveaux, ergonomie PC et téléphone (1re partie)
+**Prompt optimisé** (UX + game design) : tutoriel guidé obligatoire et rapide (6 lancers, 2 duels, acheter/relancer/bannir,
+3 pièces offertes) ; pièces de départ sans niveaux ; appliquer les retours des agents PC et téléphone ; refonte totale des menus.
+**Réalisé** : `src/tutoriel.js` (10 étapes guidées, bots maladroits qui n'achètent rien, pas de chrono, fin après 2 duels,
+3 pièces communes/rares offertes, défi entre amis réservé après, « Refaire le tutoriel » dans les paramètres) ; pièces de
+départ : « Pièce de départ », sans onglets de niveaux ; téléphone : barres de stats toujours visibles en haut de l'atelier,
+toupie au milieu, un seul retour, boutons ≥ 40 px, aide sur 2 lignes ; PC : menu en grille, raccourcis clavier (Échap,
+Entrée, 1-4, R), offres numérotées, panneaux élargis sur grand écran, Abandonner discret. Robots de test : tutoriel sauté.

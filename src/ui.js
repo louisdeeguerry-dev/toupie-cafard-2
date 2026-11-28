@@ -1,5 +1,5 @@
 // Interface : atelier, boîte mystère, recherche de partie, HUD, bilan + boutique, fin de partie.
-import { SLOTS, PIECES, PIECE, RARETES, tirerBoite, niveauxPiece, multiplicateurNiveau, NIVEAU_PIECE_MAX, GARANTIE_LEGENDAIRE } from './data/pieces.js';
+import { SLOTS, PIECES, PIECE, RARETES, estDepart, tirerBoite, niveauxPiece, multiplicateurNiveau, NIVEAU_PIECE_MAX, GARANTIE_LEGENDAIRE } from './data/pieces.js';
 import { TERRAINS, TERRAIN } from './data/terrains.js';
 import { STAT_ACHATS, PRIORITE, MANCHE_PRIORITE } from './data/boutique.js';
 import { PARTIE } from './config.js';
@@ -74,6 +74,7 @@ export function creerAtelier(save, { onChange, onJouer, onBoite, onSelection = (
     // Une pièce ouverte : la liste des pièces remplace les emplacements, jusqu'au bouton Retour
     montrer('slots', !slotChoisi);
     montrer('onglets', !slotChoisi);
+    document.getElementById('atelier').classList.toggle('piece-ouverte', !!slotChoisi);
     $('slots').innerHTML = SLOTS.filter(s => s.groupe === onglet).map(s => {
         const p = PIECE[eq[s.id]], k = nivDe(save, p.id);
         return `<button class="slot ${s.id === slotChoisi ? 'choisi' : ''}" data-slot="${s.id}">
@@ -88,7 +89,7 @@ export function creerAtelier(save, { onChange, onJouer, onBoite, onSelection = (
       const chips = max > 1 ? `<div class="chips">Niveau : ${Array.from({ length: max }, (_, i) => i + 1).map(n =>
         `<span class="chip ${n === k ? 'on' : ''}" data-piece="${p.id}" data-niv="${n}" title="Tout ×${multiplicateurNiveau(n)}">${n}</span>`).join('')}
         <span class="petit">(${save.collection[p.id]} exemplaires — tout ×${multiplicateurNiveau(k)})</span></div>`
-        : `<div class="petit">1 exemplaire — un doublon débloque le niveau 2</div>`;
+        : estDepart(p.id) ? `<div class="petit">Pièce de départ</div>` : `<div class="petit">1 exemplaire — un doublon débloque le niveau 2</div>`;
       return `<div class="carte ${eq[slotChoisi] === p.id ? 'equipee' : ''}" data-piece="${p.id}" data-niv="${k}">${carteHtml(p, k)}${chips}
         <button class="loupe" data-inspecter="${p.id}" title="Voir la pièce en grand">🔍</button></div>`;
     }).join('');
@@ -471,7 +472,7 @@ export function afficherBilan(bilan, onPret) {
       </div>`;
     $('pret').onclick = () => { if (fini) return; fini = true; clearInterval(chrono); montrer('bilan', false); onPret(); };
     majChrono();
-    $('relancer').onclick = e => { e.stopPropagation(); if (relancerOffres()) { rendre(); majHud(); } };
+    $('relancer').onclick = e => { e.stopPropagation(); if (relancerOffres()) { rendre(); majHud(); window.__tuto?.('relance'); } };
     const bp = $('btnPriorite');
     if (bp) bp.onclick = e => { e.stopPropagation(); if (acheter('priorite')) { rendre(); majHud(); } };
   };
@@ -497,12 +498,13 @@ export function afficherBilan(bilan, onPret) {
         return;
       }
       aBannir = null;
-      if (bannir(id)) rendre();
+      if (bannir(id)) { rendre(); window.__tuto?.('bannir'); }
       return;
     }
     const b = e.target.closest('[data-a]');
     // Acheter relance automatiquement les offres (gratuit)
     if (b && acheter(b.dataset.a, b.dataset.r)) {
+      window.__tuto?.('achat');
       const a = STAT_ACHATS.find(x => x.id === b.dataset.a);
       rendre(); majHud();
       // Confirmation visible de l'achat (les offres viennent d'être relancées)
@@ -513,10 +515,10 @@ export function afficherBilan(bilan, onPret) {
     }
   };
   // Temps limité pour la boutique : au bout du temps, on passe à la suite comme si on avait cliqué « Prêt »
-  let fini = false, reste = REGLES_PARTIE.tempsBoutique;
+  let fini = false, reste = partie.tuto ? 999 : REGLES_PARTIE.tempsBoutique; // tutoriel : pas de chrono pressant
   const majChrono = () => {
     const c = $('chronoBoutique'), b = $('barreTempsBoutique');
-    if (c) c.textContent = `(${Math.ceil(reste)} s)`;
+    if (c) c.textContent = partie.tuto ? "" : `(${Math.ceil(reste)} s)`; // tutoriel : pas de chrono affiché
     if (b) { b.style.width = `${(reste / REGLES_PARTIE.tempsBoutique) * 100}%`; b.classList.toggle('urgent', reste <= 5); }
   };
   const chrono = setInterval(() => {
@@ -547,3 +549,16 @@ export function afficherFin({ place, mode }, r, onRetour) {
   montrer('fin');
 }
 
+
+// Fin du tutoriel : les 3 pièces gagnées, et le jeu complet débloqué
+export function finTutoriel(gains) {
+  const v = document.createElement('div');
+  v.className = 'voile'; v.id = 'tutoFin'; v.style.zIndex = 28;
+  v.innerHTML = `<div class="panneau" style="width:min(560px,100%);text-align:center">
+    <h2>🎓 Tutoriel terminé !</h2><p>Tu sais lancer, acheter, relancer, bannir et te battre en duel. Les vraies parties sont débloquées.</p>
+    <p><b>Ta récompense : 3 pièces de toupie</b></p>
+    <div class="col-grille">${gains.map(p => `<div class="carte">${carteHtml(p, 1)}</div>`).join('')}</div>
+    <div class="actions" style="margin-top:14px"><button class="btn" id="tutoOk">Voir l'atelier ▶</button></div></div>`;
+  document.body.appendChild(v);
+  v.querySelector('#tutoOk').onclick = () => { v.remove(); document.querySelector('[data-ecran="atelier"]')?.click(); };
+}

@@ -7,6 +7,8 @@ import { lancerDansEtape, lancersDansEtape, capacite } from './match.js';
 import { partie, nouvellePartie, commencerManche, majPartie, brancherInterface, lancer, abandonner, acheter, _interne } from './match.js';
 import { majFx, majBarres, majEtincelles, facteurTemps } from './fx.js';
 import { majCamera, rendre } from './scene.js';
+import { tutoriel } from './tutoriel.js';
+import { PIECES, estDepart } from './data/pieces.js';
 import { creerToupie, libererToupie, chargerModeles, geometriesModele, modeleDetaille, modeleBrut } from './topMesh.js';
 import { habiller } from './scene.js';
 import { adopterModeleCafard } from './bugs.js';
@@ -39,6 +41,9 @@ const atelier = UI.creerAtelier(save, {
   onJouer: demarrer,
   onBoite: () => boite(),
 });
+if (save.tutoFait === undefined && save.parties > 0) { save.tutoFait = true; sauver(save); }
+majJouer();
+document.getElementById('refaireTuto')?.addEventListener('click', () => { save.tutoFait = false; sauver(save); majJouer(); allerA('menu'); });
 majVitrine();
 // Modèles détaillés des pièces (Blender) : dès qu'ils sont chargés, la vitrine de l'atelier est refaite avec eux
 chargerModeles().then(() => { adopterModeleCafard(geometriesModele('cafard')); habiller({ modeleDetaille, modeleBrut }); majVitrine(); });
@@ -126,9 +131,24 @@ function precompiler(equipe, niv) {
   renderer.compileAsync?.(scene, camera).catch(() => {}).finally(() => { t.racine.removeFromParent(); libererToupie(t); });
   if (!renderer.compileAsync) { t.racine.removeFromParent(); libererToupie(t); }
 }
+// Fin du tutoriel : 3 pièces de toupie offertes (communes ou rares, jamais une pièce de départ), vraies parties débloquées
+function finTutoriel() {
+  tutoriel.arreter();
+  retourAtelier();
+  const pool = PIECES.filter(p => ['base', 'couronne', 'pointe', 'ame'].includes(p.slot) && ['commune', 'rare'].includes(p.rarete) && !estDepart(p.id));
+  const gains = [];
+  while (gains.length < 3 && pool.length) gains.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+  for (const p of gains) save.collection[p.id] = (save.collection[p.id] || 0) + 1;
+  save.tutoFait = true;
+  sauver(save); atelier.rendre(); majJouer();
+  UI.finTutoriel(gains);
+}
+// Le bouton JOUER dit clairement que le tutoriel est obligatoire tant qu'il n'est pas fait
+function majJouer() { const b = document.getElementById('jouer'); if (b) b.textContent = save.tutoFait ? 'JOUER ▶' : '🎓 TUTORIEL ▶'; }
 function demarrer() {
   activerAudio();
-  nouvellePartie({ ...save.equipe }, { mode: save.mode, nivPieces: { ...save.niveauxPieces }, terrain: save.terrain });
+  const tuto = !save.tutoFait; // tant que le tutoriel n'est pas fait, « Jouer » lance le tutoriel guidé
+  nouvellePartie({ ...save.equipe }, { mode: tuto ? 'tutoriel' : save.mode, nivPieces: { ...save.niveauxPieces }, terrain: tuto ? 'aucun' : save.terrain, tuto });
   modeleLanceur(save.equipe);
   precompiler(save.equipe, save.niveauxPieces);
   for (const e of ECRANS) UI.montrer(e, false);
@@ -138,6 +158,7 @@ function demarrer() {
     mode = 'partie';
     UI.montrer('hud');
     commencerManche();
+    if (tuto) tutoriel.commencer();
   });
 }
 
@@ -149,6 +170,7 @@ brancherInterface({
       const sous = T ? `Terrain : ${T.icone} ${T.nom} (${td.de === partie.moi ? 'le tien' : 'celui de ' + partie.adversaire.nom})`
         : td.egalite ? 'Égalité de priorité de terrain : bureau neutre' : 'Bureau neutre';
       UI.bandeau(`⚔️ DUEL contre ${partie.adversaire.nom}`, sous, 2600);
+      window.__tuto?.('duel');
       UI.aide((partie.lancesFaits || 0) < 2 ? AIDE : ''); // l'aide disparaît après 2 lancers
     } else {
       if (partie.evolution?.length) UI.bandeau('🧬 Les cafards ont évolué !', 'Nouveaux : ' + partie.evolution.map(t => TYPES[t].icone + ' ' + TYPES[t].nom).join(', '), 2600);
@@ -169,7 +191,7 @@ brancherInterface({
     }, 2200);
   },
   minuteur: UI.minuteur,
-  lance() { UI.aide(''); partie.lancesFaits = (partie.lancesFaits || 0) + 1; },
+  lance() { UI.aide(''); partie.lancesFaits = (partie.lancesFaits || 0) + 1; window.__tuto?.('lance'); },
   finDuel(gagne) {
     baisserMusique(2); (gagne ? sfx.victoire : sfx.defaite)();
     UI.verdict(gagne, gagne ? 'La toupie adverse s\'est arrêtée la première' : 'Ta toupie s\'est arrêtée la première');
@@ -177,7 +199,10 @@ brancherInterface({
   bilan(b) {
     UI.majHud();
     UI.aide(''); UI.minuteur('');
-    setTimeout(() => UI.afficherBilan(b, () => commencerManche()), b.type === 'duel' ? 250 : 400);
+    window.__tuto?.(b.type === 'duel' ? 'bilanDuel' : 'bilan');
+    // Tutoriel : il s'arrête après son 2e duel (récompense) ; sinon on enchaîne la manche suivante
+    const suite = () => { window.__tuto?.('pret'); if (partie.tuto && tutoriel.duels >= 2) finTutoriel(); else commencerManche(); };
+    setTimeout(() => UI.afficherBilan(b, suite), b.type === 'duel' ? 250 : 400);
   },
   fin(r) {
     UI.majHud();
@@ -233,6 +258,26 @@ document.getElementById('quitter').addEventListener('click', () => {
 document.getElementById('pauseReprendre').addEventListener('click', () => UI.montrer('pause', false));
 document.getElementById('pause').addEventListener('click', e => { if (e.target.id === 'pause') UI.montrer('pause', false); });
 document.getElementById('pauseQuitter').addEventListener('click', () => { UI.montrer('pause', false); retourAtelier(); });
+// Raccourcis clavier (PC) : Échap = retour, Entrée = jouer ; boutique de manche : 1-4 acheter, R relancer, Entrée/Espace = Prêt
+addEventListener('keydown', e => {
+  if (e.target.closest?.('input, textarea, select') || e.repeat) return;
+  const vu = el => el && !el.closest('.cache') && el.offsetParent !== null;
+  const bilan = document.getElementById('bilan');
+  if (mode === 'partie' && vu(bilan)) {
+    const offres = [...document.querySelectorAll('#bilanContenu .offre')];
+    if (/^[1-4]$/.test(e.key)) { offres[+e.key - 1]?.click(); e.preventDefault(); }
+    else if (e.key === 'r' || e.key === 'R') { document.getElementById('relancer')?.click(); e.preventDefault(); }
+    else if (e.key === 'Enter' || e.key === ' ') { document.getElementById('pret')?.click(); e.preventDefault(); }
+    return;
+  }
+  if (mode === 'partie') return;
+  if (e.key === 'Escape') {
+    const retourPiece = document.querySelector('#atelier .retour-piece');
+    if (vu(retourPiece)) { retourPiece.click(); return; }
+    const retour = [...document.querySelectorAll('.ecran:not(.cache) .retour-menu[data-ecran="menu"]')].find(vu);
+    retour?.click();
+  } else if (e.key === 'Enter' && vu(document.getElementById('jouer'))) document.getElementById('jouer').click();
+});
 addEventListener('keydown', e => { if (e.key === 'Escape' && mode === 'partie' && !document.getElementById('quitter').classList.contains('cache')) document.getElementById(document.getElementById('pause').classList.contains('cache') ? 'quitter' : 'pauseReprendre').click(); });
 document.addEventListener('pointerdown', () => { activerAudio(); musique(); }, { once: true });
 // Mode test : toutes les pièces et tous les terrains au niveau max. La vraie sauvegarde est mise de côté et revient
@@ -366,6 +411,7 @@ function brancher(c, hote) {
 // ceux de la nouvelle (retour des testeurs : « Rejoindre » après « Créer » affichait l'erreur de la création)
 let essaiDefi = 0;
 $('creerDefi').onclick = async () => {
+  if (!save.tutoFait) { statut('🎓 Termine d\'abord le tutoriel (bouton TUTORIEL du menu).'); return; }
   activerAudio(); finirDefi(); statut('Création du défi…');
   const n = ++essaiDefi, st = t => { if (n === essaiDefi) statut(t); };
   try {
@@ -387,6 +433,7 @@ $('creerDefi').onclick = async () => {
   } catch (e) { st('Impossible de créer le défi : ' + e.message); }
 };
 async function rejoindre(code) {
+  if (!save.tutoFait) { statut('🎓 Termine d\'abord le tutoriel (bouton TUTORIEL du menu).'); return; }
   activerAudio(); finirDefi(); statut('Connexion au défi ' + code + '…');
   const n = ++essaiDefi, st = t => { if (n === essaiDefi) statut(t); };
   try { defi = await rejoindreDefi(code, { connecte: c => { if (n === essaiDefi) brancher(c, false); }, erreur: st, statut: st }); }

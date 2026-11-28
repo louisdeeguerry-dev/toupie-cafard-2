@@ -13,7 +13,7 @@ const OUT = process.argv[2], W = +process.argv[3] || 1280, H = +process.argv[4] 
   await p.evaluate(() => { localStorage.clear(); localStorage.setItem('toupie-cafard-2-v1', JSON.stringify({ collection: { 'base-standard': 1, 'couronne-standard': 1, 'pointe-standard': 1, 'ame-vide': 1, 'pointe-clou': 2, 'engrenage-double': 1 }, equipe: { base: 'base-standard', couronne: 'couronne-standard', pointe: 'pointe-clou', ame: 'ame-vide', engrenage: 'engrenage-double' }, niveauxPieces: { 'pointe-clou': 2 }, niveau: 4, terrain: 'cuve', terrains: ['cuve'], mode: 'classee' })); });
   await p.reload(); await p.waitForTimeout(800);
   await p.screenshot({ path: OUT + '/a-atelier.png' });
-  await p.evaluate(() => { __tc2.acceleration = 8; __tc2.sansConfirmation = true; });
+  await p.evaluate(() => { __tc2.acceleration = 8; __tc2.sansConfirmation = true; const s = __tc2.save(); s.tutoFait = true; document.getElementById('jouer').textContent = 'JOUER ▶'; });
   await p.click('#jouer');
   const t0 = Date.now(); let duelShot = false, shopShot = false; const journal = [];
   while (Date.now() - t0 < 420000) {

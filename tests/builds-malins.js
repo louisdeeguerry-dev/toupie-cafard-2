@@ -29,7 +29,7 @@ const VEUT = BUILDS[STRAT];
   const errs = []; p.on('pageerror', e => errs.push(e.message));
   await p.goto('http://localhost:8123/');
   await p.evaluate(() => localStorage.clear()); await p.reload(); await p.waitForTimeout(500);
-  await p.evaluate(() => { __tc2.acceleration = 100; __tc2.sansConfirmation = true; });
+  await p.evaluate(() => { __tc2.acceleration = 100; __tc2.sansConfirmation = true; const s = __tc2.save(); s.tutoFait = true; document.getElementById('jouer').textContent = 'JOUER ▶'; });
   // Pièces du build : pour chaque emplacement, la pièce qui donne le plus des stats voulues (pondérées par l'ordre)
   const equipe = await p.evaluate(async ([VEUT, STRAT]) => {
     const { PIECES } = await import('./src/data/pieces.js'), s = __tc2.save();

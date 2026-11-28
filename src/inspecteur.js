@@ -2,7 +2,7 @@
 // On la fait pivoter (glisser) et on zoome (molette / pincement). Un panneau montre ses effets, niveau par niveau.
 // Clic sur le fond ou « ← » : la pièce rapetisse et on revient où on était.
 import * as THREE from 'three';
-import { PIECE, RARETES, SLOTS, NIVEAU_PIECE_MAX, niveauxPiece } from './data/pieces.js';
+import { PIECE, RARETES, SLOTS, NIVEAU_PIECE_MAX, niveauxPiece, estDepart } from './data/pieces.js';
 import { STAT, effet } from './stats.js';
 import { creerPieceToupie } from './topMesh.js';
 import { creerPieceLanceur } from './lanceurMesh.js';
@@ -67,7 +67,7 @@ function panneau() {
     || '<div class="petit">Aucun effet : une pièce neutre.</div>';
   const peut = st.ctx.onEquiper && st.niv <= max;
   $('inspecteurPanneau').innerHTML = `
-    <div class="niv-onglets">${onglets}</div>
+    ${estDepart(p.id) ? '<div class="petit">Pièce de départ : elle n\'a pas de niveaux.</div>' : `<div class="niv-onglets">${onglets}</div>`}
     <div class="rar" style="color:${r.couleur}">${r.nom} · ${sl.icone} ${sl.nom}</div>
     <h2>${esc(p.nom)}</h2><div class="petit">${esc(p.desc)}</div>
     <div class="effets">${effets}</div>

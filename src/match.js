@@ -23,13 +23,15 @@ const melanger = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.
 
 // ---------------------------------------------------------------- Début de partie
 // Tout ce qui est choisi à l'atelier (pièces, niveaux de pièces, terrain) est gelé jusqu'à la fin de la partie
-export function nouvellePartie(equipe, { pseudo = 'Toi', mode = 'normale', nivPieces = {}, terrain = 'aucun' } = {}) {
+export function nouvellePartie(equipe, { pseudo = 'Toi', mode = 'normale', nivPieces = {}, terrain = 'aucun', tuto = false } = {}) {
   const noms = melanger([...NOMS_BOTS]);
   const nivEquipe = Object.fromEntries(Object.values(equipe).map(id => [id, nivPieces[id] || 1]));
   const joueurs = [{ nom: pseudo, bot: false, vies: PARTIE.vies, equipe: Object.freeze({ ...equipe }), nivPieces: Object.freeze(nivEquipe),
     terrain, niveaux: {}, achats: {}, elimine: false, place: 0 }];
   partie.bannies = [];
+  partie.tuto = tuto;
   for (let i = 1; i < PARTIE.joueurs; i++) joueurs.push(creerBot(noms[i]));
+  if (tuto) for (const j of joueurs) if (j.bot) j.habilete = 0.15; // tutoriel : bots maladroits
   const avecTerrain = terrain && terrain !== 'aucun';
   Object.assign(partie, {
     active: true, mode, joueurs, moi: joueurs[0], manche: 0, lancerCafards: 0, ami: null, entrainement: null,
@@ -234,7 +236,7 @@ const rappels = {
 function minuteurs(dt, lancees) {
   const now = performance.now(), d = Math.min(1, (now - (partie.horloge ?? now)) / 1000) * (window.__tc2?.acceleration ?? 1);
   partie.horloge = now;
-  const duel = partie.type === 'duel', limite = duel ? PARTIE.tempsLancerDuel : PARTIE.tempsLancer;
+  const duel = partie.type === 'duel', limite = partie.tuto ? 999 : duel ? PARTIE.tempsLancerDuel : PARTIE.tempsLancer; // tutoriel : on prend son temps
   const pret = duel ? !!partie.monLancer : lancees; // j'ai fait mon lancer
   if (partie.entrainement && !pret) { ui.minuteur?.('🎯 Entraînement : lance quand tu veux', false); return; }
   const parti = duel ? !!partie.lachees : lancees; // les toupies sont parties
@@ -336,7 +338,7 @@ function terminerManche(bilan) {
       (duelSimule(a, b) === a ? b : a).vies -= PARTIE.degatsDuel(e);
     }
   }
-  for (const b of bots) finMancheBot(b, partie.manche + 1, e);
+  if (!partie.tuto) for (const b of bots) finMancheBot(b, partie.manche + 1, e); // tutoriel : les bots n'achètent rien
   // Revenus de fin de manche + intérêts
   const interets = Math.min(Math.floor(partie.argent / ECONOMIE.interetPour), mesStats().interetMax);
   partie.argent += ECONOMIE.revenuManche + interets;
