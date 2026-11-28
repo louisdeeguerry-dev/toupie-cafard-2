@@ -134,9 +134,11 @@
 
 - **28/11, builds spécialisés avec robot malin** (`tests/builds-malins.js` : garde sa spécialité, achète des dégâts s'il écrase moins de 3 cafards par lancer, de la survie s'il perd ses duels ; 3 parties chacun) : Lames 2,0 (19/25 duels), Agressivité 4,0, Élan 5,3, Endurance 5,7, Critique 6,0, Puissance 6,0 (0,5 cafard par lancer), Nid 6,3, Combo 6,7, Feu 7,0, Chance 7,3. Les Lames dominent (les compensations achètent aussi des Lames) ; les builds d'économie (Nid, Combo, Chance) gagnent de l'argent mais perdent leurs duels.
 
+- **28/11, après la passe d'équilibrage** (robot malin, 2 parties par build) : Lames 4,0, Agressivité 4,5, Endurance 4,5, Élan 5,0, Critique 5,5, Nid 6,0, Puissance 6,0, Combo 7,0, Feu 7,0, Chance 7,5.
+
 ## Prochaines étapes possibles
 - **Décidé le 27/11** : 2 vies par duel perdu dès l'étape 6 (fait) ; la Combo est gardée.
-- **À reprendre** : Lames trop fortes depuis `parLames` 0,04 (essayer 0,035) ; builds d'économie (Nid, Combo, Chance) qui ne convertissent pas leur argent en duels ; Puissance inutile contre les cafards (0,5 par lancer) ; Feu faible. Piste écartée : frottement de glissement (`CHOC.glissementDuel`), il fige les toupies lentes.
+- **À reprendre** : Chance, Feu et Combo restent derniers (0 à 1 duel gagné sur 8-9) : ce sont des stats sans effet en duel ; piste : leur donner un petit effet de duel, ou rendre les duels des étapes 1-2 moins décisifs. Puissance : 0,9 cafard par lancer. Piste écartée : frottement de glissement (`CHOC.glissementDuel`), il fige les toupies lentes.
 - Retours des agents non traités : liste des pièces qui cache les emplacements dans l'atelier (choix de Louis), argent qui s'emballe en fin de longue partie, barres de stats vides sans explication, texte du terrain trop long, boîte coupée à gauche à l'ouverture (à vérifier).
 - **À mesurer** : durée et nombre de contacts des duels depuis la fin de l'attraction forcée (bureau rond neutre surtout) ; si trop peu de contacts, passer aussi le bureau neutre en hexagone.
 - **Plan des agents critiques (27/11) : les 7 points sont faits** (fin de duel, téléphone, gains, sons, toupie lisible, cafards, atelier).
