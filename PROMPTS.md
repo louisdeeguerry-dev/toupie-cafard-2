@@ -1131,3 +1131,8 @@ redessiner le noyau de météorite et créer une vraie base au trésor (pièces 
 **Réalisé** : repère supprimé ; coordonnées de texture cylindriques générées au chargement (motifs tourné, moleté… visibles) ;
 noyau : roche facettée sertie de 4 griffes dans une coupelle ; trésor (forme `tresor`) : 8 piles de pièces, rubis, saphirs,
 émeraudes, collier de 24 perles (symétrie d'ordre 8), matériaux de pierres et de perle.
+
+## 2026-11-28 — Base au trésor : Équilibre au lieu de Poids
+**Prompt optimisé** (game designer) : remplacer le malus de Poids de la Base au trésor par un malus d'Équilibre (même valeur),
+cohérent avec son modèle chargé d'or et de joyaux (règle 5).
+**Réalisé** : `poids: -4` → `equilibre: -4`, description mise à jour ; test d'équilibrage OK.

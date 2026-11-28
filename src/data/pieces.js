@@ -137,7 +137,7 @@ export const PIECES = [
   { id: 'base-ressorts', slot: 'base', nom: 'Base à ressorts', rarete: 'epique', forme: 'legere', couleur: 0x74b9ff,
     niveaux: { rebond: 7, equilibre: -4, poids: -3 }, desc: 'Rebondit sur tout, mais tient mal debout.' },
   { id: 'base-tresor', slot: 'base', nom: 'Base au trésor', rarete: 'legendaire', forme: 'tresor', couleur: 0xffd700,
-    niveaux: { chance: 4, prime: 3, combo: 2, poids: -4, inertie: -3, endurance: -2 }, desc: 'Une toupie de collectionneur : elle fait pleuvoir l\'or, mais elle est légère et fragile en duel.' },
+    niveaux: { chance: 4, prime: 3, combo: 2, equilibre: -4, inertie: -3, endurance: -2 }, desc: 'Une toupie de collectionneur : elle fait pleuvoir l\'or, mais chargée de pièces et de joyaux mal répartis, elle est déséquilibrée et fragile en duel.' },
   { id: 'couronne-epines', slot: 'couronne', nom: 'Couronne d\'épines', rarete: 'commune', forme: 'dents', couleur: 0x6d4c41,
     niveaux: { lames: 3, inertie: -3 }, desc: 'Pique un peu, mais encaisse mal les chocs.' },
   { id: 'couronne-crocs', slot: 'couronne', nom: 'Couronne à crocs', rarete: 'rare', forme: 'dents', couleur: 0xecf0f1,
