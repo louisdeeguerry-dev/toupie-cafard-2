@@ -12,7 +12,7 @@ export const GROUPES = [
 
 // special : pouvoir à 0 par défaut (affiché « — » tant qu'on ne l'a pas)
 export const STATS = [
-  { id: 'endurance', groupe: 'toupie', nom: 'Endurance', icone: '🔋', desc: 'Perd sa rotation moins vite : tourne plus longtemps.',
+  { id: 'endurance', groupe: 'toupie', nom: 'Endurance', icone: '🔋', desc: 'Perd sa rotation moins vite : tourne plus longtemps. En duel, encaisse les coups et en renvoie une partie à l\'attaquant (sauf les lames, qui percent).',
     fmt: s => `${tempsRotation(s).toFixed(1)} s de rotation` },
   { id: 'diametre', groupe: 'toupie', nom: 'Diamètre', icone: '📏', desc: 'Une toupie plus large touche plus de cafards.',
     fmt: s => `${(s.rayon * 200).toFixed(1)} cm` },
@@ -20,7 +20,7 @@ export const STATS = [
     fmt: s => `${Math.round(s.masse)} g` },
   { id: 'glisse', groupe: 'toupie', nom: 'Glisse', icone: '⛸️', desc: 'Pointe plus fine : glisse plus loin et se promène plus vite.',
     fmt: s => `balade ${Math.round((s.derive / s.frottement) * 100)} cm/s` },
-  { id: 'lames', groupe: 'toupie', nom: 'Lames', icone: '⚔️', desc: 'Plus de dégâts par contact, sur les cafards comme sur les toupies.',
+  { id: 'lames', groupe: 'toupie', nom: 'Lames', icone: '⚔️', desc: 'Plus de dégâts par contact, sur les cafards comme sur les toupies. En duel, perce l\'Endurance adverse, mais les lames freinent : la toupie s\'use plus vite.',
     fmt: s => `×${s.lames.toFixed(2)} dégâts` },
   { id: 'inertie', groupe: 'toupie', nom: 'Inertie', icone: '🛞', desc: 'Perd moins de rotation dans les chocs (cafards et toupies adverses).',
     fmt: s => Math.abs(s.inertie - 1) < 0.005 ? 'perte au choc normale' : s.inertie < 1 ? `−${Math.round((1 - s.inertie) * 100)} % de perte au choc` : `+${Math.round((s.inertie - 1) * 100)} % de perte au choc` },
@@ -28,7 +28,7 @@ export const STATS = [
     fmt: s => `tombe sous ${Math.round(s.seuilChute * 100)} %` },
   { id: 'rebond', groupe: 'toupie', nom: 'Rebond', icone: '🏓', desc: 'Garde sa vitesse en rebondissant sur les bords.',
     fmt: s => `${Math.round(s.rebond * 100)} % conservé` },
-  { id: 'agressivite', groupe: 'toupie', nom: 'Agressivité', icone: '😠', special: true, desc: 'La toupie se dirige vers les cafards et les toupies proches.',
+  { id: 'agressivite', groupe: 'toupie', nom: 'Agressivité', icone: '😠', special: true, desc: 'La toupie se dirige vers les cafards et les toupies proches. En duel, chasser l\'adversaire use un peu la toupie.',
     fmt: s => s.attraction ? `attraction ${s.attraction.toFixed(2)}` : '—' },
   { id: 'critique', groupe: 'toupie', nom: 'Coup critique', icone: '💥', special: true, desc: 'Chance d\'infliger un coup ×3. Au-delà de 100 %, le surplus rend les critiques encore plus forts.',
     fmt: s => s.crit ? `${Math.round(s.crit * 100)} % de chance${s.critMult > 3 ? `, coups ×${s.critMult.toFixed(2)}` : ''}` : '—' },
@@ -40,7 +40,7 @@ export const STATS = [
     fmt: s => s.tornade ? `${Math.round((s.tornadeRayon - 0.046) * 100)} cm autour du bord` : '—' },
   { id: 'puissance', groupe: 'lanceur', nom: 'Puissance', icone: '🚀', desc: 'La toupie démarre en tournant plus vite : elle encaisse plus de chocs avant de s\'arrêter (sa « vie » en duel).',
     fmt: s => `${Math.round(s.tours).toLocaleString('fr-FR')} tr/min` },
-  { id: 'elan', groupe: 'lanceur', nom: 'Élan', icone: '💨', desc: 'La toupie part plus vite et plus loin.',
+  { id: 'elan', groupe: 'lanceur', nom: 'Élan', icone: '💨', desc: 'La toupie part plus vite et plus loin. En duel, elle s\'use aussi un peu moins.',
     fmt: s => `${Math.round(s.vitesse * 100)} cm/s` },
   { id: 'precision', groupe: 'lanceur', nom: 'Précision', icone: '🎯', desc: 'Zone « PARFAIT » de la jauge plus large (+8 % de puissance).',
     fmt: s => `zone de ${Math.round(s.parfait * 100)} %` },
@@ -85,9 +85,9 @@ export function calculer(niv) {
     seuilChute: Math.min(0.6, 0.25 / f(0.06, L('equilibre'))),
     rebond: Math.max(0.2, Math.min(0.95, 0.6 + 0.04 * L('rebond'))),
     attraction: 0.12 * P('agressivite'),
-    crit: Math.min(1, 0.04 * P('critique')), // 4 % par niveau, jusqu'à 100 %…
-    critMult: 3 * Math.max(1, 0.04 * P('critique')), // …et tout ce qui dépasse 100 % rend les critiques plus forts (125 % → coups ×3,75)
-    feu: P('feu') ? 0.25 + 0.08 * P('feu') : 0,
+    crit: Math.min(1, 0.05 * P('critique')), // 5 % par niveau (série du 28/11 : Critique trop faible), jusqu'à 100 %…
+    critMult: 3 * Math.max(1, 0.05 * P('critique')), // …et tout ce qui dépasse 100 % rend les critiques plus forts (125 % → coups ×3,75)
+    feu: P('feu') ? 0.3 + 0.1 * P('feu') : 0, // série du 28/11 : Feu trop faible
     feuDuree: 1 + 0.08 * P('feu'),
     souffle: P('souffle') ? 0.03 + 0.012 * P('souffle') : 0,
     souffleMax: 0.25 + 0.03 * P('souffle'),
@@ -95,6 +95,7 @@ export function calculer(niv) {
     tornadeRayon: 0.1 + 0.012 * P('tornade'),
     tours: 600 * f(0.18, L('puissance')),
     vitesse: 0.95 * f(0.1, L('elan')),
+    elanNiv: P('elan'), // en duel, l'Élan donne aussi un peu d'endurance (physics.js, CHOC.elanEndurance)
     parfait: Math.max(0.03, Math.min(0.4, 0.1 + 0.02 * L('precision'))),
     toupies: Math.min(2, 1 + Math.round(P('multi'))), // au plus 2 toupies : pièce (≤ 1) ou un seul achat (rareté mythique)
     // Bureau

@@ -308,6 +308,68 @@ def base_tresor():  # base au trésor : corps doré, piles de pièces, joyaux et
     exporter('base-tresor')
 
 
+def piece_moletee(nom, r, h, x=0.0, y=0.0, z=0.0, rot=(0.0, 0.0, 0.0), n=32):
+    """Pièce de monnaie à tranche moletée (une strie sur deux rentrée) et listel en relief sur chaque face."""
+    bpy.ops.mesh.primitive_cylinder_add(vertices=n, radius=r, depth=h, location=(0, 0, 0))
+    ob = objet_actif(nom)
+    for v in ob.data.vertices:  # stries de la tranche
+        a = math.atan2(v.co.y, v.co.x)
+        if round(a / (2 * math.pi / n)) % 2:
+            v.co.x *= 0.93
+            v.co.y *= 0.93
+    anneaux = []
+    for sens in (1, -1):  # listel : petit anneau en relief sur chaque face
+        bpy.ops.mesh.primitive_torus_add(major_radius=r * 0.78, minor_radius=h * 0.18, major_segments=max(12, n // 2), minor_segments=4, location=(0, 0, sens * h / 2))
+        anneaux.append(bpy.context.object)
+    bpy.ops.object.select_all(action='DESELECT')
+    for o in anneaux + [ob]:
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = ob
+    bpy.ops.object.join()
+    ob.location = (x, y, z)
+    ob.rotation_euler = rot
+    lisser(ob, 40)
+    return ob
+
+
+def base_tirelire():  # tirelire de céramique CREUSE (peu d'inertie) : fente avec une pièce glissée dedans, 4 hublots où l'on voit
+    # les pièces économisées, 8 médailles en relief sur le flanc, cerclage doré (dessus à 17 mm)
+    vider()
+    revolution('tirelire_corps', [(0.0, 0.0), (0.0110, 0.0), (0.0112, 0.0010), (0.0190, 0.0014), (0.0228, 0.0040),
+        (0.0252, 0.0075), (0.0258, 0.0095), (0.0250, 0.0120), (0.0226, 0.0145), (0.0185, 0.0160), (0.0120, 0.0168), (0.0, 0.0170)])
+    bpy.ops.mesh.primitive_torus_add(major_radius=0.0256, minor_radius=0.0007, major_segments=PAS, minor_segments=10, location=(0, 0, 0.0085))
+    lisser(objet_actif('cerclage_or'), 80)
+    # Fente sur le dessus, et une pièce à moitié glissée dedans (debout, dans l'axe de la fente)
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(0, 0, 0.0170))
+    rebord = objet_actif('rebord_fente_or')
+    rebord.scale = (0.0150, 0.0042, 0.0008)
+    bev = rebord.modifiers.new('biseau', 'BEVEL'); bev.width = 0.0004; bev.segments = 2
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(0, 0, 0.0172))
+    objet_actif('fente_sombre').scale = (0.0122, 0.0020, 0.0008)
+    piece_moletee('piece_fente_or', 0.0048, 0.0013, 0, 0, 0.0190, rot=(math.pi / 2, 0, 0))
+    # 4 hublots de verre fumé cerclés d'or : derrière, une pile de pièces (l'argent économisé)
+    for i in range(4):
+        a = i * math.pi / 2 + math.pi / 4
+        cx, cy, cz = 0.0238 * math.cos(a), 0.0238 * math.sin(a), 0.0130
+        incl = (0, math.radians(55), a)
+        bpy.ops.mesh.primitive_cylinder_add(vertices=24, radius=0.0036, depth=0.0006, location=(cx, cy, cz), rotation=incl)
+        lisser(objet_actif(f'hublot{i}_sombre'), 50)
+        bpy.ops.mesh.primitive_torus_add(major_radius=0.0037, minor_radius=0.0005, major_segments=24, minor_segments=6, location=(cx, cy, cz), rotation=incl)
+        lisser(objet_actif(f'cerclage_hublot{i}_or'), 80)
+        for j in range(3):  # pièces empilées, vues à travers le verre
+            piece_moletee(f'epargne{i}_{j}_or', 0.0015, 0.0005, cx * 1.012, cy * 1.012, cz - 0.0012 + j * 0.0008, rot=incl, n=16)
+    # 8 médailles (pièces moletées) incrustées sur le flanc bas
+    for i in range(8):
+        a = i * math.pi / 4
+        piece_moletee(f'medaille{i}_or', 0.0024, 0.0008, 0.0243 * math.cos(a), 0.0243 * math.sin(a), 0.0060, rot=(0, math.radians(124), a))  # face perpendiculaire au flanc
+    # 16 points d'émail blanc au-dessus du cerclage (décor de céramique peinte)
+    for i in range(16):
+        a = i * math.pi / 8 + math.pi / 16
+        bpy.ops.mesh.primitive_uv_sphere_add(segments=8, ring_count=5, radius=0.0006, location=(0.0250 * math.cos(a), 0.0250 * math.sin(a), 0.0112))
+        lisser(objet_actif(f'email{i}_blanc'), 80)
+    exporter('base-tirelire')
+
+
 # ================================================================ COURONNES (centrées sur leur plan, y = 0)
 def couronne_large():  # anneau large et plat (Ø 100 mm) : grande surface de contact, vissé
     vider()
@@ -689,7 +751,7 @@ def boite_ferrures():  # boîte de 90 × 110 × 60 mm (L × H × P) : coins de m
 
 if __name__ == '__main__':
     for f in (pointe_standard, pointe_clou, pointe_foreuse, pointe_diamant, pointe_bille, pointe_ventouse,
-              base_standard, base_lourde, base_legere, base_gyro, base_noyau, base_tresor,
+              base_standard, base_lourde, base_legere, base_gyro, base_noyau, base_tresor, base_tirelire,
               couronne_standard, couronne_large, couronne_dents, couronne_bouclier, couronne_lames, couronne_inertie,
               lanceur_boitier, ame_vide, ame_oeil, ame_aimant, ame_ressort, ame_flamme, ame_sangsue, ame_cyclone,
               ame_fer, ame_carapace, lanceur_pied, lanceur_manche, cafard, decor_bureau, terrain_rebond, terrain_collant,

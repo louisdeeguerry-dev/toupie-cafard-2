@@ -15,7 +15,7 @@ import { adopterModeleCafard } from './bugs.js';
 import { activerAudio, ronron, musique, basculerMusique, musiqueActive, sfx, baisserMusique } from './audio.js';
 import * as UI from './ui.js';
 import { VERSION } from './config.js';
-import { initParametres } from './parametres.js';
+import { initParametres, surveillerPerf } from './parametres.js';
 import { demarrerOuverture, cliquerOuverture, finirOuverture, tournerPieces } from './ouverture3d.js';
 import { RARETES, SLOTS } from './data/pieces.js';
 import { creerDefi, rejoindreDefi } from './enligne.js';
@@ -316,6 +316,7 @@ btnMusique.addEventListener('click', e => { e.stopPropagation(); activerAudio();
 // ---------------------------------------------------------------- Boucle
 let avant = performance.now(), t = 0;
 function boucle(maintenant) {
+  surveillerPerf(maintenant - avant);
   const dtReel = Math.min(0.05, (maintenant - avant) / 1000);
   // acceleration : tests auto ; facteurTemps : arrêt sur image et ralenti des gros chocs
   const dt = dtReel * (window.__tc2?.acceleration ?? 1) * facteurTemps(dtReel) * (mode === 'partie' && partie.phase === 'jeu' ? partie.acceleration || 1 : 1);

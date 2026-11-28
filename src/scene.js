@@ -8,7 +8,9 @@ import { UnrealBloomPass } from '../vendor/jsm/postprocessing/UnrealBloomPass.js
 import { OutputPass } from '../vendor/jsm/postprocessing/OutputPass.js';
 
 export const conteneur = document.getElementById('jeu');
-export const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+// Anticrénelage coûteux et peu utile sur les écrans de téléphone très denses : coupé sur les appareils tactiles à forte densité
+const ECRAN_DENSE_TACTILE = (window.devicePixelRatio || 1) >= 2 && matchMedia('(pointer: coarse)').matches;
+export const renderer = new THREE.WebGLRenderer({ antialias: !ECRAN_DENSE_TACTILE, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
 renderer.debug.checkShaderErrors = false; // la vérification synchrone des shaders fige l'image à chaque compilation (saccades)
 renderer.shadowMap.enabled = true;
@@ -30,6 +32,8 @@ export function reglerGraphismes({ qualite = 'haute', ombres = true, halo = true
   const dpr = window.devicePixelRatio || 1;
   renderer.setPixelRatio(qualite === 'basse' ? Math.min(0.75, dpr) : qualite === 'moyenne' ? Math.min(1, dpr) : Math.min(2, dpr));
   renderer.shadowMap.enabled = ombres;
+  const taille = qualite === 'haute' ? 2048 : qualite === 'moyenne' ? 1024 : 512; // ombres moins détaillées = plus rapide
+  if (lampe.shadow.mapSize.x !== taille) { lampe.shadow.mapSize.set(taille, taille); lampe.shadow.map?.dispose(); lampe.shadow.map = null; }
   scene.traverse(o => { if (o.material) [].concat(o.material).forEach(m => { m.needsUpdate = true; }); });
   graph.halo = halo;
   cadrer();

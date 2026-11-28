@@ -2,12 +2,13 @@
 import * as THREE from 'three';
 import { PIECE } from './data/pieces.js';
 import { GLTFLoader } from '../vendor/jsm/loaders/GLTFLoader.js';
+import { mergeGeometries } from '../vendor/jsm/loaders/BufferGeometryUtils.js';
 
 // ---------------------------------------------------------------- Modèles détaillés (Blender : outils/blender/toupies.py)
 // Chargés au démarrage ; tant qu'ils ne sont pas là (ou s'ils manquent), le jeu garde les formes simples.
 // Chaque objet du modèle a un RÔLE (corps / acier / sombre) : on lui applique les matériaux du jeu (couleur de la pièce…).
 export const MODELES_DISPO = ['standard', 'clou', 'foreuse', 'diamant', 'bille', 'ventouse'].map(f => 'pointe-' + f)
-  .concat(['standard', 'lourde', 'legere', 'gyro', 'noyau', 'tresor'].map(f => 'base-' + f))
+  .concat(['standard', 'lourde', 'legere', 'gyro', 'noyau', 'tresor', 'tirelire'].map(f => 'base-' + f))
   .concat(['standard', 'large', 'dents', 'bouclier', 'lames', 'inertie'].map(f => 'couronne-' + f), ['lanceur-boitier'])
   .concat(['vide', 'oeil', 'aimant', 'ressort', 'flamme', 'sangsue', 'cyclone', 'fer', 'carapace'].map(f => 'ame-' + f))
   .concat(['lanceur-pied', 'lanceur-manche', 'cafard', 'decor-bureau', 'terrain-rebond', 'terrain-collant', 'terrain-cuve', 'boite-ferrures']);
@@ -18,6 +19,22 @@ export const modeleBrut = nom => SCENES[nom]?.clone();
 export const geometriesModele = nom => MODELES[nom] && Object.fromEntries(MODELES[nom].map(p => [p.nom, p.geo.clone().applyMatrix4(p.matrice)]));
 export const modeleCharge = nom => !!MODELES[nom];
 const MODELES = {};
+// Performance (téléphones) : toutes les parties d'un modèle qui ont le même matériau sont fusionnées en UNE géométrie
+// (une perle, une vis, une pièce de monnaie… ne coûtent plus chacune un appel de dessin)
+const FUSION = {};
+function fusionner(parts) {
+  const parRole = {};
+  for (const p of parts) {
+    let g = p.geo.clone().applyMatrix4(p.matrice);
+    for (const a of Object.keys(g.attributes)) if (!['position', 'normal', 'uv'].includes(a)) g.deleteAttribute(a);
+    if (g.index) g = g.toNonIndexed();
+    (parRole[p.role] ||= []).push(g);
+  }
+  return Object.entries(parRole).map(([role, geos]) => {
+    const geo = geos.length > 1 ? mergeGeometries(geos) : geos[0];
+    return geo ? { nom: role, role, geo, matrice: new THREE.Matrix4() } : null;
+  }).filter(Boolean);
+}
 const V = new URL(import.meta.url).searchParams.get('v') || '0'; // anti-cache : même empreinte que ce module (outils/versionner.mjs)
 let chargement = null;
 export function chargerModeles() {
@@ -29,6 +46,7 @@ export function chargerModeles() {
     g.scene.traverse(o => { if (o.isMesh && !o.geometry.attributes.uv) uvCylindre(o.geometry); });
     g.scene.traverse(o => { if (o.isMesh) parts.push({ nom: o.name, geo: o.geometry, role: o.name.match(RE_ROLE)?.[1] || 'corps', matrice: o.matrixWorld.clone() }); });
     MODELES[nom] = parts;
+    FUSION[nom] = fusionner(parts);
   }).catch(() => { /* modèle absent : formes simples */ }))));
 }
 let matAcierM = null, matSombreM = null, matBlancM = null;
@@ -54,7 +72,7 @@ function uvCylindre(geo) {
 }
 export const modeleDetaille = (nom, matCorps, y = 0) => modele(nom, matCorps, y);
 function modele(nom, matCorps, y) {
-  const parts = MODELES[nom];
+  const parts = FUSION[nom] || MODELES[nom];
   if (!parts) return null;
   matAcierM ||= new THREE.MeshStandardMaterial({ color: 0xc9d0d8, metalness: 0.95, roughness: 0.22 });
   matSombreM ||= new THREE.MeshStandardMaterial({ color: 0x23272e, metalness: 0.4, roughness: 0.45 });
@@ -231,7 +249,7 @@ function base(p, y, k = 1) {
       g.add(t);
     }
     if (p.forme === 'legere') return { g, top: y + 0.014 };
-    if (p.forme === 'noyau' || p.forme === 'tresor') return { g, top: y + 0.017 };
+    if (p.forme === 'noyau' || p.forme === 'tresor' || p.forme === 'tirelire') return { g, top: y + 0.017 };
     if (p.forme === 'lourde') { r = 0.029; h = 0.017; }
     rivetsNiveau(g, k, r * 0.78, y + h + 0.0006);
     return { g, top: y + h };

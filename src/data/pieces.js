@@ -130,7 +130,7 @@ export const PIECES = [
   // ---------- EXTENSION : pièces d'économie et de spécialisation (toujours somme des niveaux = 0) ----------
   { id: 'base-plume', slot: 'base', nom: 'Base plume', rarete: 'commune', forme: 'legere', couleur: 0xf5f0e6,
     niveaux: { elan: 3, endurance: 2, poids: -5 }, desc: 'Ultra-légère : part vite et tourne longtemps, mais s\'envole au moindre choc.' },
-  { id: 'base-tirelire', slot: 'base', nom: 'Base tirelire', rarete: 'rare', forme: 'standard', couleur: 0xf78fb3,
+  { id: 'base-tirelire', slot: 'base', nom: 'Base tirelire', rarete: 'rare', forme: 'tirelire', couleur: 0xf78fb3,
     niveaux: { prime: 5, poids: -3, inertie: -2 }, desc: 'Chaque cafard rapporte plus, mais la toupie est fragile.' },
   { id: 'base-aimantee', slot: 'base', nom: 'Base aimantée', rarete: 'rare', forme: 'gyro', couleur: 0xc0392b,
     niveaux: { agressivite: 4, elan: -2, glisse: -2 }, desc: 'Attirée par les cibles, mais lourde à lancer.' },

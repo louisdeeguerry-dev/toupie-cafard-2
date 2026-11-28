@@ -36,9 +36,13 @@ export function modeDuel(oui) { duel = !!oui; }
 // inertieDuel : exposant de l'Inertie de la cible sur les pertes (1 = plein effet, 0,5 = effet adouci).
 // usureTassee : 0 = usure de duel selon l'Endurance seule ; 1 = même usure pour tous (les malus d'Endurance comptent moins).
 const RAYON_STANDARD = 0.046; // rayon d'une toupie standard (stats.js)
-export const CHOC = { ref: 600, base: 0.01, parLames: 0.0375, parVitesse: 0.12, attraction: 0.1, parAgressivite: 0.3, rebondBoost: 1.35, rebondPlafond: 1.9,
+export const CHOC = { ref: 600, base: 0.01, parLames: 0.0375, parVitesse: 0.16, attraction: 0.1, parAgressivite: 0.3, rebondBoost: 1.35, rebondPlafond: 1.9,
   // Réglages calés au simulateur (tests/duels-sim.js, 27/11, 2e passe) : Élan 46 % (77 % sur terrain rebondissant), Puissance 69 %
-  cuvette: 1.1, partRelative: 0.85, usureTassee: 0.45, deriveDuel: 0.2, inertieDuel: 0.5, masseDuel: 0.5, seuilMaxDuel: 0.3, approcheMax: 99, frottementDuel: 1, glissementDuel: 0, glissant: 0, recul: 0.2, tornadeToupie: 0.5, poussee: 0.12, delai: 0.2, rebond: 0.5, usureDuel: 0.22, enduranceChoc: 0, lamesSurplus: 0, lamesMult: 0, critDuel: 1.5 };
+  cuvette: 1.1, partRelative: 0.85, usureTassee: 0, deriveDuel: 0.2, inertieDuel: 0.5, masseDuel: 0.5, seuilMaxDuel: 0.3, approcheMax: 99, frottementDuel: 1, glissementDuel: 0, glissant: 0, recul: 0.2, tornadeToupie: 0.5, poussee: 0.12, delai: 0.2, rebond: 0.5, usureDuel: 0.22, enduranceChoc: 1, lamesSurplus: 0, lamesMult: 0.8, critDuel: 2, elanEndurance: 0.7, percage: 5, renvoi: 1, trainee: 0.3, fougue: 1 }; 
+// Styles de jeu en duel (28/11, simulateur tests/duels-sim.js MATRICE=1) : triangle Endurance > Puissance > Lames > Endurance.
+// enduranceChoc : l'Endurance protège des coups ; percage : les lames percent cette protection ; renvoi : le choc absorbé revient
+// sur l'attaquant ; lamesMult : les lames multiplient les dégâts ; trainee : les lames freinent (la toupie s'use seule) ;
+// fougue : chasser l'adversaire (Agressivité) use la toupie ; elanEndurance : l'Élan use moins en duel ; critDuel : critiques ×2.
 
 // Les toupies sont un peu étirées en hauteur pour être lisibles vues de haut (la hauteur ne compte pas dans la physique)
 const HAUTEUR_VUE = 1.35;
@@ -306,7 +310,9 @@ export function majToupies(dt, cb) {
     if (usureActive) {
       t.age += dt;
       const usure = duel && CHOC.usureTassee ? 0.12 ** CHOC.usureTassee * s.usure ** (1 - CHOC.usureTassee) : s.usure;
-      t.rotation -= t.rotation * usure * (duel ? CHOC.usureDuel : 1) * dt;
+      const parElan = duel && CHOC.elanEndurance ? 1 + CHOC.elanEndurance * 0.15 * (s.elanNiv || 0) : 1; // Élan : moins d'usure en duel
+      const trainee = duel ? (1 + CHOC.trainee * Math.max(0, s.lames - 1)) * (1 + CHOC.fougue * (s.attraction || 0)) : 1; // les lames freinent dans l'air : la toupie s'use seule
+      t.rotation -= t.rotation * usure * (duel ? CHOC.usureDuel : 1) * trainee / parElan * dt;
     }
     if (t.age > 25) t.rotation -= t.rotation * 0.08 * (t.age - 25) * dt;
     if (t.rotation < t.rotationMax * (duel ? Math.min(s.seuilChute, CHOC.seuilMaxDuel) : s.seuilChute)) { t.tombe = 0.001; cb.chute?.(t); }
@@ -388,7 +394,12 @@ function frapperToupie(att, cible, approche, cb, contact) {
     * (2 * att.s.masse / (att.s.masse + cible.s.masse)) ** CHOC.masseDuel * cible.s.inertie ** CHOC.inertieDuel * (0.5 + 0.5 * att.rotation / att.rotationMax);
   if (CHOC.lamesMult) perte *= att.s.lames ** CHOC.lamesMult; // Lames : chaque niveau multiplie les dégâts infligés
   // Endurance : une toupie endurante encaisse aussi mieux les coups (un malus d'Endurance, lui, ne fait qu'user la toupie plus vite)
-  if (CHOC.enduranceChoc) perte *= Math.min(1, cible.s.usure / 0.12) ** CHOC.enduranceChoc;
+  if (CHOC.enduranceChoc) {
+    const garde = Math.min(1, cible.s.usure / 0.12) ** (CHOC.enduranceChoc / (1 + CHOC.percage * Math.max(0, att.s.lames - 1))); // les lames percent la protection
+    // Renvoi : une partie du choc absorbé par la toupie endurante revient sur l'attaquant (frapper un roc fait mal)
+    if (CHOC.renvoi) att.rotation -= (perte * (1 - garde) / cible.rotationMax) * att.rotationMax * CHOC.renvoi;
+    perte *= garde;
+  }
   let crit = false;
   if (att.s.crit && Math.random() < att.s.crit * 0.5) { perte *= CHOC.critDuel; crit = true; } // critiques moins forts en duel
   if (CHOC.glissant) perte /= 1 + CHOC.glissant * Math.max(0, Math.hypot(cible.vx, cible.vz) - 0.5);

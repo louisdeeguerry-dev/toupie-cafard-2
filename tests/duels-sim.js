@@ -41,7 +41,7 @@ const BUILDS = {
       const [s1 = 'endurance', s2 = 'lames'] = veut;
       B[nom] = { eq, niv, achats: { [s1]: Math.round(ACHATS * 0.6), [s2]: Math.round(ACHATS * 0.4) } };
     }
-    const noms = Object.keys(B), stats = {};
+    const noms = Object.keys(B), stats = {}, matrice = {};
     for (const n of noms) stats[n] = { v: 0, d: 0, contacts: 0, duree: 0, chrono: 0, neutre: { v: 0, d: 0 }, rebond: { v: 0, d: 0 } };
     const rnd = (a, c) => a + Math.random() * (c - a);
     function duel(A, Bb, terrain) {
@@ -84,6 +84,7 @@ const BUILDS = {
       if (i === j) continue;
       for (let k = 0; k < N / 2; k++) {
         const r = duel(B[noms[i]], B[noms[j]], terrain);
+        const cle = noms[i] + '>' + noms[j]; matrice[cle] = (matrice[cle] || 0) + (r.gagneA ? 1 : 0) / N;
         for (const [n, g] of [[noms[i], r.gagneA], [noms[j], !r.gagneA]]) {
           const s = stats[n], t = terrain ? s.rebond : s.neutre;
           if (g) { s.v++; t.v++; } else { s.d++; t.d++; }
@@ -108,7 +109,7 @@ const BUILDS = {
       marges[st] = r;
     }
     ph.viderToupies(); ph.choisirTerrain(null); ph.modeDuel(false);
-    return { marges, stats, equipes: Object.fromEntries(noms.map(n => [n, B[n].eq])) };
+    return { marges, matrice, stats, equipes: Object.fromEntries(noms.map(n => [n, B[n].eq])) };
   }, { BUILDS, N, ACHATS, REGLAGES, MARGE, DIAG });
   if (res.diag) { const d = res.diag; console.log(`DIAG ${DIAG} : A gagne ${Math.round(100 * d.v / N)} % · fins ${JSON.stringify(d.fins)} · contacts ${d.contacts.toFixed(1)} · durée ${d.temps.toFixed(1)} s · pertes par chocs A ${(100 * d.chocsA).toFixed(0)} % / B ${(100 * d.chocsC).toFixed(0)} % · rotation finale A ${(100 * d.finA).toFixed(0)} % / B ${(100 * d.finC).toFixed(0)} %`); await b.close(); return; }
   console.log(`| Build | Victoires | Bureau neutre | Terrain rebondissant | Contacts / duel | Durée moy. (s) | Fin au chrono |`);
@@ -118,6 +119,7 @@ const BUILDS = {
     console.log(`| ${n} | ${pc(s)} | ${pc(s.neutre)} | ${pc(s.rebond)} | ${(s.contacts / tot).toFixed(1)} | ${(s.duree / tot).toFixed(1)} | ${Math.round((100 * s.chrono) / tot)} % |`);
   }
   if (MARGE) for (const [st, [plus, moins]] of Object.entries(res.marges)) console.log(`MARGE ${st.padEnd(12)} +2 niv : ${plus} % · −2 niv : ${moins} %`);
+  if (process.env.MATRICE) { const n = Object.keys(res.stats); console.log('MATRICE (ligne bat colonne, %)\n' + ''.padEnd(12) + n.map(x => x.slice(0, 6).padStart(7)).join('')); for (const a of n) console.log(a.padEnd(12) + n.map(b => (a === b ? '—' : Math.round(50 * ((res.matrice[a + '>' + b] || 0) + 1 - (res.matrice[b + '>' + a] || 0))) + '').padStart(7)).join('')); }
   if (process.env.EQUIPES) console.log(JSON.stringify(res.equipes));
   console.log('ERREURS', JSON.stringify(errs));
   await b.close();
