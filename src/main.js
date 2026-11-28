@@ -1,7 +1,7 @@
 // Point d'entrée : relie l'atelier, la partie et la boucle de rendu.
 import { renderer, scene, camera, vitrine, vitrineCam } from './scene.js';
 import { majModeles, selection as selectionAtelier, majAtelier, terrainVitrine, initControles, controlesActifs } from './atelier3d.js';
-import { charger, sauver, reinitialiser, changerBuild } from './save.js';
+import { charger, sauver, reinitialiser, changerBuild, creerBuild, supprimerBuild } from './save.js';
 import { lanceur, majLanceur, lancerDirect, modeleLanceur } from './launcher.js';
 import { lancerDansEtape, lancersDansEtape, capacite } from './match.js';
 import { partie, nouvellePartie, commencerManche, majPartie, brancherInterface, lancer, abandonner, acheter, _interne } from './match.js';
@@ -65,35 +65,63 @@ function allerA(ecran) {
   atelier.rendre();
 }
 
-// ---------------------------------------------------------------- Builds : 4 emplacements renommables
+// ---------------------------------------------------------------- Builds : colonne de gauche (noms), aperçu 3D à droite
+// Un clic sur une ligne équipe ce build (la toupie et le lanceur changent à droite) ; « Ouvrir » (ou double-clic) passe
+// à l'édition : toupie à gauche, colonne des emplacements à droite.
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+let renomme = -1, enListeBuilds = false, dernierClic = { i: -1, t: 0 };
 function pageBuilds(ouvrir) {
+  enListeBuilds = ouvrir;
   const page = document.getElementById('pageBuilds'), at = document.getElementById('atelier');
   page.classList.toggle('cache', !ouvrir); at.classList.toggle('choix-build', ouvrir);
   document.getElementById('nomBuildActif').textContent = save.builds[save.buildActif].nom;
+  if (mode === 'atelier' && !document.getElementById('atelier').classList.contains('cache')) {
+    if (ouvrir) { selectionAtelier('ensemble', null); placerVitrine(innerWidth > 720 ? -0.13 : 0); }
+    else { const et = atelier.etat(); selectionAtelier(et.onglet === 'ensemble' ? 'toupie' : et.onglet, et.slot); placerVitrine(innerWidth > 720 ? 0.2 : 0); }
+  }
   if (!ouvrir) return;
   sauver(save); // l'équipement actif est recopié dans son emplacement
-  document.getElementById('buildsGrille').innerHTML = save.builds.map((b, i) => `<div class="carte-build ${i === save.buildActif ? 'actif' : ''}" data-build="${i}" role="button" tabindex="0">
-    <input data-renommer="${i}" value="${esc(b.nom)}" maxlength="20" aria-label="Nom du build ${i + 1}">
-    <ul>${SLOTS.map(sl => `<li>${sl.icone} <span>${sl.nom} :</span> ${esc(PIECE_PAR_ID[b.equipe[sl.id]]?.nom || '—')}${(b.niveauxPieces[b.equipe[sl.id]] || 1) > 1 ? ` <b>niv ${b.niveauxPieces[b.equipe[sl.id]]}</b>` : ''}</li>`).join('')}
-      <li>🏟️ <span>Terrain :</span> ${b.terrain === 'aucun' ? 'aucun' : esc(TERRAIN[b.terrain]?.nom || b.terrain)}</li></ul>
-    <div class="equiper">${i === save.buildActif ? '✔ Équipé · modifier ▶' : 'Équiper et modifier ▶'}</div></div>`).join('');
+  const seul = save.builds.length <= 1;
+  document.getElementById('buildsGrille').innerHTML = save.builds.map((b, i) => `<div class="ligne-build ${i === save.buildActif ? 'actif' : ''}" data-build="${i}">
+    ${renomme === i ? `<input data-renommer="${i}" value="${esc(b.nom)}" maxlength="20" aria-label="Nom du build">` : `<span class="nom">${esc(b.nom)}</span>`}
+    <button class="act" data-action="renommer" title="Renommer">✏️</button>${seul ? '' : '<button class="act" data-action="supprimer" title="Supprimer">🗑️</button>'}
+    <button class="ouvrir" data-action="ouvrir">Ouvrir ▶</button></div>`).join('');
+  document.getElementById('creerBuild').disabled = save.builds.length >= 12;
+  const champ = document.querySelector('[data-renommer]');
+  if (champ) { champ.focus(); champ.select(); }
+}
+function finirRenommage(champ) {
+  if (renomme < 0) return;
+  save.builds[renomme].nom = champ.value.trim().slice(0, 20) || save.builds[renomme].nom;
+  renomme = -1; sauver(save); pageBuilds(true);
 }
 document.getElementById('ouvrirBuilds').addEventListener('click', () => { UI.son?.('choix', { volume: 0.5 }); pageBuilds(true); });
-document.getElementById('buildsGrille').addEventListener('change', e => {
-  const i = e.target.dataset?.renommer;
-  if (i === undefined) return;
-  save.builds[i].nom = e.target.value.trim().slice(0, 20) || `Build ${+i + 1}`; sauver(save);
-  document.getElementById('nomBuildActif').textContent = save.builds[save.buildActif].nom;
-});
-document.getElementById('buildsGrille').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.dataset?.renommer !== undefined) e.target.blur(); });
-document.getElementById('buildsGrille').addEventListener('click', e => {
-  if (e.target.closest('[data-renommer]')) return; // on renomme : ne pas choisir
-  const c = e.target.closest('[data-build]');
-  if (!c) return;
+document.getElementById('creerBuild').addEventListener('click', () => {
   activerAudio(); UI.son?.('choix', { volume: 0.6 });
-  changerBuild(save, +c.dataset.build); sauver(save);
-  majVitrine(); atelier.rendre(); pageBuilds(false);
+  if (!creerBuild(save)) return;
+  changerBuild(save, save.builds.length - 1); renomme = save.buildActif; sauver(save);
+  majVitrine(); atelier.rendre(); pageBuilds(true);
+});
+// Édition : les stats passent sous la colonne des emplacements (la toupie occupe la gauche de l'écran)
+document.querySelector('#atelier .cote').appendChild(document.querySelector('#atelier .gauche'));
+const grille = document.getElementById('buildsGrille');
+grille.addEventListener('keydown', e => { if (e.target.dataset?.renommer !== undefined) { if (e.key === 'Enter') finirRenommage(e.target); if (e.key === 'Escape') { renomme = -1; pageBuilds(true); } } });
+grille.addEventListener('focusout', e => { if (e.target.dataset?.renommer !== undefined) finirRenommage(e.target); });
+grille.addEventListener('click', e => {
+  if (e.target.closest('[data-renommer]')) return;
+  const l = e.target.closest('[data-build]');
+  if (!l) return;
+  const i = +l.dataset.build, action = e.target.closest('[data-action]')?.dataset.action;
+  activerAudio(); UI.son?.('choix', { volume: 0.6 });
+  if (action === 'renommer') { renomme = i; pageBuilds(true); return; }
+  if (action === 'supprimer') {
+    if (!confirm(`Supprimer « ${save.builds[i].nom} » ?`)) return;
+    supprimerBuild(save, i); sauver(save); majVitrine(); atelier.rendre(); pageBuilds(true); return;
+  }
+  const double = dernierClic.i === i && performance.now() - dernierClic.t < 450; // deux clics rapides = ouvrir
+  dernierClic = { i, t: performance.now() };
+  if (i !== save.buildActif) { changerBuild(save, i); sauver(save); majVitrine(); atelier.rendre(); }
+  if (action === 'ouvrir' || double) pageBuilds(false); else pageBuilds(true);
 });
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-ecran]');

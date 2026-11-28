@@ -200,8 +200,9 @@ export function majModeles(equipe, slotChange = null, nivPieces = {}) {
 }
 
 function appliquerVisibilite() {
+  // « ensemble » (aperçu d'un build) : la toupie ET le lanceur, côte à côte sur le bureau
   etat.toupie.racine.visible = etat.onglet !== 'lanceur';
-  etat.lanceur.racine.visible = etat.onglet === 'lanceur';
+  etat.lanceur.racine.visible = etat.onglet === 'lanceur' || etat.onglet === 'ensemble';
 }
 
 export function selection(onglet, slot) {
@@ -298,6 +299,9 @@ export function majAtelier(dt, t) {
   if (eclateL) L.racine.rotation.y += (-Math.PI / 2 - L.racine.rotation.y) * k; // de profil : l'axe traverse l'écran
   else L.racine.rotation.y += dt * 0.35;
   L.racine.position.y += ((eclateL ? 0.15 : 0) - L.racine.position.y) * k; // surélevé : rien ne rentre dans le sol
+  const ens = etat.onglet === 'ensemble';
+  T.racine.position.x += ((ens ? -0.075 : 0) - T.racine.position.x) * k;
+  L.racine.position.x += ((ens ? 0.1 : 0) - L.racine.position.x) * k;
 
   // Caméra : vue d'ensemble, zoom sur la pièce choisie, ou vue large de l'arène (onglet Terrain)
   let pos, cible;
@@ -309,6 +313,7 @@ export function majAtelier(dt, t) {
   // Zoom : la pièce choisie au centre, mais assez de recul pour voir toute la vue éclatée
   else if (eclateT) ({ pos, cible } = cibleDe(T.parts, etat.slot, ECHELLE_T, [0.05, 0.05, 0.32], new THREE.Vector3(0, T.racine.position.y + 0.02, 0)));
   else if (eclateL) ({ pos, cible } = cadrerLanceur(L, etat.slot)); // tout le lanceur éclaté tient entre les panneaux
+  else if (etat.onglet === 'ensemble') { pos = new THREE.Vector3(0.02, 0.24, 0.66); cible = new THREE.Vector3(0.015, 0.035, 0); }
   else if (etat.onglet === 'lanceur') { pos = new THREE.Vector3(0.26, 0.36, 0.8); cible = new THREE.Vector3(0, 0.07, 0); }
   else { pos = new THREE.Vector3(0, 0.12, 0.42); cible = new THREE.Vector3(0, 0.045, 0); }
   const kc = 1 - Math.exp(-4 * dt);

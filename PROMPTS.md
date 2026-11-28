@@ -1202,3 +1202,7 @@ Entrée, 1-4, R), offres numérotées, panneaux élargis sur grand écran, Aband
 ## 2026-11-28 — Emplacements de build
 **Prompt optimisé** : (rôle : dev UI/gameplay) En cliquant sur Atelier, afficher 4 builds renommables (Build 1 à 4), chacun avec sa toupie, son lanceur et son terrain, pour changer de configuration rapidement. Consigne : si les crédits manquent, tout mettre en pause et reprendre plus tard.
 **Fait** : save.builds (4) + buildActif, changerBuild (recopie en place), page « Mes builds » à l'entrée de l'atelier, renommage direct, bouton « changer de build » dans l'atelier. Testé PC + Pixel 7.
+
+## 2026-11-28 — Builds : visuel simplifié
+**Prompt optimisé** : (rôle : dev UI) Atelier en 2 temps : colonne de gauche avec seulement les noms des builds (créer, supprimer, renommer), aperçu 3D (toupie, lanceur, bureau) à droite ; à l'ouverture, toupie à gauche et colonne à droite avec une ligne par emplacement (toupie, puis lanceur, puis terrain).
+**Fait** : colonne des builds, vue « ensemble », création/suppression (1 à 12), renommage, ouverture par bouton ou double clic ; emplacements en lignes, stats sous la colonne. Testé PC + Pixel 7.

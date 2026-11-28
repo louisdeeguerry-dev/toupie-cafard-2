@@ -47,30 +47,52 @@ export function charger() {
 // ---------------------------------------------------------------- Emplacements de build
 // 4 builds nommés (toupie + lanceur + niveaux des pièces + terrain). L'équipement « actif » reste save.equipe /
 // save.niveauxPieces / save.terrain (tout le jeu s'en sert) : changer de build recopie le build choisi dedans.
-export const NB_BUILDS = 4;
+export const NB_BUILDS = 4, MAX_BUILDS = 12; // 4 au départ ; on peut en créer jusqu'à 12 et en supprimer (au moins 1)
 const copieBuild = s => ({ equipe: { ...s.equipe }, niveauxPieces: { ...s.niveauxPieces }, terrain: s.terrain });
+const buildNeuf = i => ({ nom: `Build ${i + 1}`, equipe: { ...DEPART }, niveauxPieces: {}, terrain: 'aucun' });
 export function verifierBuilds(s) {
-  if (!Array.isArray(s.builds)) s.builds = [];
-  for (let i = 0; i < NB_BUILDS; i++) {
-    const b = s.builds[i] ||= { nom: `Build ${i + 1}`, ...(i === (s.buildActif || 0) ? copieBuild(s) : { equipe: { ...DEPART }, niveauxPieces: {}, terrain: 'aucun' }) };
+  if (!Array.isArray(s.builds) || !s.builds.length) s.builds = Array.from({ length: NB_BUILDS }, (_, i) => (i === (s.buildActif || 0) ? { nom: `Build ${i + 1}`, ...copieBuild(s) } : buildNeuf(i)));
+  for (let i = 0; i < s.builds.length; i++) {
+    const b = s.builds[i] ||= buildNeuf(i);
     b.nom = String(b.nom || `Build ${i + 1}`).slice(0, 20);
     b.equipe = { ...DEPART, ...b.equipe };
     for (const [slot, id] of Object.entries(b.equipe)) if (!PIECE[id] || !s.collection[id] || PIECE[id].slot !== slot) b.equipe[slot] = DEPART[slot];
     b.niveauxPieces ||= {};
     if (b.terrain !== 'aucun' && !(s.terrains || []).includes(b.terrain)) b.terrain = 'aucun';
   }
-  s.builds.length = NB_BUILDS;
-  s.buildActif = Math.max(0, Math.min(NB_BUILDS - 1, s.buildActif || 0));
+  s.builds.length = Math.min(MAX_BUILDS, s.builds.length);
+  s.buildActif = Math.max(0, Math.min(s.builds.length - 1, s.buildActif || 0));
   return s;
 }
 // Recopie l'équipement actif dans son emplacement (appelé à chaque sauvegarde)
 function noterBuild(s) {
   if (!s.builds) verifierBuilds(s);
+  if (!s.builds[s.buildActif]) return;
   Object.assign(s.builds[s.buildActif], copieBuild(s));
+}
+export function creerBuild(s) {
+  if (s.builds.length >= MAX_BUILDS) return false;
+  noterBuild(s);
+  let n = s.builds.length + 1;
+  while (s.builds.some(b => b.nom === `Build ${n}`)) n++;
+  s.builds.push({ ...buildNeuf(0), nom: `Build ${n}` });
+  return true;
+}
+export function supprimerBuild(s, i) {
+  if (s.builds.length <= 1) return false;
+  noterBuild(s);
+  s.builds.splice(i, 1);
+  const actif = s.buildActif === i ? Math.min(i, s.builds.length - 1) : s.buildActif - (i < s.buildActif ? 1 : 0);
+  s.buildActif = -1; // l'ancien actif n'existe plus : on charge le nouveau sans le recopier
+  chargerBuild(s, actif);
+  return true;
 }
 export function changerBuild(s, i) {
   noterBuild(s);
   verifierBuilds(s);
+  chargerBuild(s, i);
+}
+function chargerBuild(s, i) {
   const b = s.builds[i];
   s.buildActif = i;
   // Remplacement EN PLACE : l'atelier garde des références vers ces objets
