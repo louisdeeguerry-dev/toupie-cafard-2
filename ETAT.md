@@ -136,7 +136,10 @@
 
 - **28/11, après la passe d'équilibrage** (robot malin, 2 parties par build) : Lames 4,0, Agressivité 4,5, Endurance 4,5, Élan 5,0, Critique 5,5, Nid 6,0, Puissance 6,0, Combo 7,0, Feu 7,0, Chance 7,5.
 
+- **28/11, nouvelles règles** (doré ×2, Nid dégressif, étapes courtes dès l'étape 8, 3 vies dès l'étape 10, Multi-lancer mythique ; robot malin, 2 parties) : Lames 4,0, Agressivité 4,0, Élan 4,5, Combo 5,5, Endurance 5,5, Critique 6,0, Puissance 6,0, Feu 6,5, Chance 7,0, Nid 7,5. Aucune erreur.
+
 ## Prochaines étapes possibles
+- **3D** : modéliser des toupies détaillées avec Blender en module Python (`bpy`) dans le conteneur cloud, puis HDRI Poly Haven et `MeshPhysicalMaterial` (voir `RESSOURCES.md` § 2.1 bis). L'installation de `bpy` a été bloquée par les règles de la session : à autoriser par Louis.
 - **Décidé le 27/11** : 2 vies par duel perdu dès l'étape 6 (fait) ; la Combo est gardée.
 - **À reprendre** : Chance, Feu et Combo restent derniers (0 à 1 duel gagné sur 8-9) : ce sont des stats sans effet en duel ; piste : leur donner un petit effet de duel, ou rendre les duels des étapes 1-2 moins décisifs. Puissance : 0,9 cafard par lancer. Piste écartée : frottement de glissement (`CHOC.glissementDuel`), il fige les toupies lentes.
 - Retours des agents non traités : liste des pièces qui cache les emplacements dans l'atelier (choix de Louis), argent qui s'emballe en fin de longue partie, barres de stats vides sans explication, texte du terrain trop long, boîte coupée à gauche à l'ouverture (à vérifier).
