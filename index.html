@@ -453,6 +453,23 @@
 .parametres label.case { justify-content: flex-start; }
 .parametres select, .parametres input[type=range] { flex: 1; max-width: 200px; }
 /* Boutique 3D : panneau sur le côté, confirmation d'achat au centre */
+/* Page des builds */
+#atelier.choix-build .cote, #atelier.choix-build .gauche, #atelier.choix-build .stats-mobile { display: none !important; }
+#pageBuilds { position: absolute; left: 50%; top: 72px; transform: translateX(-50%); width: min(980px, 94vw); max-height: calc(100% - 90px); overflow-y: auto; pointer-events: auto; }
+#pageBuilds h2 { margin: 0 0 10px; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+#buildsGrille { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.carte-build { background: #241a13; border: 2px solid #3d2e22; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 6px; cursor: pointer; text-align: left; color: inherit; font: inherit; }
+.carte-build:hover { border-color: #7a5a3a; transform: translateY(-2px); }
+.carte-build.actif { border-color: var(--accent); box-shadow: 0 0 0 2px #ff9a3c44; }
+.carte-build input { background: #1a130e; color: #fff; border: 1px solid transparent; border-radius: 8px; padding: 6px 8px; font-size: 16px; font-weight: 900; width: 100%; min-height: 40px; }
+.carte-build input:hover, .carte-build input:focus { border-color: var(--bord); }
+.carte-build ul { list-style: none; margin: 0; padding: 0; font-size: 12px; display: grid; gap: 2px; }
+.carte-build li span { opacity: .7; }
+.carte-build .equiper { margin-top: auto; text-align: center; font-weight: 900; color: var(--accent); }
+.carte-build.actif .equiper { color: #8ef59a; }
+.build-actif { width: 100%; min-height: 40px; }
+@media (max-width: 900px) { #buildsGrille { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 720px) { #pageBuilds { top: 10px; max-height: calc(100% - 90px - env(safe-area-inset-bottom)); } }
 #boutiqueMeta { pointer-events: none; }
 #boutiqueMeta .panneau { pointer-events: auto; }
 .produits-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
@@ -520,8 +537,14 @@
     <h3>📊 Stats <span class="petit">(survole une barre)</span></h3>
     <div class="stats" id="statsGauche"></div>
   </div>
+  <!-- Page des builds : 4 emplacements renommables (toupie + lanceur + terrain), affichée en entrant dans l'atelier -->
+  <div id="pageBuilds" class="panneau cache">
+    <h2>🗂️ Mes builds <span class="petit">Choisis un build à équiper et à modifier · touche le nom pour le renommer</span></h2>
+    <div id="buildsGrille"></div>
+  </div>
   <div class="cote panneau">
     <button class="retour-menu" data-ecran="menu">← Menu</button>
+    <button class="btn discret build-actif" id="ouvrirBuilds">🗂️ <b id="nomBuildActif">Build 1</b> · changer de build</button>
     <div class="onglets" id="onglets">
       <button data-onglet="toupie">🌀 Toupie</button><button data-onglet="lanceur">🚀 Lanceur</button><button data-onglet="terrain">🏟️ Terrain</button>
     </div>
@@ -725,7 +748,7 @@
   <div class="actions"><button class="btn" id="pauseReprendre">▶ Reprendre</button><button class="btn" id="pauseQuitter" style="background:linear-gradient(#ff6b5b,#c0392b);color:#fff">🏳️ Abandonner</button></div>
 </div></div>
 
-<script type="importmap">{"imports":{"three":"./vendor/three.module.js?v=a762b858","./src/atelier3d.js":"./src/atelier3d.js?v=ca0507a6","./src/audio.js":"./src/audio.js?v=a66add9e","./src/bots.js":"./src/bots.js?v=1a0021fd","./src/bugs.js":"./src/bugs.js?v=89265498","./src/config.js":"./src/config.js?v=6ce0de2e","./src/data/boutique.js":"./src/data/boutique.js?v=c715de5e","./src/data/cafards.js":"./src/data/cafards.js?v=4e07a535","./src/data/pieces.js":"./src/data/pieces.js?v=c67fe0b9","./src/data/terrains.js":"./src/data/terrains.js?v=432a674d","./src/enligne.js":"./src/enligne.js?v=2338143c","./src/fx.js":"./src/fx.js?v=911fec12","./src/inspecteur.js":"./src/inspecteur.js?v=d9944222","./src/lanceurMesh.js":"./src/lanceurMesh.js?v=43daea2e","./src/launcher.js":"./src/launcher.js?v=5caff3e9","./src/magasin3d.js":"./src/magasin3d.js?v=8ed9dcaa","./src/main.js":"./src/main.js?v=50362128","./src/match.js":"./src/match.js?v=1367bffc","./src/ouverture3d.js":"./src/ouverture3d.js?v=ddfe4f83","./src/parametres.js":"./src/parametres.js?v=37ff0e5f","./src/physics.js":"./src/physics.js?v=119900f1","./src/progression.js":"./src/progression.js?v=81194ffc","./src/save.js":"./src/save.js?v=45a68a57","./src/scene.js":"./src/scene.js?v=8a80004e","./src/stats.js":"./src/stats.js?v=8c65d57c","./src/topMesh.js":"./src/topMesh.js?v=911b5ffa","./src/tutoriel.js":"./src/tutoriel.js?v=a7fd601b","./src/ui.js":"./src/ui.js?v=2734625a","./vendor/jsm/loaders/BufferGeometryUtils.js":"./vendor/jsm/loaders/BufferGeometryUtils.js?v=00ecb96b","./vendor/jsm/loaders/GLTFLoader.js":"./vendor/jsm/loaders/GLTFLoader.js?v=aee0c31f","./vendor/jsm/loaders/RGBELoader.js":"./vendor/jsm/loaders/RGBELoader.js?v=7626b55b","./vendor/jsm/postprocessing/EffectComposer.js":"./vendor/jsm/postprocessing/EffectComposer.js?v=eccf8177","./vendor/jsm/postprocessing/MaskPass.js":"./vendor/jsm/postprocessing/MaskPass.js?v=10b721db","./vendor/jsm/postprocessing/OutputPass.js":"./vendor/jsm/postprocessing/OutputPass.js?v=8ca54f44","./vendor/jsm/postprocessing/Pass.js":"./vendor/jsm/postprocessing/Pass.js?v=a5ec37ce","./vendor/jsm/postprocessing/RenderPass.js":"./vendor/jsm/postprocessing/RenderPass.js?v=89aaff34","./vendor/jsm/postprocessing/ShaderPass.js":"./vendor/jsm/postprocessing/ShaderPass.js?v=f145da64","./vendor/jsm/postprocessing/UnrealBloomPass.js":"./vendor/jsm/postprocessing/UnrealBloomPass.js?v=a60d7378","./vendor/jsm/shaders/CopyShader.js":"./vendor/jsm/shaders/CopyShader.js?v=6088e45f","./vendor/jsm/shaders/LuminosityHighPassShader.js":"./vendor/jsm/shaders/LuminosityHighPassShader.js?v=05b8a6dd","./vendor/jsm/shaders/OutputShader.js":"./vendor/jsm/shaders/OutputShader.js?v=251fcfe4"}}</script>
-<script type="module" src="src/main.js?v=5bb72bad"></script>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js?v=a762b858","./src/atelier3d.js":"./src/atelier3d.js?v=ca0507a6","./src/audio.js":"./src/audio.js?v=a66add9e","./src/bots.js":"./src/bots.js?v=1a0021fd","./src/bugs.js":"./src/bugs.js?v=89265498","./src/config.js":"./src/config.js?v=6ce0de2e","./src/data/boutique.js":"./src/data/boutique.js?v=c715de5e","./src/data/cafards.js":"./src/data/cafards.js?v=4e07a535","./src/data/pieces.js":"./src/data/pieces.js?v=c67fe0b9","./src/data/terrains.js":"./src/data/terrains.js?v=432a674d","./src/enligne.js":"./src/enligne.js?v=2338143c","./src/fx.js":"./src/fx.js?v=911fec12","./src/inspecteur.js":"./src/inspecteur.js?v=d9944222","./src/lanceurMesh.js":"./src/lanceurMesh.js?v=43daea2e","./src/launcher.js":"./src/launcher.js?v=5caff3e9","./src/magasin3d.js":"./src/magasin3d.js?v=8ed9dcaa","./src/main.js":"./src/main.js?v=15be7652","./src/match.js":"./src/match.js?v=1367bffc","./src/ouverture3d.js":"./src/ouverture3d.js?v=ddfe4f83","./src/parametres.js":"./src/parametres.js?v=37ff0e5f","./src/physics.js":"./src/physics.js?v=119900f1","./src/progression.js":"./src/progression.js?v=81194ffc","./src/save.js":"./src/save.js?v=a8dac5ad","./src/scene.js":"./src/scene.js?v=8a80004e","./src/stats.js":"./src/stats.js?v=8c65d57c","./src/topMesh.js":"./src/topMesh.js?v=911b5ffa","./src/tutoriel.js":"./src/tutoriel.js?v=a7fd601b","./src/ui.js":"./src/ui.js?v=2734625a","./vendor/jsm/loaders/BufferGeometryUtils.js":"./vendor/jsm/loaders/BufferGeometryUtils.js?v=00ecb96b","./vendor/jsm/loaders/GLTFLoader.js":"./vendor/jsm/loaders/GLTFLoader.js?v=aee0c31f","./vendor/jsm/loaders/RGBELoader.js":"./vendor/jsm/loaders/RGBELoader.js?v=7626b55b","./vendor/jsm/postprocessing/EffectComposer.js":"./vendor/jsm/postprocessing/EffectComposer.js?v=eccf8177","./vendor/jsm/postprocessing/MaskPass.js":"./vendor/jsm/postprocessing/MaskPass.js?v=10b721db","./vendor/jsm/postprocessing/OutputPass.js":"./vendor/jsm/postprocessing/OutputPass.js?v=8ca54f44","./vendor/jsm/postprocessing/Pass.js":"./vendor/jsm/postprocessing/Pass.js?v=a5ec37ce","./vendor/jsm/postprocessing/RenderPass.js":"./vendor/jsm/postprocessing/RenderPass.js?v=89aaff34","./vendor/jsm/postprocessing/ShaderPass.js":"./vendor/jsm/postprocessing/ShaderPass.js?v=f145da64","./vendor/jsm/postprocessing/UnrealBloomPass.js":"./vendor/jsm/postprocessing/UnrealBloomPass.js?v=a60d7378","./vendor/jsm/shaders/CopyShader.js":"./vendor/jsm/shaders/CopyShader.js?v=6088e45f","./vendor/jsm/shaders/LuminosityHighPassShader.js":"./vendor/jsm/shaders/LuminosityHighPassShader.js?v=05b8a6dd","./vendor/jsm/shaders/OutputShader.js":"./vendor/jsm/shaders/OutputShader.js?v=251fcfe4"}}</script>
+<script type="module" src="src/main.js?v=ce39c0db"></script>
 </body>
 </html>

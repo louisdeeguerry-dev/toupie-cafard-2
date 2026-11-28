@@ -1198,3 +1198,7 @@ Entrée, 1-4, R), offres numérotées, panneaux élargis sur grand écran, Aband
 ## 2026-11-28 — Textures des pièces
 **Prompt optimisé** : (rôle : artiste 3D / intégrateur) Plus de texture sur toutes les pièces, cohérente avec leur fabrication (règle 5).
 **Fait** : motifs plus contrastés et relief par motif ; nouveaux motifs roche, craquelure (tirelire émaillée), grené (pièces sombres), anodisé (alu) ; acier des modèles brossé, or martelé. Roche du noyau encore peu visible.
+
+## 2026-11-28 — Emplacements de build
+**Prompt optimisé** : (rôle : dev UI/gameplay) En cliquant sur Atelier, afficher 4 builds renommables (Build 1 à 4), chacun avec sa toupie, son lanceur et son terrain, pour changer de configuration rapidement. Consigne : si les crédits manquent, tout mettre en pause et reprendre plus tard.
+**Fait** : save.builds (4) + buildActif, changerBuild (recopie en place), page « Mes builds » à l'entrée de l'atelier, renommage direct, bouton « changer de build » dans l'atelier. Testé PC + Pixel 7.

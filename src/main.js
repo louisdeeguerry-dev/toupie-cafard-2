@@ -1,14 +1,14 @@
 // Point d'entrée : relie l'atelier, la partie et la boucle de rendu.
 import { renderer, scene, camera, vitrine, vitrineCam } from './scene.js';
 import { majModeles, selection as selectionAtelier, majAtelier, terrainVitrine, initControles, controlesActifs } from './atelier3d.js';
-import { charger, sauver, reinitialiser } from './save.js';
+import { charger, sauver, reinitialiser, changerBuild } from './save.js';
 import { lanceur, majLanceur, lancerDirect, modeleLanceur } from './launcher.js';
 import { lancerDansEtape, lancersDansEtape, capacite } from './match.js';
 import { partie, nouvellePartie, commencerManche, majPartie, brancherInterface, lancer, abandonner, acheter, _interne } from './match.js';
 import { majFx, majBarres, majEtincelles, facteurTemps } from './fx.js';
 import { majCamera, rendre } from './scene.js';
 import { tutoriel } from './tutoriel.js';
-import { PIECES, estDepart } from './data/pieces.js';
+import { PIECES, estDepart, PIECE as PIECE_PAR_ID } from './data/pieces.js';
 import { creerToupie, libererToupie, chargerModeles, geometriesModele, modeleDetaille, modeleBrut } from './topMesh.js';
 import { habiller, placerVitrine } from './scene.js';
 import { adopterModeleCafard } from './bugs.js';
@@ -61,8 +61,40 @@ function allerA(ecran) {
   if (ecran === 'boutiqueMeta') selectionAtelier('boutique', null); // la caméra va au comptoir
   else if (ecran !== 'atelier') selectionAtelier('toupie', null); // hors atelier : la toupie tourne, montée
   else { const et = atelier.etat(); selectionAtelier(et.onglet, et.slot); }
+  pageBuilds(ecran === 'atelier'); // en entrant dans l'atelier : d'abord le choix du build
   atelier.rendre();
 }
+
+// ---------------------------------------------------------------- Builds : 4 emplacements renommables
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+function pageBuilds(ouvrir) {
+  const page = document.getElementById('pageBuilds'), at = document.getElementById('atelier');
+  page.classList.toggle('cache', !ouvrir); at.classList.toggle('choix-build', ouvrir);
+  document.getElementById('nomBuildActif').textContent = save.builds[save.buildActif].nom;
+  if (!ouvrir) return;
+  sauver(save); // l'équipement actif est recopié dans son emplacement
+  document.getElementById('buildsGrille').innerHTML = save.builds.map((b, i) => `<div class="carte-build ${i === save.buildActif ? 'actif' : ''}" data-build="${i}" role="button" tabindex="0">
+    <input data-renommer="${i}" value="${esc(b.nom)}" maxlength="20" aria-label="Nom du build ${i + 1}">
+    <ul>${SLOTS.map(sl => `<li>${sl.icone} <span>${sl.nom} :</span> ${esc(PIECE_PAR_ID[b.equipe[sl.id]]?.nom || '—')}${(b.niveauxPieces[b.equipe[sl.id]] || 1) > 1 ? ` <b>niv ${b.niveauxPieces[b.equipe[sl.id]]}</b>` : ''}</li>`).join('')}
+      <li>🏟️ <span>Terrain :</span> ${b.terrain === 'aucun' ? 'aucun' : esc(TERRAIN[b.terrain]?.nom || b.terrain)}</li></ul>
+    <div class="equiper">${i === save.buildActif ? '✔ Équipé · modifier ▶' : 'Équiper et modifier ▶'}</div></div>`).join('');
+}
+document.getElementById('ouvrirBuilds').addEventListener('click', () => { UI.son?.('choix', { volume: 0.5 }); pageBuilds(true); });
+document.getElementById('buildsGrille').addEventListener('change', e => {
+  const i = e.target.dataset?.renommer;
+  if (i === undefined) return;
+  save.builds[i].nom = e.target.value.trim().slice(0, 20) || `Build ${+i + 1}`; sauver(save);
+  document.getElementById('nomBuildActif').textContent = save.builds[save.buildActif].nom;
+});
+document.getElementById('buildsGrille').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.dataset?.renommer !== undefined) e.target.blur(); });
+document.getElementById('buildsGrille').addEventListener('click', e => {
+  if (e.target.closest('[data-renommer]')) return; // on renomme : ne pas choisir
+  const c = e.target.closest('[data-build]');
+  if (!c) return;
+  activerAudio(); UI.son?.('choix', { volume: 0.6 });
+  changerBuild(save, +c.dataset.build); sauver(save);
+  majVitrine(); atelier.rendre(); pageBuilds(false);
+});
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-ecran]');
   if (!b || mode !== 'atelier') return;
