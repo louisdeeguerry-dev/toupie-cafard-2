@@ -10,7 +10,7 @@ export const MODELES_DISPO = ['standard', 'clou', 'foreuse', 'diamant', 'bille',
   .concat(['standard', 'lourde', 'legere', 'gyro', 'noyau', 'tresor'].map(f => 'base-' + f))
   .concat(['standard', 'large', 'dents', 'bouclier', 'lames', 'inertie'].map(f => 'couronne-' + f), ['lanceur-boitier'])
   .concat(['vide', 'oeil', 'aimant', 'ressort', 'flamme', 'sangsue', 'cyclone', 'fer', 'carapace'].map(f => 'ame-' + f))
-  .concat(['lanceur-pied', 'lanceur-manche', 'cafard', 'decor-bureau', 'terrain-rebond', 'terrain-collant', 'terrain-cuve']);
+  .concat(['lanceur-pied', 'lanceur-manche', 'cafard', 'decor-bureau', 'terrain-rebond', 'terrain-collant', 'terrain-cuve', 'boite-ferrures']);
 const SCENES = {};
 // Modèle tel qu'exporté, avec ses propres couleurs (décor du bureau)
 export const modeleBrut = nom => SCENES[nom]?.clone();

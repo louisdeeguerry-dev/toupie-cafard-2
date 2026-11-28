@@ -1,5 +1,6 @@
 // La scène 3D : rendu, caméra, bureau de jeu, et la vitrine de l'atelier.
 import * as THREE from 'three';
+import { RGBELoader } from '../vendor/jsm/loaders/RGBELoader.js';
 import { DESK_X, ARENE_R, RAIL_R, RAIL_ANGLE } from './config.js';
 import { EffectComposer } from '../vendor/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from '../vendor/jsm/postprocessing/RenderPass.js';
@@ -14,7 +15,7 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.05;
+renderer.toneMappingExposure = 0.85; // l'HDRI de studio éclaire plus que l'ancien studio généré
 conteneur.appendChild(renderer.domElement);
 
 // Post-traitement : un halo doux (bloom) autour de ce qui brille (voyants, étincelles, néons, lueurs des pièces).
@@ -307,3 +308,12 @@ function studio() {
 const reflets = studio();
 scene.environment = reflets;
 vitrine.environment = reflets;
+// Éclairage HDRI : photo à 360° d'un vrai studio (Poly Haven « Studio Small 09 », CC0) pour des reflets réalistes sur les
+// métaux et les vernis. Chargée en arrière-plan ; si elle manque, le studio généré ci-dessus reste en place.
+const V_HDRI = new URL(import.meta.url).searchParams.get('v') || '0';
+new RGBELoader().loadAsync(`assets/hdri/studio_small_09_1k.hdr?v=${V_HDRI}`).then(tex => {
+  tex.mapping = THREE.EquirectangularReflectionMapping;
+  const pm = new THREE.PMREMGenerator(renderer), env = pm.fromEquirectangular(tex).texture;
+  scene.environment = env; vitrine.environment = env;
+  tex.dispose(); pm.dispose();
+}).catch(() => { /* pas d'HDRI : studio généré */ });

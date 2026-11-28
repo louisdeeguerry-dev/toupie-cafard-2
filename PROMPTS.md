@@ -1148,3 +1148,9 @@ gardées) et des cafards détaillés (espèces, marche et dorés conservés), sa
 mécaniquement crédible (ressorts du rebondissant, colle du collant, pente de la cuve), sans perdre en fluidité.
 **Réalisé** : décor (tasse, pot à crayons, cahier, règle, écrous) et table en bois ; bandes rebondissantes à ressorts ;
 coulures de colle ; pente de cuve au bois continu ; bug corrigé : le rôle « or » était trouvé dans « corps » (tout était doré).
+
+## 2026-11-28 — 3D : boîtes mystère et éclairage HDRI
+**Prompt optimisé** (artiste 3D + rendu) : détailler la boîte mystère (sans perdre ses faces illustrées ni son animation) et
+passer à un vrai éclairage HDRI de studio (Poly Haven, CC0), avec repli et sans perte de fluidité.
+**Réalisé** : quincaillerie Blender (coins rivetés, charnières sur l'axe du couvercle, fermoir) ; HDRI « Studio Small 09 » 1k
++ RGBELoader (MIT) ; exposition ajustée ; hôte dl.polyhaven.org autorisé dans l'environnement cloud ; licences notées.

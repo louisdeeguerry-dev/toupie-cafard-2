@@ -11,3 +11,5 @@
 Tout le reste (code, modèles 3D construits en code, textures dessinées en code) est original.
 | `vendor/jsm/loaders/GLTFLoader.js`, `BufferGeometryUtils.js` | [Three.js](https://github.com/mrdoob/three.js) r160 (copiés depuis le jeu 1) | MIT |
 | `assets/modeles/*.glb` | Modèles créés pour le jeu avec Blender (`outils/blender/toupies.py`) ; Blender ([bpy](https://pypi.org/project/bpy/)) est un outil GPL, les modèles produits nous appartiennent | — |
+| `vendor/jsm/loaders/RGBELoader.js` | [Three.js](https://github.com/mrdoob/three.js) r160 (paquet npm `three@0.160.0`) | MIT |
+| `assets/hdri/studio_small_09_1k.hdr` | HDRI « Studio Small 09 », [Poly Haven](https://polyhaven.com/a/studio_small_09) | CC0 |

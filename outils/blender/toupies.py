@@ -666,11 +666,32 @@ def terrain_cuve():  # le plateau se relève en pente douce près du bord : c'es
     exporter('terrain-cuve')
 
 
+
+# ================================================================ BOÎTE MYSTÈRE (ouverture 3D) : quincaillerie sur la boîte en carton du jeu
+def boite_ferrures():  # boîte de 90 × 110 × 60 mm (L × H × P) : coins de métal rivetés, 2 charnières à l'arrière, fermoir doré devant
+    vider()
+    L, H, P = 0.09, 0.11, 0.06
+    for sx in (-1, 1):
+        for sy in (-1, 1):  # Blender : y = profondeur (avant = −y, car il devient +z dans le jeu), z = hauteur
+            for z in (0.0, H):
+                bpy.ops.mesh.primitive_cube_add(size=1, location=(sx * (L / 2 - 0.004), sy * (P / 2 - 0.004), z + (0.004 if z == 0 else -0.004)))
+                c = objet_actif(f'coin{sx}{sy}{int(z * 100)}_acier'); c.scale = (0.0105, 0.0105, 0.0105)
+                bev = c.modifiers.new('biseau', 'BEVEL'); bev.width = 0.0012; bev.segments = 2
+                cylindre(f'rivet{sx}{sy}{int(z * 100)}_or', 0.0011, 0.0010, sx * (L / 2 - 0.004), sy * (P / 2 + 0.0012), z + (0.004 if z == 0 else -0.004), 10).rotation_euler = (math.pi / 2, 0, 0)
+    for sx in (-1, 1):  # charnières : le couvercle pivote vraiment autour de cet axe (arête arrière du haut)
+        c = cylindre(f'charniere{sx}_acier', 0.0026, 0.018, sx * 0.025, P / 2, H, 16)
+        c.rotation_euler = (0, math.pi / 2, 0)
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(0, -P / 2 - 0.0015, H - 0.010))
+    f = objet_actif('fermoir_or'); f.scale = (0.014, 0.003, 0.012)
+    bev = f.modifiers.new('biseau', 'BEVEL'); bev.width = 0.001; bev.segments = 2
+    exporter('boite-ferrures')
+
+
 if __name__ == '__main__':
     for f in (pointe_standard, pointe_clou, pointe_foreuse, pointe_diamant, pointe_bille, pointe_ventouse,
               base_standard, base_lourde, base_legere, base_gyro, base_noyau, base_tresor,
               couronne_standard, couronne_large, couronne_dents, couronne_bouclier, couronne_lames, couronne_inertie,
               lanceur_boitier, ame_vide, ame_oeil, ame_aimant, ame_ressort, ame_flamme, ame_sangsue, ame_cyclone,
               ame_fer, ame_carapace, lanceur_pied, lanceur_manche, cafard, decor_bureau, terrain_rebond, terrain_collant,
-              terrain_cuve):
+              terrain_cuve, boite_ferrures):
         f()

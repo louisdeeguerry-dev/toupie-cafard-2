@@ -2,6 +2,7 @@
 // Chaque clic ouvre un peu plus : 1 le scellé saute, 2 le couvercle s'entrouvre, 3 il s'ouvre et la lumière (couleur de la
 // rareté) s'échappe, 4 la VRAIE pièce 3D sort de sa boîte en tournant et brille. Ensuite, le récapitulatif des lots.
 import * as THREE from 'three';
+import { modeleDetaille } from './topMesh.js';
 import { vitrine } from './scene.js';
 import { texture } from './magasin3d.js';
 import { creerPieceToupie } from './topMesh.js';
@@ -35,6 +36,9 @@ function creerBoite(lot) {
   paroi(ep, H, P, -L / 2, H / 2, 0, cote);               // gauche
   paroi(ep, H, P, L / 2, H / 2, 0, cote);                // droite
   paroi(L, ep, P, 0, ep / 2, 0, dessous);                // fond
+  // Quincaillerie (Blender) : coins de métal rivetés, charnières sur l'axe du couvercle, fermoir doré
+  const ferrures = modeleDetaille('boite-ferrures', dessous, 0);
+  if (ferrures) { ferrures.traverse(o => { o.castShadow = true; }); g.add(ferrures); }
   // Couvercle : charnière sur l'arête arrière du haut
   const charniere = new THREE.Group(); charniere.position.set(0, H, -P / 2); g.add(charniere);
   const couvercle = new THREE.Mesh(new THREE.BoxGeometry(L + 0.004, 0.004, P + 0.004),
