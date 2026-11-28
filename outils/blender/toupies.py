@@ -96,11 +96,11 @@ def helice_conique(nom, r0, r1, z0, z1, tours, fil, n=200):
     return ob
 
 
-def exporter(nom):
+def exporter(nom, materiaux=False):
     os.makedirs(SORTIE, exist_ok=True)
     chemin = os.path.abspath(os.path.join(SORTIE, nom + '.glb'))
     bpy.ops.export_scene.gltf(filepath=chemin, export_format='GLB', export_apply=True, export_yup=True,
-                              export_materials='NONE', export_normals=True)
+                              export_materials='EXPORT' if materiaux else 'NONE', export_normals=True)
     print('écrit', chemin, os.path.getsize(chemin), 'octets')
 
 
@@ -582,10 +582,95 @@ def cafard():
     exporter('cafard')
 
 
+
+# ================================================================ DÉCOR DU BUREAU (avec ses propres couleurs)
+def materiau(ob, couleur, rugosite=0.5, metal=0.0):
+    m = bpy.data.materials.new(ob.name + '_mat')
+    m.use_nodes = True
+    b = m.node_tree.nodes['Principled BSDF']
+    b.inputs['Base Color'].default_value = (*couleur, 1)
+    b.inputs['Roughness'].default_value = rugosite
+    b.inputs['Metallic'].default_value = metal
+    ob.data.materials.append(m)
+    return ob
+
+
+def decor_bureau():  # objets posés sur le bureau, autour du plateau (Ø 1,2 m) : tasse, pot à crayons, cahier, règle, écrous
+    vider()
+    # Tasse de café (en haut à gauche)
+    t = revolution('tasse', [(0.0, 0.0), (0.040, 0.0), (0.044, 0.004), (0.046, 0.090), (0.042, 0.092), (0.040, 0.010), (0.0, 0.010)], pas=48)
+    t.location = (-0.80, -0.40, 0.0); materiau(t, (0.80, 0.18, 0.12), 0.25)
+    bpy.ops.mesh.primitive_torus_add(major_radius=0.022, minor_radius=0.006, location=(-0.752, -0.40, 0.048), rotation=(math.pi / 2, 0, 0))
+    an = objet_actif('anse'); materiau(an, (0.80, 0.18, 0.12), 0.25); lisser(an, 80)
+    cafe = revolution('cafe', [(0.0, 0.070), (0.040, 0.070), (0.0, 0.0701)], pas=48); cafe.location = (-0.80, -0.40, 0.0)
+    materiau(cafe, (0.10, 0.05, 0.02), 0.05)
+    # Pot à crayons (en haut à droite) avec 4 crayons hexagonaux
+    pot = revolution('pot', [(0.0, 0.0), (0.045, 0.0), (0.045, 0.110), (0.041, 0.110), (0.041, 0.006), (0.0, 0.006)], pas=6)
+    pot.location = (0.82, -0.42, 0.0); materiau(pot, (0.15, 0.35, 0.65), 0.4)
+    for i, (dx, dy, c) in enumerate([(0.012, 0.010, (1.0, 0.75, 0.10)), (-0.014, 0.006, (0.20, 0.60, 0.25)), (0.004, -0.016, (0.85, 0.25, 0.35)), (-0.006, 0.0, (0.95, 0.55, 0.15))]):
+        cr = revolution(f'crayon{i}', [(0.0, 0.0), (0.0045, 0.0), (0.0045, 0.170), (0.0, 0.178)], pas=6)
+        cr.location = (0.82 + dx, -0.42 + dy, 0.01); cr.rotation_euler = (dy * 6, -dx * 6, i)
+        materiau(cr, c, 0.5)
+        mi = revolution(f'mine{i}', [(0.0, 0.170), (0.0045, 0.170), (0.0, 0.192)], pas=6)
+        mi.location = cr.location; mi.rotation_euler = cr.rotation_euler; materiau(mi, (0.85, 0.70, 0.50), 0.6)
+    # Cahier fermé et règle (à droite, côté joueur)
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(0.90, 0.30, 0.008)); ca = objet_actif('cahier')
+    ca.scale = (0.21, 0.29, 0.016); ca.rotation_euler = (0, 0, 0.25); materiau(ca, (0.10, 0.45, 0.40), 0.6)
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(0.90, 0.30, 0.0165)); pg = objet_actif('pages')
+    pg.scale = (0.205, 0.285, 0.002); pg.rotation_euler = (0, 0, 0.25); materiau(pg, (0.95, 0.93, 0.86), 0.8)
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(-0.86, 0.35, 0.002)); re = objet_actif('regle')
+    re.scale = (0.035, 0.32, 0.004); re.rotation_euler = (0, 0, -0.4); materiau(re, (0.80, 0.85, 0.90), 0.15, 0.6)
+    # Quelques écrous et vis égarés (l'atelier n'est pas loin)
+    for i, (x, y) in enumerate([(-0.78, -0.62), (0.80, -0.66), (-1.10, 0.05), (1.15, -0.15)]):
+        e = revolution(f'ecrou{i}', [(0.006, 0.0), (0.016, 0.0), (0.016, 0.010), (0.006, 0.010)], pas=6)
+        e.location = (x, y, 0.0); e.rotation_euler = (0, 0, i); materiau(e, (0.70, 0.72, 0.75), 0.3, 0.9)
+    exporter('decor-bureau', materiaux=True)
+
+
+# ================================================================ TERRAINS DE DUEL
+def terrain_rebond():  # une bande rebondissante (longueur 1,264 m) : boudin de caoutchouc poussé par 5 ressorts, sur ses supports
+    vider()
+    L = 2 * 0.6 + 0.064
+    bpy.ops.mesh.primitive_cylinder_add(vertices=24, radius=0.018, depth=L, location=(0, 0, 0.012), rotation=(0, math.pi / 2, 0))
+    lisser(objet_actif('boudin_corps'), 50)
+    for i in range(5):  # ressorts entre le boudin et le rail arrière : ce sont eux qui relancent la toupie
+        x = -0.48 + i * 0.24
+        pts = []
+        for k in range(6 * 16 + 1):
+            a = k / 16 * 2 * math.pi
+            pts.append((x + 0.007 * math.cos(a), 0.022 + k / 96 * 0.026, 0.012 + 0.007 * math.sin(a)))
+        courbe(f'ressort{i}_acier', pts, 0.0016)
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(0, 0.052, 0.012)); r = objet_actif('rail_sombre'); r.scale = (L, 0.008, 0.030)
+    exporter('terrain-rebond')
+
+
+def terrain_collant():  # coulures de colle collées sur l'intérieur du rebord rond (le jeu les place tout autour)
+    vider()
+    import random
+    random.seed(5)
+    for i in range(18):
+        a = i * 2 * math.pi / 18 + random.uniform(-0.08, 0.08)
+        r = 0.6 - 0.004
+        long = random.uniform(0.02, 0.05)
+        pts = [(r * math.cos(a), r * math.sin(a), 0.020), ((r - long * 0.6) * math.cos(a), (r - long * 0.6) * math.sin(a), 0.004),
+               ((r - long) * math.cos(a), (r - long) * math.sin(a), 0.001)]
+        courbe(f'coulure{i}_corps', pts, random.uniform(0.004, 0.007))
+        bpy.ops.mesh.primitive_uv_sphere_add(segments=12, ring_count=6, radius=0.009, location=((r - long) * math.cos(a), (r - long) * math.sin(a), 0.0))
+        g = objet_actif(f'goutte{i}_corps'); g.scale = (1, 1, 0.35); lisser(g, 80)
+    exporter('terrain-collant')
+
+
+def terrain_cuve():  # le plateau se relève en pente douce près du bord : c'est une vraie cuve (les toupies glissent au centre)
+    vider()
+    revolution('pente_corps', [(0.30, 0.0), (0.45, 0.004), (0.55, 0.014), (0.598, 0.026), (0.598, 0.0), (0.30, -0.001)], pas=128)
+    exporter('terrain-cuve')
+
+
 if __name__ == '__main__':
     for f in (pointe_standard, pointe_clou, pointe_foreuse, pointe_diamant, pointe_bille, pointe_ventouse,
               base_standard, base_lourde, base_legere, base_gyro, base_noyau, base_tresor,
               couronne_standard, couronne_large, couronne_dents, couronne_bouclier, couronne_lames, couronne_inertie,
               lanceur_boitier, ame_vide, ame_oeil, ame_aimant, ame_ressort, ame_flamme, ame_sangsue, ame_cyclone,
-              ame_fer, ame_carapace, lanceur_pied, lanceur_manche, cafard):
+              ame_fer, ame_carapace, lanceur_pied, lanceur_manche, cafard, decor_bureau, terrain_rebond, terrain_collant,
+              terrain_cuve):
         f()

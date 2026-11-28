@@ -1142,3 +1142,9 @@ cohérent avec son modèle chargé d'or et de joyaux (règle 5).
 gardées) et des cafards détaillés (espèces, marche et dorés conservés), sans perdre en fluidité.
 **Réalisé** : modèles `lanceur-pied` (socle, jonc doré, colonne, collier) et `lanceur-manche` (75 mm, 6 bagues, butée) ;
 `cafard` en pièces unité (abdomen annelé, tête à mandibules, pronotum à rebord, patte articulée épineuse en miroir).
+
+## 2026-11-28 — 3D : décor et terrains
+**Prompt optimisé** (artiste 3D + level designer) : habiller le bureau d'objets modélisés et rendre chaque terrain lisible et
+mécaniquement crédible (ressorts du rebondissant, colle du collant, pente de la cuve), sans perdre en fluidité.
+**Réalisé** : décor (tasse, pot à crayons, cahier, règle, écrous) et table en bois ; bandes rebondissantes à ressorts ;
+coulures de colle ; pente de cuve au bois continu ; bug corrigé : le rôle « or » était trouvé dans « corps » (tout était doré).

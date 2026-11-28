@@ -121,7 +121,8 @@ const carre = new THREE.Group();
 }
 
 // Table et sol autour
-const table = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.06, 1.8), new THREE.MeshStandardMaterial({ color: 0x2a1c12, roughness: 0.8 }));
+const boisTable = textureBois().clone(); boisTable.wrapS = boisTable.wrapT = THREE.RepeatWrapping; boisTable.repeat.set(2.5, 1.4); boisTable.needsUpdate = true;
+const table = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.06, 1.8), new THREE.MeshStandardMaterial({ color: 0x5a3c26, map: boisTable, roughness: 0.6 }));
 table.position.y = -0.07;
 table.receiveShadow = true;
 scene.add(table);
@@ -164,7 +165,42 @@ for (const r of [0.15, 0.3, 0.45]) {
 }
 creux.visible = false;
 scene.add(creux);
+// ---------------------------------------------------------------- Habillage détaillé (modèles Blender, chargés au démarrage)
+// Décor du bureau, bandes à ressorts du terrain rebondissant, coulures de colle, pente de la cuve. Sans modèles : formes simples.
+const habits = { rebond: null, collant: null, cuve: null };
+export function habiller({ modeleDetaille, modeleBrut }) {
+  const decor = modeleBrut('decor-bureau');
+  if (decor) { decor.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); scene.add(decor); }
+  const bandes = new THREE.Group();
+  for (let k = 0; k < 4; k++) {
+    const b = modeleDetaille('terrain-rebond', rebordMat, 0);
+    if (!b) break;
+    const a = (k * Math.PI) / 2; // chaque bande : ressorts tournés vers l'extérieur (ils repoussent la toupie vers le centre)
+    b.position.set(Math.cos(a) * (ARENE_R + 0.014), 0, Math.sin(a) * (ARENE_R + 0.014));
+    b.rotation.y = Math.atan2(-Math.cos(a), -Math.sin(a));
+    bandes.add(b);
+  }
+  if (bandes.children.length) {
+    carre.children.filter(o => o.geometry?.type === 'CylinderGeometry').forEach(o => { o.visible = false; });
+    carre.add(bandes); habits.rebond = bandes;
+  }
+  habits.collant = modeleDetaille('terrain-collant', rebordMat, 0);
+  habits.cuve = modeleDetaille('terrain-cuve', bois, 0);
+  // Pente de la cuve : même projection du bois que le dessus du plateau (les veines continuent sans couture)
+  habits.cuve?.traverse(o => {
+    if (!o.isMesh) return;
+    const p = o.geometry.attributes.position, uv = o.geometry.attributes.uv;
+    for (let i = 0; i < p.count; i++) uv.setXY(i, p.getZ(i) / (2 * ARENE_R) + 0.5, p.getX(i) / (2 * ARENE_R) + 0.5);
+    uv.needsUpdate = true;
+  });
+  for (const h of [habits.collant, habits.cuve]) if (h) { h.visible = false; scene.add(h); }
+  decorTerrain(dernierTerrain.id, dernierTerrain.duel);
+}
+const dernierTerrain = { id: null, duel: false };
 export function decorTerrain(id, duel = false) {
+  dernierTerrain.id = id; dernierTerrain.duel = duel;
+  if (habits.collant) habits.collant.visible = id === 'collant';
+  if (habits.cuve) habits.cuve.visible = id === 'cuve';
   const c = id === 'rebond' ? { color: 0x2f80ed, emissive: 0x0b3b8a, roughness: 0.3 }
     : id === 'collant' ? { color: 0x7dbb3a, emissive: 0x1f3d05, roughness: 0.1 }
     : REBORD_NEUTRE;

@@ -10,7 +10,10 @@ export const MODELES_DISPO = ['standard', 'clou', 'foreuse', 'diamant', 'bille',
   .concat(['standard', 'lourde', 'legere', 'gyro', 'noyau', 'tresor'].map(f => 'base-' + f))
   .concat(['standard', 'large', 'dents', 'bouclier', 'lames', 'inertie'].map(f => 'couronne-' + f), ['lanceur-boitier'])
   .concat(['vide', 'oeil', 'aimant', 'ressort', 'flamme', 'sangsue', 'cyclone', 'fer', 'carapace'].map(f => 'ame-' + f))
-  .concat(['lanceur-pied', 'lanceur-manche', 'cafard']);
+  .concat(['lanceur-pied', 'lanceur-manche', 'cafard', 'decor-bureau', 'terrain-rebond', 'terrain-collant', 'terrain-cuve']);
+const SCENES = {};
+// Modèle tel qu'exporté, avec ses propres couleurs (décor du bureau)
+export const modeleBrut = nom => SCENES[nom]?.clone();
 // Géométries d'un modèle, par nom d'objet, avec sa position déjà appliquée (cafards : bugs.js)
 export const geometriesModele = nom => MODELES[nom] && Object.fromEntries(MODELES[nom].map(p => [p.nom, p.geo.clone().applyMatrix4(p.matrice)]));
 export const modeleCharge = nom => !!MODELES[nom];
@@ -22,14 +25,17 @@ export function chargerModeles() {
   return (chargement ||= Promise.all(MODELES_DISPO.map(nom => l.loadAsync(`assets/modeles/${nom}.glb?v=${V}`).then(g => {
     const parts = [];
     g.scene.updateMatrixWorld(true);
+    SCENES[nom] = g.scene;
     g.scene.traverse(o => { if (o.isMesh && !o.geometry.attributes.uv) uvCylindre(o.geometry); });
-    g.scene.traverse(o => { if (o.isMesh) parts.push({ nom: o.name, geo: o.geometry, role: ROLES.find(r => o.name.includes(r)) || 'corps', matrice: o.matrixWorld.clone() }); });
+    g.scene.traverse(o => { if (o.isMesh) parts.push({ nom: o.name, geo: o.geometry, role: o.name.match(RE_ROLE)?.[1] || 'corps', matrice: o.matrixWorld.clone() }); });
     MODELES[nom] = parts;
   }).catch(() => { /* modèle absent : formes simples */ }))));
 }
 let matAcierM = null, matSombreM = null, matBlancM = null;
 const PIERRES_ROLES = ['rubis', 'saphir', 'emeraude', 'perle'];
 const ROLES = ['acier', 'sombre', 'or', 'blanc', 'rubis', 'saphir', 'emeraude', 'perle'];
+// Le rôle est le SUFFIXE du nom (« vis0_acier ») : chercher le mot n'importe où trouvait « or » dans « c-or-ps » (tout devenait doré)
+const RE_ROLE = new RegExp(`_(${ROLES.join('|')})(?:[._]\\d+)*$`);
 // Pierres et perles (base au trésor) : matériaux partagés, brillants
 const PIERRES = {};
 const pierre = role => (PIERRES[role] ||= new THREE.MeshPhysicalMaterial(role === 'perle'
