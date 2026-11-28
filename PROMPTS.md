@@ -1154,3 +1154,7 @@ coulures de colle ; pente de cuve au bois continu ; bug corrigé : le rôle « o
 passer à un vrai éclairage HDRI de studio (Poly Haven, CC0), avec repli et sans perte de fluidité.
 **Réalisé** : quincaillerie Blender (coins rivetés, charnières sur l'axe du couvercle, fermoir) ; HDRI « Studio Small 09 » 1k
 + RGBELoader (MIT) ; exposition ajustée ; hôte dl.polyhaven.org autorisé dans l'environnement cloud ; licences notées.
+
+## 2026-11-28 — Éclairage de la vitrine adouci
+**Prompt optimisé** (éclairagiste) : adoucir la vitrine de l'atelier (plateau saturé, reflet rose) sans perdre la lisibilité des pièces.
+**Réalisé** : lumière ambiante 0,55, projecteur 2,6 plus diffus, projecteurs colorés 0,4, bois du plateau mat (reflets du studio ×0,35).

@@ -267,8 +267,8 @@ vitrine.background = new THREE.Color(0x15110e);
 export const vitrineCam = new THREE.PerspectiveCamera(35, 1, 0.01, 10);
 vitrineCam.position.set(0, 0.1, 0.4);
 vitrineCam.lookAt(0, 0.035, 0);
-vitrine.add(new THREE.HemisphereLight(0xffffff, 0x302018, 0.7)); // éclairage adouci (28/11) : les détails des pièces ne sont plus « brûlés »
-const spot = new THREE.SpotLight(0xffe7c4, 4, 2, 0.6, 0.5);
+vitrine.add(new THREE.HemisphereLight(0xffffff, 0x302018, 0.55)); // éclairage adouci (28/11) : les détails des pièces ne sont plus « brûlés »
+const spot = new THREE.SpotLight(0xffe7c4, 2.6, 2, 0.6, 0.6); // plus doux et plus diffus : le plateau ne sature plus
 spot.position.set(0.15, 0.5, 0.25);
 spot.castShadow = true;
 vitrine.add(spot);

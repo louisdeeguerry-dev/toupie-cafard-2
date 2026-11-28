@@ -20,7 +20,7 @@ const ciel = new THREE.Mesh(new THREE.SphereGeometry(6, 32, 16), new THREE.Shade
 vitrine.add(ciel);
 vitrine.background = null;
 const projecteurs = [0xff8a3d, 0x3dc8ff, 0xff4fa3].map((c, i) => {
-  const l = new THREE.PointLight(c, 0.8, 1.6); // projecteurs colorés plus doux (ils brûlaient la toupie)
+  const l = new THREE.PointLight(c, 0.4, 1.6); // projecteurs colorés discrets (ils brûlaient la toupie et rosissaient le plateau)
   l.userData.phase = (i / 3) * Math.PI * 2;
   vitrine.add(l);
   return l;
@@ -74,7 +74,7 @@ export function initControles(canvas) {
 }
 
 // ---------------------------------------------------------------- Mini-arène (couleur du rebord = terrain choisi)
-const bois = new THREE.MeshStandardMaterial({ color: 0x8a5a32, roughness: 0.45 });
+const bois = new THREE.MeshStandardMaterial({ color: 0x7a4e2b, roughness: 0.72, envMapIntensity: 0.35 }); // bois mat : il ne renvoie plus tout le studio (plateau saturé)
 const arene = new THREE.Group();
 const disque = new THREE.Mesh(new THREE.CylinderGeometry(R, R * 1.02, 0.016, 64), bois);
 disque.position.y = -0.008; disque.receiveShadow = true;
