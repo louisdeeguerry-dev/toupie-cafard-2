@@ -1184,3 +1184,7 @@ Entrée, 1-4, R), offres numérotées, panneaux élargis sur grand écran, Aband
 ## 2026-11-28 — Refonte des menus + tutoriel obligatoire
 **Prompt optimisé** : (rôle : dev UI/UX Three.js) Réorganiser totalement les menus : bandeau de navigation en haut sur PC (barre d'onglets en bas sur téléphone), accueil exploitant l'espace avec un maximum d'infos lisibles. Créer un tutoriel guidé obligatoire (6 lancers contre les cafards, 2 duels contre des bots, apprendre acheter/relancer/bannir), récompensé par 3 pièces de toupie, qui débloque les vraies parties. Retirer les niveaux sur les pièces de départ. Vérifier PC 1000×650 et Pixel 7.
 **Fait** : #nav (onglets + profil + JOUER), accueil en 2 colonnes avec toupie à gauche (PC) / remontée au-dessus de la carte (téléphone), src/tutoriel.js (10 étapes), récompense, bouton « Refaire le tutoriel », niveaux masqués pour estDepart. Tutoriel testé de bout en bout.
+
+## 2026-11-28 — Collection, boutique et défi refaits
+**Prompt optimisé** : (rôle : dev UI/UX) Refondre la collection, la boutique de boîtes et l'écran Défi dans le style du nouveau bandeau, lisibles sur PC et téléphone (Règle 6).
+**Fait** : collection avec onglets par emplacement (compteurs), filtres Toutes/Possédées/À trouver, barres de progression, cartes colorées par rareté avec étoiles de niveau et pastilles bonus/malus ; boutique : panneau sous le bandeau, boutons d'achat des paquets, caméra recadrée (PC et téléphone) ; défi : 3 étapes expliquées, colonnes Inviter / Rejoindre.

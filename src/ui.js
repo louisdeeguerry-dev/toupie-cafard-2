@@ -200,29 +200,65 @@ export function creerAtelier(save, { onChange, onJouer, onBoite, onSelection = (
 }
 
 // ---------------------------------------------------------------- Collection : tout ce qu'on possède (et ce qui manque)
-let collectionBranchee = false;
+let collectionBranchee = false, colFiltre = 'tout', colOnglet = 'tout', colSave = null;
+const ORDRE_RARETE = Object.keys(RARETES);
+// Bonus et malus d'une pièce en petites pastilles (icône de la stat + valeur au niveau 1)
+const pastilles = p => Object.entries(niveauxPiece(p, 1)).filter(([, v]) => v).sort((a, b) => b[1] - a[1])
+  .map(([s, v]) => `<span class="pastille ${v > 0 ? 'plus' : 'moins'}" title="${esc(STAT[s]?.nom || s)}">${STAT[s]?.icone || ''}${v > 0 ? '+' : ''}${Math.round(v * 10) / 10}</span>`).join('');
+const barre = (n, t) => `<span class="col-barre"><i style="width:${t ? Math.round(100 * n / t) : 0}%"></i></span><span class="col-compte">${n}/${t}</span>`;
 export function rendreCollection(save) {
+  colSave = save;
   if (!collectionBranchee) {
     collectionBranchee = true;
     $('collectionContenu').addEventListener('click', e => {
       const c = e.target.closest('[data-inspecter]');
-      if (c) inspecter(c.dataset.inspecter, { save });
+      if (c) inspecter(c.dataset.inspecter, { save: colSave });
+    });
+    $('collectionOutils').addEventListener('click', e => {
+      const b = e.target.closest('[data-filtre],[data-onglet]');
+      if (!b) return;
+      if (b.dataset.filtre) colFiltre = b.dataset.filtre; else colOnglet = b.dataset.onglet;
+      rendreCollection(colSave);
     });
   }
-  const possede = PIECES.filter(p => save.collection[p.id]).length;
-  $('collectionTotal').textContent = `${possede}/${PIECES.length} pièces · ${save.terrains.length}/${TERRAINS.filter(t => t.rarete).length} terrains`;
-  $('collectionContenu').innerHTML = SLOTS.map(sl => `<div class="col-groupe"><h3>${sl.icone} ${sl.nom}</h3><div class="col-grille">` +
-    PIECES.filter(p => p.slot === sl.id).map(p => {
-      const n = save.collection[p.id] || 0, r = RARETES[p.rarete];
-      return `<div class="col-carte ${n ? '' : 'manque'}" ${n ? `data-inspecter="${p.id}"` : ''} title="${esc(p.desc)}" style="border-color:${n ? r.couleur + '88' : ''}">
-        <span class="rar" style="color:${r.couleur}">${r.nom}</span><b>${n ? esc(p.nom) : '???'}</b>
-        ${n ? `<span class="petit">×${n}${n > 1 ? ` · jusqu'au niveau ${Math.min(NIVEAU_PIECE_MAX, n)}` : ''}</span>` : '<span class="petit">à trouver</span>'}</div>`;
-    }).join('') + '</div></div>').join('') +
-    `<div class="col-groupe"><h3>🏟️ Terrains de duel</h3><div class="col-grille">` + TERRAINS.filter(t => t.rarete).map(t => {
+  const aMoi = p => !!save.collection[p.id];
+  const possede = PIECES.filter(aMoi).length, terrainsR = TERRAINS.filter(t => t.rarete);
+  $('collectionTotal').innerHTML = `${barre(possede, PIECES.length)} pièces · <b>${save.terrains.length}/${terrainsR.length}</b> terrains`;
+  const onglets = [{ id: 'tout', icone: '📚', nom: 'Tout' }, ...SLOTS, { id: 'terrains', icone: '🏟️', nom: 'Terrains' }];
+  $('collectionOutils').innerHTML = `<div class="col-onglets">${onglets.map(o => {
+      const liste = o.id === 'tout' ? PIECES : PIECES.filter(p => p.slot === o.id);
+      const c = o.id === 'terrains' ? `${save.terrains.length}/${terrainsR.length}` : `${liste.filter(aMoi).length}/${liste.length}`;
+      return `<button class="${colOnglet === o.id ? 'on' : ''}" data-onglet="${o.id}">${o.icone} <span>${o.nom}</span> <small>${c}</small></button>`;
+    }).join('')}</div>
+    <div class="col-filtres">${[['tout', 'Toutes'], ['moi', 'Possédées'], ['manque', 'À trouver']].map(([f, n]) => `<button class="${colFiltre === f ? 'on' : ''}" data-filtre="${f}">${n}</button>`).join('')}</div>`;
+  const garder = p => colFiltre === 'tout' || (colFiltre === 'moi') === aMoi(p);
+  const carte = p => {
+    const n = save.collection[p.id] || 0, r = RARETES[p.rarete];
+    if (!n) return `<div class="col-carte manque" style="--rar:${r.couleur}" title="Se trouve dans les boîtes mystère">
+      <span class="rar">${r.nom}</span><b>???</b><span class="petit">à trouver</span></div>`;
+    const niv = estDepart(p.id) ? '<span class="petit">Pièce de départ</span>'
+      : `<span class="col-niv" title="Niveau maximum débloqué (1 exemplaire = 1 niveau)">${'★'.repeat(Math.min(NIVEAU_PIECE_MAX, n))}${'☆'.repeat(Math.max(0, NIVEAU_PIECE_MAX - n))}</span>`;
+    return `<div class="col-carte" data-inspecter="${p.id}" style="--rar:${r.couleur}" title="${esc(p.desc)}">
+      <span class="rar">${r.nom}</span><b>${esc(p.nom)}</b>${niv}
+      <div class="col-pastilles">${pastilles(p) || '<span class="petit">Sans bonus ni malus</span>'}</div>
+      <span class="petit col-desc">${esc(p.desc)}</span>${n > 1 ? `<span class="col-ex">×${n}</span>` : ''}</div>`;
+  };
+  const groupes = SLOTS.filter(sl => colOnglet === 'tout' || colOnglet === sl.id).map(sl => {
+    const toutes = PIECES.filter(p => p.slot === sl.id).sort((a, b) => ORDRE_RARETE.indexOf(a.rarete) - ORDRE_RARETE.indexOf(b.rarete));
+    const vues = toutes.filter(garder);
+    if (!vues.length) return '';
+    return `<div class="col-groupe"><h3>${sl.icone} ${sl.nom} ${barre(toutes.filter(aMoi).length, toutes.length)}</h3>
+      <div class="petit col-sous">${esc(sl.desc)}</div><div class="col-grille">${vues.map(carte).join('')}</div></div>`;
+  });
+  if (colOnglet === 'tout' || colOnglet === 'terrains') {
+    const vus = terrainsR.filter(t => colFiltre === 'tout' || (colFiltre === 'moi') === save.terrains.includes(t.id));
+    if (vus.length) groupes.push(`<div class="col-groupe"><h3>🏟️ Terrains de duel ${barre(save.terrains.length, terrainsR.length)}</h3><div class="col-grille">` + vus.map(t => {
       const ok = save.terrains.includes(t.id);
-      return `<div class="col-carte ${ok ? '' : 'manque'}" title="${esc(t.desc)}"><span class="rar" style="color:${RARETES.legendaire.couleur}">Légendaire</span>
-        <b>${ok ? t.icone + ' ' + esc(t.nom) : '???'}</b><span class="petit">${ok ? 'possédé' : 'à trouver'}</span></div>`;
-    }).join('') + '</div></div>';
+      return `<div class="col-carte ${ok ? '' : 'manque'}" style="--rar:${RARETES.legendaire.couleur}" title="${esc(t.desc)}"><span class="rar">Légendaire</span>
+        <b>${ok ? t.icone + ' ' + esc(t.nom) : '???'}</b><span class="petit">${ok ? esc(t.desc) : 'à trouver · 📦 boîtes mystère'}</span></div>`;
+    }).join('') + '</div></div>');
+  }
+  $('collectionContenu').innerHTML = groupes.join('') || '<p class="petit">Rien ici pour ce filtre.</p>';
 }
 
 // ---------------------------------------------------------------- Boîte mystère

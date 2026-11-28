@@ -128,10 +128,13 @@ export function majMagasin(dt, t, actif) {
   });
 }
 // Caméra de la boutique : face au comptoir
-export const vueBoutique = () => ({
-  pos: POSITION_BOUTIQUE.clone().add(new THREE.Vector3(-0.1, 0.32, 1.0)), // un peu à gauche : le panneau de gauche ne cache pas le petit paquet
-  cible: POSITION_BOUTIQUE.clone().add(new THREE.Vector3(-0.1, 0.18, 0)),
-});
+export const vueBoutique = () => innerWidth > 720 ? {
+  pos: POSITION_BOUTIQUE.clone().add(new THREE.Vector3(-0.1, 0.38, 1.0)), // un peu à gauche : le panneau de gauche ne cache pas le petit paquet
+  cible: POSITION_BOUTIQUE.clone().add(new THREE.Vector3(-0.1, 0.27, 0)),
+} : { // téléphone (portrait) : plus de recul, comptoir centré dans la moitié haute (le panneau occupe le bas)
+  pos: POSITION_BOUTIQUE.clone().add(new THREE.Vector3(0.08, 0.42, 1.9)),
+  cible: POSITION_BOUTIQUE.clone().add(new THREE.Vector3(0.08, 0.1, 0)),
+};
 // Quel produit est sous le pointeur (coordonnées écran normalisées -1…1) ?
 const ray = new THREE.Raycaster();
 export function produitSous(ndc, camera) {

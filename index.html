@@ -145,11 +145,31 @@
   button.pastille:hover { filter: brightness(1.3); box-shadow: 0 0 12px 2px rgba(255,211,107,.5); }
   .offre:not(:disabled):hover { transform: translateY(-3px); filter: brightness(1.1); }
   [data-onglet]:hover, [data-slot]:hover { filter: brightness(1.2); }
-  .collection-panneau { width: min(760px, 100%); max-height: 100%; overflow-y: auto; padding: 18px; }
+  .collection-panneau { width: min(1100px, 100%); max-height: 100%; overflow-y: auto; padding: 18px; }
   .col-groupe h3 { margin: 12px 0 6px; }
-  .col-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+  .col-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+  @media (max-width: 720px) { .col-grille { grid-template-columns: 1fr 1fr; } }
   .col-carte { background: #241a13; border: 2px solid #3d2e22; border-radius: 10px; padding: 8px; font-size: 12px; }
-  .col-carte.manque { opacity: .35; filter: grayscale(1); }
+  .col-carte.manque { opacity: .5; }
+  .col-carte { position: relative; display: flex; flex-direction: column; gap: 3px; border-left: 5px solid var(--rar, #3d2e22); }
+  .col-carte .rar { color: var(--rar); font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+  .col-niv { color: var(--or); letter-spacing: 1px; font-size: 13px; }
+  .col-ex { position: absolute; right: 8px; top: 6px; font-weight: 900; color: var(--doux); }
+  .col-pastilles { display: flex; flex-wrap: wrap; gap: 3px; }
+  .pastille { font-size: 11px; font-weight: 800; padding: 1px 5px; border-radius: 6px; background: #1a3a1f; color: #8ef59a; }
+  .pastille.moins { background: #3d1a1a; color: #ff9a8a; }
+  .col-desc { opacity: .8; }
+  .col-sous { margin: -2px 0 8px; }
+  .col-barre { display: inline-block; vertical-align: middle; width: 90px; height: 8px; border-radius: 4px; background: #3d2e22; overflow: hidden; margin: 0 6px; }
+  .col-barre i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), var(--or)); }
+  .col-compte { font-size: 13px; font-weight: 800; color: var(--doux); }
+  #collectionOutils { position: sticky; top: -18px; z-index: 2; background: #1c1410; padding: 8px 0; display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; }
+  .col-onglets, .col-filtres { display: flex; gap: 4px; overflow-x: auto; }
+  #collectionOutils button { min-height: 40px; padding: 6px 10px; border-radius: 10px; background: #241a13; border: 1px solid #3d2e22; color: var(--doux);
+    font-weight: 800; font-size: 13px; cursor: pointer; white-space: nowrap; }
+  #collectionOutils button.on { border-color: var(--accent); color: #fff; background: #3a2617; }
+  #collectionOutils small { opacity: .7; font-size: 11px; }
+  @media (max-width: 720px) { .col-onglets { width: 100%; } .col-onglets button span { display: none; } }
   .col-carte b { display: block; font-size: 13px; }
   @media (max-width: 720px) { .ecran { justify-content: center; align-items: flex-end; } .menu-centre { margin: 0; } }
   #inspecteur { position: fixed; inset: 0; z-index: 30; display: grid; grid-template-columns: 1fr min(380px, 92vw); align-items: center; gap: 16px; padding: 24px;
@@ -435,11 +455,14 @@
 /* Boutique 3D : panneau sur le côté, confirmation d'achat au centre */
 #boutiqueMeta { pointer-events: none; }
 #boutiqueMeta .panneau { pointer-events: auto; }
-.boutique-meta { position: absolute; left: 14px; top: 14px; width: min(300px, 86vw); display: flex; flex-direction: column; gap: 8px; }
+.produits-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.produits-meta .btn { display: flex; flex-direction: column; gap: 2px; padding: 8px 6px; min-height: 52px; font-size: 13px; }
+.produits-meta .btn span { font-size: 11px; font-weight: 600; opacity: .85; }
+.boutique-meta { position: absolute; left: 14px; top: 72px; width: min(300px, 86vw); display: flex; flex-direction: column; gap: 8px; }
 .boutique-meta .solde { font-size: 22px; font-weight: 900; color: var(--or); }
 .achat-paquet { position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%); width: min(360px, 92vw); text-align: center; animation: apparait .35s cubic-bezier(.2,1.6,.4,1); }
 .achat-paquet .grand { font-size: 22px; font-weight: 900; }
-@media (max-width: 720px) { .boutique-meta { top: auto; bottom: calc(10px + env(safe-area-inset-bottom)); left: 8px; right: 8px; width: auto; } .achat-paquet { bottom: auto; top: 12px; } }
+@media (max-width: 720px) { .boutique-meta { top: auto; bottom: calc(70px + env(safe-area-inset-bottom)); max-height: 52vh; overflow-y: auto; left: 8px; right: 8px; width: auto; } .achat-paquet { bottom: auto; top: 12px; } }
 /* Ouverture des boîtes en 3D : consigne en bas, récapitulatif des lots */
 #ouverture { position: fixed; inset: 0; pointer-events: none; z-index: 15; }
 .ouverture-aide { position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); font-size: 20px; font-weight: 900; color: #fff;
@@ -459,6 +482,16 @@
 .rejoindre { display: flex; gap: 8px; justify-content: center; }
 .rejoindre input { width: 120px; text-transform: uppercase; letter-spacing: .2em; text-align: center; }
 .ou { opacity: .6; }
+.defi { width: min(560px, 94vw); }
+.defi-etapes { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; text-align: left; font-size: 14px; }
+.defi-etapes li { display: flex; gap: 10px; align-items: center; background: #241a13; border-radius: 10px; padding: 8px 10px; }
+.defi-etapes li > b { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: #2a1300; }
+.defi-colonnes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.defi-colonnes section { display: flex; flex-direction: column; gap: 8px; background: #241a13; border: 1px solid var(--bord); border-radius: 12px; padding: 12px; }
+.defi-colonnes h3 { margin: 0; }
+.defi .rejoindre input { flex: 1; min-width: 0; min-height: 44px; }
+.defi .btn { min-height: 44px; }
+@media (max-width: 720px) { .defi-colonnes { grid-template-columns: 1fr; } .defi-etapes { font-size: 13px; } }
 /* Verdict du duel plein écran */
 #verdict { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none;
   opacity: 0; transition: opacity .2s; z-index: 30; }
@@ -549,16 +582,27 @@
   <div class="menu-centre panneau defi">
     <button class="retour-menu" data-ecran="menu">← Menu</button>
     <h2>🤝 Défier un ami</h2>
-    <p class="petit">Une vraie partie à deux : chacun écrase ses cafards et fait ses achats, puis vous vous affrontez en duel, en temps réel. 5 ❤️ chacun, 1 vie par duel perdu (2 à partir de l'étape 6).</p>
-    <label>Ton pseudo <input id="pseudo" maxlength="16" placeholder="Toi"></label>
-    <button class="btn" id="creerDefi">Créer un défi</button>
-    <div id="codeDefi" class="cache">
-      <div class="petit">Donne ce code à ton ami (ou envoie-lui le lien) :</div>
-      <div class="code-gros" id="codeTexte">…</div>
-      <button class="btn second" id="copierLien">📋 Copier le lien</button>
+    <ol class="defi-etapes">
+      <li><b>1</b><span>Chacun écrase ses cafards et fait ses achats, comme en partie normale.</span></li>
+      <li><b>2</b><span>Puis vos toupies s'affrontent en <b>duel</b>, en temps réel.</span></li>
+      <li><b>3</b><span>5 ❤️ chacun ; un duel perdu coûte 1 ❤️ (2 dès l'étape 6).</span></li>
+    </ol>
+    <label class="defi-pseudo">Ton pseudo <input id="pseudo" maxlength="16" placeholder="Toi"></label>
+    <div class="defi-colonnes">
+      <section>
+        <h3>🎟️ Inviter</h3>
+        <button class="btn" id="creerDefi">Créer un défi</button>
+        <div id="codeDefi" class="cache">
+          <div class="petit">Donne ce code à ton ami (ou envoie-lui le lien) :</div>
+          <div class="code-gros" id="codeTexte">…</div>
+          <button class="btn second" id="copierLien">📋 Copier le lien</button>
+        </div>
+      </section>
+      <section>
+        <h3>🔑 Rejoindre</h3>
+        <div class="rejoindre"><input id="codeAmi" maxlength="5" placeholder="CODE" autocomplete="off"><button class="btn second" id="rejoindreDefi">Rejoindre</button></div>
+      </section>
     </div>
-    <div class="ou">— ou —</div>
-    <div class="rejoindre"><input id="codeAmi" maxlength="5" placeholder="CODE" autocomplete="off"><button class="btn second" id="rejoindreDefi">Rejoindre</button></div>
     <div class="petit" id="statutDefi"></div>
   </div>
 </div>
@@ -586,7 +630,11 @@
     <button class="retour-menu" data-ecran="menu">← Menu</button>
     <h2>📦 Boutique</h2>
     <div class="solde" id="soldeEcrous"></div>
-    <div class="petit">👆 Clique sur un paquet du comptoir pour l'acheter.</div>
+    <div class="produits-meta" id="produitsMeta">
+      <button class="btn second" data-produit="paquet"><b>📦 Petit paquet</b><span>1 pièce · 100 🔩</span></button>
+      <button class="btn second" data-produit="carton"><b>📦📦 Gros carton</b><span>5 pièces (1 offerte) · 450 🔩</span></button>
+    </div>
+    <div class="petit">👆 Ou clique un paquet sur le comptoir.</div>
     <div class="actions">
       <button class="btn" id="ouvrirBoite">📦 Ouvrir</button>
       <button class="btn second cache" id="acheterBoite">+1 📦</button>
@@ -602,6 +650,7 @@
   <div class="panneau collection-panneau">
     <button class="retour-menu" data-ecran="menu">← Menu</button>
     <h2>📚 Collection <span class="petit" id="collectionTotal"></span></h2>
+    <div id="collectionOutils"></div>
     <div id="collectionContenu"></div>
   </div>
 </div>
@@ -676,7 +725,7 @@
   <div class="actions"><button class="btn" id="pauseReprendre">▶ Reprendre</button><button class="btn" id="pauseQuitter" style="background:linear-gradient(#ff6b5b,#c0392b);color:#fff">🏳️ Abandonner</button></div>
 </div></div>
 
-<script type="importmap">{"imports":{"three":"./vendor/three.module.js?v=a762b858","./src/atelier3d.js":"./src/atelier3d.js?v=ca0507a6","./src/audio.js":"./src/audio.js?v=a66add9e","./src/bots.js":"./src/bots.js?v=1a0021fd","./src/bugs.js":"./src/bugs.js?v=89265498","./src/config.js":"./src/config.js?v=6ce0de2e","./src/data/boutique.js":"./src/data/boutique.js?v=c715de5e","./src/data/cafards.js":"./src/data/cafards.js?v=4e07a535","./src/data/pieces.js":"./src/data/pieces.js?v=a1ef85c8","./src/data/terrains.js":"./src/data/terrains.js?v=432a674d","./src/enligne.js":"./src/enligne.js?v=2338143c","./src/fx.js":"./src/fx.js?v=911fec12","./src/inspecteur.js":"./src/inspecteur.js?v=d9944222","./src/lanceurMesh.js":"./src/lanceurMesh.js?v=43daea2e","./src/launcher.js":"./src/launcher.js?v=5caff3e9","./src/magasin3d.js":"./src/magasin3d.js?v=0af5946b","./src/main.js":"./src/main.js?v=8373f65c","./src/match.js":"./src/match.js?v=1367bffc","./src/ouverture3d.js":"./src/ouverture3d.js?v=ddfe4f83","./src/parametres.js":"./src/parametres.js?v=a8dab31a","./src/physics.js":"./src/physics.js?v=107eeac8","./src/progression.js":"./src/progression.js?v=81194ffc","./src/save.js":"./src/save.js?v=45a68a57","./src/scene.js":"./src/scene.js?v=c7529c24","./src/stats.js":"./src/stats.js?v=66772d0f","./src/topMesh.js":"./src/topMesh.js?v=06215461","./src/tutoriel.js":"./src/tutoriel.js?v=a7fd601b","./src/ui.js":"./src/ui.js?v=593f6a68","./vendor/jsm/loaders/BufferGeometryUtils.js":"./vendor/jsm/loaders/BufferGeometryUtils.js?v=00ecb96b","./vendor/jsm/loaders/GLTFLoader.js":"./vendor/jsm/loaders/GLTFLoader.js?v=aee0c31f","./vendor/jsm/loaders/RGBELoader.js":"./vendor/jsm/loaders/RGBELoader.js?v=7626b55b","./vendor/jsm/postprocessing/EffectComposer.js":"./vendor/jsm/postprocessing/EffectComposer.js?v=eccf8177","./vendor/jsm/postprocessing/MaskPass.js":"./vendor/jsm/postprocessing/MaskPass.js?v=10b721db","./vendor/jsm/postprocessing/OutputPass.js":"./vendor/jsm/postprocessing/OutputPass.js?v=8ca54f44","./vendor/jsm/postprocessing/Pass.js":"./vendor/jsm/postprocessing/Pass.js?v=a5ec37ce","./vendor/jsm/postprocessing/RenderPass.js":"./vendor/jsm/postprocessing/RenderPass.js?v=89aaff34","./vendor/jsm/postprocessing/ShaderPass.js":"./vendor/jsm/postprocessing/ShaderPass.js?v=f145da64","./vendor/jsm/postprocessing/UnrealBloomPass.js":"./vendor/jsm/postprocessing/UnrealBloomPass.js?v=a60d7378","./vendor/jsm/shaders/CopyShader.js":"./vendor/jsm/shaders/CopyShader.js?v=6088e45f","./vendor/jsm/shaders/LuminosityHighPassShader.js":"./vendor/jsm/shaders/LuminosityHighPassShader.js?v=05b8a6dd","./vendor/jsm/shaders/OutputShader.js":"./vendor/jsm/shaders/OutputShader.js?v=251fcfe4"}}</script>
-<script type="module" src="src/main.js?v=09d2ca82"></script>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js?v=a762b858","./src/atelier3d.js":"./src/atelier3d.js?v=ca0507a6","./src/audio.js":"./src/audio.js?v=a66add9e","./src/bots.js":"./src/bots.js?v=1a0021fd","./src/bugs.js":"./src/bugs.js?v=89265498","./src/config.js":"./src/config.js?v=6ce0de2e","./src/data/boutique.js":"./src/data/boutique.js?v=c715de5e","./src/data/cafards.js":"./src/data/cafards.js?v=4e07a535","./src/data/pieces.js":"./src/data/pieces.js?v=a1ef85c8","./src/data/terrains.js":"./src/data/terrains.js?v=432a674d","./src/enligne.js":"./src/enligne.js?v=2338143c","./src/fx.js":"./src/fx.js?v=911fec12","./src/inspecteur.js":"./src/inspecteur.js?v=d9944222","./src/lanceurMesh.js":"./src/lanceurMesh.js?v=43daea2e","./src/launcher.js":"./src/launcher.js?v=5caff3e9","./src/magasin3d.js":"./src/magasin3d.js?v=8ed9dcaa","./src/main.js":"./src/main.js?v=98370721","./src/match.js":"./src/match.js?v=1367bffc","./src/ouverture3d.js":"./src/ouverture3d.js?v=ddfe4f83","./src/parametres.js":"./src/parametres.js?v=a8dab31a","./src/physics.js":"./src/physics.js?v=107eeac8","./src/progression.js":"./src/progression.js?v=81194ffc","./src/save.js":"./src/save.js?v=45a68a57","./src/scene.js":"./src/scene.js?v=c7529c24","./src/stats.js":"./src/stats.js?v=66772d0f","./src/topMesh.js":"./src/topMesh.js?v=06215461","./src/tutoriel.js":"./src/tutoriel.js?v=a7fd601b","./src/ui.js":"./src/ui.js?v=2734625a","./vendor/jsm/loaders/BufferGeometryUtils.js":"./vendor/jsm/loaders/BufferGeometryUtils.js?v=00ecb96b","./vendor/jsm/loaders/GLTFLoader.js":"./vendor/jsm/loaders/GLTFLoader.js?v=aee0c31f","./vendor/jsm/loaders/RGBELoader.js":"./vendor/jsm/loaders/RGBELoader.js?v=7626b55b","./vendor/jsm/postprocessing/EffectComposer.js":"./vendor/jsm/postprocessing/EffectComposer.js?v=eccf8177","./vendor/jsm/postprocessing/MaskPass.js":"./vendor/jsm/postprocessing/MaskPass.js?v=10b721db","./vendor/jsm/postprocessing/OutputPass.js":"./vendor/jsm/postprocessing/OutputPass.js?v=8ca54f44","./vendor/jsm/postprocessing/Pass.js":"./vendor/jsm/postprocessing/Pass.js?v=a5ec37ce","./vendor/jsm/postprocessing/RenderPass.js":"./vendor/jsm/postprocessing/RenderPass.js?v=89aaff34","./vendor/jsm/postprocessing/ShaderPass.js":"./vendor/jsm/postprocessing/ShaderPass.js?v=f145da64","./vendor/jsm/postprocessing/UnrealBloomPass.js":"./vendor/jsm/postprocessing/UnrealBloomPass.js?v=a60d7378","./vendor/jsm/shaders/CopyShader.js":"./vendor/jsm/shaders/CopyShader.js?v=6088e45f","./vendor/jsm/shaders/LuminosityHighPassShader.js":"./vendor/jsm/shaders/LuminosityHighPassShader.js?v=05b8a6dd","./vendor/jsm/shaders/OutputShader.js":"./vendor/jsm/shaders/OutputShader.js?v=251fcfe4"}}</script>
+<script type="module" src="src/main.js?v=85e75e64"></script>
 </body>
 </html>

@@ -55,7 +55,7 @@ initParametres();
 function allerA(ecran) {
   for (const e of ECRANS) UI.montrer(e, e === ecran);
   document.querySelectorAll('#nav [data-nav]').forEach(b => b.classList.toggle('on', b.dataset.nav === ecran));
-  placerVitrine({ menu: 0.24, parametres: 0.16 }[ecran] || 0); // accueil (PC) : la toupie à gauche, la carte à droite
+  placerVitrine({ menu: 0.24, parametres: 0.16, ami: 0.2 }[ecran] || 0); // accueil (PC) : la toupie à gauche, la carte à droite
   controlesActifs(ecran === 'atelier'); // dans l'atelier : glisser pour pivoter, molette pour zoomer
   if (ecran === 'collection') UI.rendreCollection(save);
   if (ecran === 'boutiqueMeta') selectionAtelier('boutique', null); // la caméra va au comptoir
@@ -478,7 +478,11 @@ renderer.domElement.addEventListener('pointermove', e => {
 renderer.domElement.addEventListener('click', e => {
   if (!enBoutique()) return;
   const id = produitSous(ndc(e), vitrineCam);
-  if (!id) return;
+  if (id) proposerAchat(id);
+});
+// Les mêmes paquets en boutons dans le panneau (plus simple au doigt et au clavier)
+document.getElementById('produitsMeta').addEventListener('click', e => { const b = e.target.closest('[data-produit]'); if (b) proposerAchat(b.dataset.produit); });
+function proposerAchat(id) {
   activerAudio(); UI.son?.('choix', { volume: 0.6 });
   const p = PRODUITS[id], ok = save.ecrous >= p.prix, el = $('achatPaquet');
   el.innerHTML = `<div class="grand">${p.pieces > 1 ? '📦📦' : '📦'} ${p.nom}</div><div>${p.desc}</div>
@@ -493,7 +497,7 @@ renderer.domElement.addEventListener('click', e => {
     UI.son?.('piece');
     boite(p.pieces);
   };
-});
+}
 
 // Numéro de version affiché au menu (empreinte de main.js) : permet de vérifier qu'on a bien la dernière version en ligne
 document.getElementById('versionJeu').textContent = 'Version ' + (new URL(import.meta.url).searchParams.get('v') || 'locale');
