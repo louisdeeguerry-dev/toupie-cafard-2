@@ -3,6 +3,7 @@
 // et un manche rond à voyants entouré d'un ressort (= le RESSORT choisi). Chaque pièce est un groupe à part, pour la vue éclatée de l'atelier.
 // Repère : le boîtier (là où part la toupie) est vers −z, la poignée vers +z.
 import * as THREE from 'three';
+import { modeleDetaille } from './topMesh.js';
 import { PIECE } from './data/pieces.js';
 
 const HY = 0.05; // hauteur du boîtier
@@ -100,9 +101,14 @@ function engrenage(p) {
 function ressort(p) {
   const g = new THREE.Group(), mat = M(p.couleur, 0.8, 0.25);
   const helice = (spires, rayon, fil, x = 0) => {
-    const pts = [], n = spires * 24, long = NZ1 - NZ0 - 0.006;
-    for (let k = 0; k <= n; k++) { const a = (k / 24) * Math.PI * 2; pts.push(new THREE.Vector3(x + Math.cos(a) * rayon, HY + Math.sin(a) * rayon, NZ0 + 0.003 + (k / n) * long)); }
-    ajouter(g, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), n * 2, fil, 6), mat);
+    // Spires de bout jointives (comme un vrai ressort de compression : il appuie bien à plat), spires utiles au milieu
+    const pts = [], n = spires * 24, long = NZ1 - NZ0 - 0.006, jointe = 2.2 * fil, utile = long - 2 * jointe;
+    for (let k = 0; k <= n; k++) {
+      const a = (k / 24) * Math.PI * 2, s = k / 24; // s = numéro de spire (0 → spires)
+      const z = s < 1 ? s * jointe : s > spires - 1 ? jointe + utile + (s - spires + 1) * jointe : jointe + ((s - 1) / Math.max(1, spires - 2)) * utile;
+      pts.push(new THREE.Vector3(x + Math.cos(a) * rayon, HY + Math.sin(a) * rayon, NZ0 + 0.003 + z));
+    }
+    ajouter(g, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), n * 2, fil, 10), mat);
   };
   switch (p.forme) {
     case 'souple': helice(6, 0.0095, 0.0009); break;
@@ -134,10 +140,11 @@ export function creerLanceur(equipe) {
   const corps = new THREE.Group();
   const dessus = M(0xffffff, 0.2, 0.4, { map: textureFace() });
   const profil = [[0, -0.008], [0.03, -0.008], [0.034, -0.005], [0.034, 0.005], [0.031, 0.008], [0, 0.008]].map(([x, y]) => new THREE.Vector2(x, y));
-  ajouter(corps, new THREE.LatheGeometry(profil, 64), coque, 0, HY, LZ);
+  const boitier = modeleDetaille('lanceur-boitier', coque, HY); // modèle détaillé (Blender) : crans de prise, vis
+  if (boitier) { boitier.position.z = LZ; corps.add(boitier); } else ajouter(corps, new THREE.LatheGeometry(profil, 64), coque, 0, HY, LZ);
   ajouter(corps, new THREE.CircleGeometry(0.0305, 64), dessus, 0, HY + 0.0081, LZ).rotation.x = -Math.PI / 2;
   ajouter(corps, new THREE.TorusGeometry(0.0325, 0.0018, 10, 64), accent, 0, HY + 0.0065, LZ).rotation.x = Math.PI / 2;
-  for (let i = 0; i < 8; i++) { // rivets sur la tranche
+  if (!boitier) for (let i = 0; i < 8; i++) { // rivets sur la tranche (le modèle détaillé a ses propres vis)
     const a = (i / 8) * Math.PI * 2;
     ajouter(corps, new THREE.SphereGeometry(0.0016, 10, 6), acier, Math.cos(a) * 0.0342, HY, LZ + Math.sin(a) * 0.0342);
   }
@@ -176,7 +183,7 @@ export function creerLanceur(equipe) {
 }
 
 export function libererLanceur(l) {
-  l.racine.traverse(o => { if (o.isMesh) { o.geometry.dispose(); [].concat(o.material).forEach(m => { if (m.map !== faceTex) m.dispose(); }); } });
+  l.racine.traverse(o => { if (o.isMesh) { if (!o.userData.geoPartagee) o.geometry.dispose(); if (!o.userData.matPartage) [].concat(o.material).forEach(m => { if (m.map !== faceTex) m.dispose(); }); } });
   l.racine.removeFromParent();
 }
 

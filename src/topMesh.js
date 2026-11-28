@@ -6,7 +6,10 @@ import { GLTFLoader } from '../vendor/jsm/loaders/GLTFLoader.js';
 // ---------------------------------------------------------------- Modèles détaillés (Blender : outils/blender/toupies.py)
 // Chargés au démarrage ; tant qu'ils ne sont pas là (ou s'ils manquent), le jeu garde les formes simples.
 // Chaque objet du modèle a un RÔLE (corps / acier / sombre) : on lui applique les matériaux du jeu (couleur de la pièce…).
-export const MODELES_DISPO = ['pointe-standard', 'base-standard', 'couronne-standard'];
+export const MODELES_DISPO = ['standard', 'clou', 'foreuse', 'diamant', 'bille', 'ventouse'].map(f => 'pointe-' + f)
+  .concat(['standard', 'lourde', 'legere', 'gyro', 'noyau'].map(f => 'base-' + f))
+  .concat(['standard', 'large', 'dents', 'bouclier', 'lames', 'inertie'].map(f => 'couronne-' + f), ['lanceur-boitier']);
+export const modeleCharge = nom => !!MODELES[nom];
 const MODELES = {};
 const V = new URL(import.meta.url).searchParams.get('v') || '0'; // anti-cache : même empreinte que ce module (outils/versionner.mjs)
 let chargement = null;
@@ -15,11 +18,12 @@ export function chargerModeles() {
   return (chargement ||= Promise.all(MODELES_DISPO.map(nom => l.loadAsync(`assets/modeles/${nom}.glb?v=${V}`).then(g => {
     const parts = [];
     g.scene.updateMatrixWorld(true);
-    g.scene.traverse(o => { if (o.isMesh) parts.push({ geo: o.geometry, role: ['acier', 'sombre'].find(r => o.name.includes(r)) || 'corps', matrice: o.matrixWorld.clone() }); });
+    g.scene.traverse(o => { if (o.isMesh) parts.push({ geo: o.geometry, role: ['acier', 'sombre', 'or'].find(r => o.name.includes(r)) || 'corps', matrice: o.matrixWorld.clone() }); });
     MODELES[nom] = parts;
   }).catch(() => { /* modèle absent : formes simples */ }))));
 }
 let matAcierM = null, matSombreM = null;
+export const modeleDetaille = (nom, matCorps, y = 0) => modele(nom, matCorps, y);
 function modele(nom, matCorps, y) {
   const parts = MODELES[nom];
   if (!parts) return null;
@@ -28,7 +32,7 @@ function modele(nom, matCorps, y) {
   const g = new THREE.Group();
   g.position.y = y;
   for (const p of parts) {
-    const m = new THREE.Mesh(p.geo, p.role === 'acier' ? matAcierM : p.role === 'sombre' ? matSombreM : matCorps);
+    const m = new THREE.Mesh(p.geo, p.role === 'acier' ? matAcierM : p.role === 'sombre' ? matSombreM : p.role === 'or' ? matRivetOr : matCorps);
     p.matrice.decompose(m.position, m.quaternion, m.scale);
     m.userData.geoPartagee = true; // géométrie partagée entre toutes les toupies : ne pas la détruire
     m.userData.matPartage = p.role !== 'corps';
@@ -118,6 +122,13 @@ function rivetsNiveau(g, k, rayon, y) {
 function pointe(p, k = 1) {
   const g = new THREE.Group(), m = mat(p.couleur, {}, 'brosse');
   let h = 0.018;
+  // Modèle détaillé (Blender) s'il est chargé, avec le matériau propre à la forme
+  const matM = p.forme === 'diamant' ? mat(p.couleur, { metalness: 0.2, roughness: 0.05, emissive: 0x2a5a6a, emissiveIntensity: 0.4 })
+    : p.forme === 'bille' ? mat(p.couleur, { metalness: 0.9, roughness: 0.1 })
+    : p.forme === 'ventouse' ? mat(p.couleur, { metalness: 0.1, roughness: 0.7 }) : m;
+  const md = modele('pointe-' + p.forme, matM, 0);
+  if (md) { g.add(md); return { g, h: p.forme === 'clou' ? 0.022 : p.forme === 'diamant' ? 0.02 : 0.018 }; }
+  if (matM !== m) matM.dispose();
   switch (p.forme) {
     case 'clou': {
       h = 0.022;
@@ -168,8 +179,6 @@ function pointe(p, k = 1) {
       break;
     }
     default: {
-      const md = p.forme === 'standard' && modele('pointe-standard', m, 0);
-      if (md) { g.add(md); break; }
       const c = new THREE.Mesh(new THREE.ConeGeometry(0.011, 0.018, 20), m);
       c.rotation.x = Math.PI; c.position.y = 0.009;
       g.add(c);
@@ -181,6 +190,22 @@ function pointe(p, k = 1) {
 function base(p, y, k = 1) {
   const g = new THREE.Group(), m = mat(p.couleur, {}, p.forme === 'lourde' ? 'martele' : 'tourne');
   let r = 0.026, h = 0.014;
+  const matN = p.forme === 'noyau' ? mat(p.couleur, { emissive: 0x4a1a7a, emissiveIntensity: 0.5, flatShading: true }) : m;
+  const md = modele('base-' + p.forme, matN, y);
+  if (md) {
+    g.add(md);
+    if (p.forme === 'gyro') { // le gyroscope reste animé par le jeu (il tourne dans sa fenêtre)
+      const t = new THREE.Mesh(new THREE.TorusGeometry(0.017, 0.003, 8, 32), mat(0x9fe8d8, { emissive: 0x1f7a68, emissiveIntensity: 0.6 }));
+      t.position.y = y + 0.008; t.rotation.x = Math.PI / 2.4; t.userData.gyro = true;
+      g.add(t);
+    }
+    if (p.forme === 'legere') return { g, top: y + 0.014 };
+    if (p.forme === 'noyau') return { g, top: y + 0.017 };
+    if (p.forme === 'lourde') { r = 0.029; h = 0.017; }
+    rivetsNiveau(g, k, r * 0.78, y + h + 0.0006);
+    return { g, top: y + h };
+  }
+  if (matN !== m) matN.dispose();
   switch (p.forme) {
     case 'lourde': r = 0.029; h = 0.017; break;
     case 'legere': {
@@ -210,13 +235,9 @@ function base(p, y, k = 1) {
       return { g, top: y + 0.017 };
     }
   }
-  const md = p.forme === 'standard' && modele('base-standard', m, y);
-  if (md) g.add(md);
-  else {
-    const c = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 0.8, h, 40), m);
-    c.position.y = y + h / 2;
-    g.add(c);
-  }
+  const c = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 0.8, h, 40), m);
+  c.position.y = y + h / 2;
+  g.add(c);
   rivetsNiveau(g, k, r * 0.78, y + h + 0.0006);
   return { g, top: y + h };
 }
@@ -224,11 +245,18 @@ function base(p, y, k = 1) {
 function couronne(p, y, k = 1) {
   const g = new THREE.Group(), m = mat(p.couleur, {}, 'moletage');
   const R = 0.034;
-  switch (p.forme) {
+  // Modèle détaillé (Blender) : il remplace l'anneau ; les dents et les lames (nombre selon le niveau) restent ajoutées ici
+  const matC = p.forme === 'bouclier' ? mat(p.couleur, {}, 'brosse') : p.forme === 'inertie' ? mat(p.couleur, { metalness: 1, roughness: 0.2 }, 'tourne') : m;
+  const md = modele('couronne-' + p.forme, matC, y);
+  if (md) g.add(md); else if (matC !== m) matC.dispose();
+  switch (md && !['dents', 'lames'].includes(p.forme) ? 'modele' : p.forme) {
+    case 'modele': break;
     case 'dents': {
-      const t = new THREE.Mesh(new THREE.TorusGeometry(R, 0.005, 10, 40), m);
-      t.rotation.x = Math.PI / 2; t.position.y = y;
-      g.add(t);
+      if (!md) {
+        const t = new THREE.Mesh(new THREE.TorusGeometry(R, 0.005, 10, 40), m);
+        t.rotation.x = Math.PI / 2; t.position.y = y;
+        g.add(t);
+      }
       const nd = 6 + 3 * k; // niveau 1 : 9 dents … niveau 5 : 21 dents
       for (let i = 0; i < nd; i++) {
         const d = new THREE.Mesh(new THREE.ConeGeometry(0.004, 0.009, 4), m);
@@ -248,9 +276,11 @@ function couronne(p, y, k = 1) {
       break;
     }
     case 'lames': {
-      const t = new THREE.Mesh(new THREE.TorusGeometry(R - 0.006, 0.003, 8, 32), m);
-      t.rotation.x = Math.PI / 2; t.position.y = y;
-      g.add(t);
+      if (!md) {
+        const t = new THREE.Mesh(new THREE.TorusGeometry(R - 0.006, 0.003, 8, 32), m);
+        t.rotation.x = Math.PI / 2; t.position.y = y;
+        g.add(t);
+      }
       // Niveau 1 : 2 lames, puis une lame de plus par niveau (niv 5 : 6 lames)
       const n = 1 + k, matLame = mat(p.couleur, { metalness: 0.95, roughness: 0.18 }, 'brosse'), matFil = mat(0xf4f7fa, { metalness: 1, roughness: 0.08 });
       for (let i = 0; i < n; i++) {
@@ -276,8 +306,6 @@ function couronne(p, y, k = 1) {
       break;
     }
     default: {
-      const md = p.forme === 'standard' && modele('couronne-standard', m, y);
-      if (md) { g.add(md); break; }
       const t = new THREE.Mesh(new THREE.TorusGeometry(R, 0.006, 12, 40), m);
       t.rotation.x = Math.PI / 2; t.position.y = y;
       g.add(t);

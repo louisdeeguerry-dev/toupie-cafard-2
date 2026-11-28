@@ -1111,3 +1111,10 @@ reproductible (script Blender → `.glb` → chargement dans le jeu avec repli),
 **Réalisé** : `bpy` 5.3 installé ; `outils/blender/toupies.py` (pièces par révolution de profils mécaniques : bille d'acier,
 gorges, jonc serti, vis de fixation, crans de prise) ; `assets/modeles/` (3 modèles, 60-100 Ko) ; GLTFLoader (MIT) ;
 matériaux du jeu appliqués par rôle ; anti-cache ; licences notées.
+
+## 2026-11-28 — 3D : toutes les pièces et le lanceur
+**Prompt optimisé** (artiste technique 3D + dev Three.js) : étendre la chaîne Blender à toutes les formes de pièces de toupie
+et au lanceur, en gardant dimensions, logique mécanique, détails de niveau et repli.
+**Réalisé** : 15 nouvelles fonctions Blender (pointes clou/foreuse à filet hélicoïdal/diamant serti/bille en cage/ventouse ;
+bases lourde à masselottes/légère à rayons/gyro à pivots/noyau de météorite cerclé ; couronnes large vissée/dents/bouclier
+nervuré/lames/volant d'inertie ; boîtier de lanceur cranté) ; branchement générique par forme ; ressorts à spires jointives.
