@@ -1,6 +1,41 @@
 // Fabrique le modèle 3D d'une toupie à partir de ses 4 pièces. Tout est dessiné en code (comme le jeu 1).
 import * as THREE from 'three';
 import { PIECE } from './data/pieces.js';
+import { GLTFLoader } from '../vendor/jsm/loaders/GLTFLoader.js';
+
+// ---------------------------------------------------------------- Modèles détaillés (Blender : outils/blender/toupies.py)
+// Chargés au démarrage ; tant qu'ils ne sont pas là (ou s'ils manquent), le jeu garde les formes simples.
+// Chaque objet du modèle a un RÔLE (corps / acier / sombre) : on lui applique les matériaux du jeu (couleur de la pièce…).
+export const MODELES_DISPO = ['pointe-standard', 'base-standard', 'couronne-standard'];
+const MODELES = {};
+const V = new URL(import.meta.url).searchParams.get('v') || '0'; // anti-cache : même empreinte que ce module (outils/versionner.mjs)
+let chargement = null;
+export function chargerModeles() {
+  const l = new GLTFLoader();
+  return (chargement ||= Promise.all(MODELES_DISPO.map(nom => l.loadAsync(`assets/modeles/${nom}.glb?v=${V}`).then(g => {
+    const parts = [];
+    g.scene.updateMatrixWorld(true);
+    g.scene.traverse(o => { if (o.isMesh) parts.push({ geo: o.geometry, role: ['acier', 'sombre'].find(r => o.name.includes(r)) || 'corps', matrice: o.matrixWorld.clone() }); });
+    MODELES[nom] = parts;
+  }).catch(() => { /* modèle absent : formes simples */ }))));
+}
+let matAcierM = null, matSombreM = null;
+function modele(nom, matCorps, y) {
+  const parts = MODELES[nom];
+  if (!parts) return null;
+  matAcierM ||= new THREE.MeshStandardMaterial({ color: 0xc9d0d8, metalness: 0.95, roughness: 0.22 });
+  matSombreM ||= new THREE.MeshStandardMaterial({ color: 0x23272e, metalness: 0.4, roughness: 0.45 });
+  const g = new THREE.Group();
+  g.position.y = y;
+  for (const p of parts) {
+    const m = new THREE.Mesh(p.geo, p.role === 'acier' ? matAcierM : p.role === 'sombre' ? matSombreM : matCorps);
+    p.matrice.decompose(m.position, m.quaternion, m.scale);
+    m.userData.geoPartagee = true; // géométrie partagée entre toutes les toupies : ne pas la détruire
+    m.userData.matPartage = p.role !== 'corps';
+    g.add(m);
+  }
+  return g;
+}
 
 // ---------------------------------------------------------------- Textures d'usinage (dessinées une fois, partagées)
 // Chaque motif raconte comment la pièce est fabriquée (règle 5) :
@@ -133,6 +168,8 @@ function pointe(p, k = 1) {
       break;
     }
     default: {
+      const md = p.forme === 'standard' && modele('pointe-standard', m, 0);
+      if (md) { g.add(md); break; }
       const c = new THREE.Mesh(new THREE.ConeGeometry(0.011, 0.018, 20), m);
       c.rotation.x = Math.PI; c.position.y = 0.009;
       g.add(c);
@@ -173,9 +210,13 @@ function base(p, y, k = 1) {
       return { g, top: y + 0.017 };
     }
   }
-  const c = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 0.8, h, 40), m);
-  c.position.y = y + h / 2;
-  g.add(c);
+  const md = p.forme === 'standard' && modele('base-standard', m, y);
+  if (md) g.add(md);
+  else {
+    const c = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 0.8, h, 40), m);
+    c.position.y = y + h / 2;
+    g.add(c);
+  }
   rivetsNiveau(g, k, r * 0.78, y + h + 0.0006);
   return { g, top: y + h };
 }
@@ -235,6 +276,8 @@ function couronne(p, y, k = 1) {
       break;
     }
     default: {
+      const md = p.forme === 'standard' && modele('couronne-standard', m, y);
+      if (md) { g.add(md); break; }
       const t = new THREE.Mesh(new THREE.TorusGeometry(R, 0.006, 12, 40), m);
       t.rotation.x = Math.PI / 2; t.position.y = y;
       g.add(t);
@@ -326,7 +369,7 @@ export function creerToupie(equipe, nivPieces = {}) {
 }
 
 export function libererToupie(t) {
-  t.racine.traverse(o => { if (o.isMesh) { o.geometry.dispose(); o.material.dispose(); } });
+  t.racine.traverse(o => { if (o.isMesh) { if (!o.userData.geoPartagee) o.geometry.dispose(); if (!o.userData.matPartage) o.material.dispose(); } });
   t.racine.removeFromParent();
 }
 

@@ -1104,3 +1104,10 @@ Multi-lancer limité à 1 achat, rareté mythique très rare (Chance), très che
 **Réalisé** : doré ×4 → ×2 ; Nid = n jusqu'à 5 puis 5 + 5·ln(1+(n−5)/5) ; 2 vies dès l'étape 6, 3 dès l'étape 10 ; étapes
 courtes (2 lancers) dès l'étape 8 ; Multi-lancer mythique 220 💰, 1 achat, ~6 % des boutiques (17 % avec Chance 8) ;
 recommandation 3D : Blender (module Python dans le cloud) + glTF + HDRI Poly Haven, pas Unity (installation bloquée, à autoriser).
+
+## 2026-11-28 — Installer Blender et commencer la 3D des toupies
+**Prompt optimisé** (artiste technique 3D + dev Three.js) : installer Blender (`bpy`) dans le cloud, créer une chaîne
+reproductible (script Blender → `.glb` → chargement dans le jeu avec repli), commencer par les pièces standard.
+**Réalisé** : `bpy` 5.3 installé ; `outils/blender/toupies.py` (pièces par révolution de profils mécaniques : bille d'acier,
+gorges, jonc serti, vis de fixation, crans de prise) ; `assets/modeles/` (3 modèles, 60-100 Ko) ; GLTFLoader (MIT) ;
+matériaux du jeu appliqués par rôle ; anti-cache ; licences notées.
