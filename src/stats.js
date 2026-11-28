@@ -93,7 +93,7 @@ export function calculer(niv) {
     souffleMax: 0.25 + 0.03 * P('souffle'),
     tornade: P('tornade') ? 0.12 + 0.03 * P('tornade') : 0,
     tornadeRayon: 0.1 + 0.012 * P('tornade'),
-    tours: 600 * f(0.18, L('puissance')),
+    tours: 600 * f(0.22, L('puissance')), // série du 28/11 (nouveaux duels) : Puissance dernière (8/8), relevée
     vitesse: 0.95 * f(0.1, L('elan')),
     elanNiv: P('elan'), // en duel, l'Élan donne aussi un peu d'endurance (physics.js, CHOC.elanEndurance)
     parfait: Math.max(0.03, Math.min(0.4, 0.1 + 0.02 * L('precision'))),
