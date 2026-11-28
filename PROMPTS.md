@@ -1118,3 +1118,9 @@ et au lanceur, en gardant dimensions, logique mécanique, détails de niveau et 
 **Réalisé** : 15 nouvelles fonctions Blender (pointes clou/foreuse à filet hélicoïdal/diamant serti/bille en cage/ventouse ;
 bases lourde à masselottes/légère à rayons/gyro à pivots/noyau de météorite cerclé ; couronnes large vissée/dents/bouclier
 nervuré/lames/volant d'inertie ; boîtier de lanceur cranté) ; branchement générique par forme ; ressorts à spires jointives.
+
+## 2026-11-28 — 3D : âmes et rendu
+**Prompt optimisé** (artiste technique 3D + rendu Three.js) : modéliser les 9 âmes (symbole lisible, lueur de niveau gardée)
+et améliorer le rendu (halo moins envahissant, reflets de studio, matériaux plus fins) sans perdre en fluidité.
+**Réalisé** : 9 âmes Blender (socle vissé ; œil à pupille fendue, aimant à pôles, ressort, flamme torsadée, sangsue annelée,
+cyclone, fer à clous, carapace à écailles) ; matériaux vernis ; bandes de lumière de studio ; halo et éclairage de l'atelier adoucis.

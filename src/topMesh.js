@@ -8,7 +8,8 @@ import { GLTFLoader } from '../vendor/jsm/loaders/GLTFLoader.js';
 // Chaque objet du modèle a un RÔLE (corps / acier / sombre) : on lui applique les matériaux du jeu (couleur de la pièce…).
 export const MODELES_DISPO = ['standard', 'clou', 'foreuse', 'diamant', 'bille', 'ventouse'].map(f => 'pointe-' + f)
   .concat(['standard', 'lourde', 'legere', 'gyro', 'noyau'].map(f => 'base-' + f))
-  .concat(['standard', 'large', 'dents', 'bouclier', 'lames', 'inertie'].map(f => 'couronne-' + f), ['lanceur-boitier']);
+  .concat(['standard', 'large', 'dents', 'bouclier', 'lames', 'inertie'].map(f => 'couronne-' + f), ['lanceur-boitier'])
+  .concat(['vide', 'oeil', 'aimant', 'ressort', 'flamme', 'sangsue', 'cyclone', 'fer', 'carapace'].map(f => 'ame-' + f));
 export const modeleCharge = nom => !!MODELES[nom];
 const MODELES = {};
 const V = new URL(import.meta.url).searchParams.get('v') || '0'; // anti-cache : même empreinte que ce module (outils/versionner.mjs)
@@ -18,21 +19,22 @@ export function chargerModeles() {
   return (chargement ||= Promise.all(MODELES_DISPO.map(nom => l.loadAsync(`assets/modeles/${nom}.glb?v=${V}`).then(g => {
     const parts = [];
     g.scene.updateMatrixWorld(true);
-    g.scene.traverse(o => { if (o.isMesh) parts.push({ geo: o.geometry, role: ['acier', 'sombre', 'or'].find(r => o.name.includes(r)) || 'corps', matrice: o.matrixWorld.clone() }); });
+    g.scene.traverse(o => { if (o.isMesh) parts.push({ geo: o.geometry, role: ['acier', 'sombre', 'or', 'blanc'].find(r => o.name.includes(r)) || 'corps', matrice: o.matrixWorld.clone() }); });
     MODELES[nom] = parts;
   }).catch(() => { /* modèle absent : formes simples */ }))));
 }
-let matAcierM = null, matSombreM = null;
+let matAcierM = null, matSombreM = null, matBlancM = null;
 export const modeleDetaille = (nom, matCorps, y = 0) => modele(nom, matCorps, y);
 function modele(nom, matCorps, y) {
   const parts = MODELES[nom];
   if (!parts) return null;
   matAcierM ||= new THREE.MeshStandardMaterial({ color: 0xc9d0d8, metalness: 0.95, roughness: 0.22 });
   matSombreM ||= new THREE.MeshStandardMaterial({ color: 0x23272e, metalness: 0.4, roughness: 0.45 });
+  matBlancM ||= new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x555555, roughness: 0.3 });
   const g = new THREE.Group();
   g.position.y = y;
   for (const p of parts) {
-    const m = new THREE.Mesh(p.geo, p.role === 'acier' ? matAcierM : p.role === 'sombre' ? matSombreM : p.role === 'or' ? matRivetOr : matCorps);
+    const m = new THREE.Mesh(p.geo, p.role === 'acier' ? matAcierM : p.role === 'sombre' ? matSombreM : p.role === 'or' ? matRivetOr : p.role === 'blanc' ? matBlancM : matCorps);
     p.matrice.decompose(m.position, m.quaternion, m.scale);
     m.userData.geoPartagee = true; // géométrie partagée entre toutes les toupies : ne pas la détruire
     m.userData.matPartage = p.role !== 'corps';
@@ -76,7 +78,8 @@ function textures(nom) {
   return (motifs[nom] = { map: fab(true), relief: fab(false) });
 }
 const mat = (couleur, o = {}, motif = null) => {
-  const m = new THREE.MeshStandardMaterial({ color: couleur, roughness: 0.35, metalness: 0.55, ...o });
+  // Matériau « vernis » : une couche de vernis brillante sur la peinture métallisée (reflets nets, détails lisibles)
+  const m = new THREE.MeshPhysicalMaterial({ color: couleur, roughness: 0.35, metalness: 0.55, clearcoat: 0.6, clearcoatRoughness: 0.18, ...o });
   if (motif) {
     const t = textures(motif);
     Object.assign(m, { map: t.map, bumpMap: t.relief, bumpScale: motif === 'moletage' ? 0.0012 : 0.0006, roughnessMap: t.relief, roughness: Math.min(1, m.roughness * 1.4) });
@@ -321,6 +324,11 @@ function couronne(p, y, k = 1) {
 
 function ame(p, y, k = 1) {
   const g = new THREE.Group();
+  // Modèle détaillé (Blender) : socle vissé + symbole, qui garde la couleur et la LUEUR de niveau de l'âme
+  const matA = p.forme === 'vide' ? mat(p.couleur) : mat(p.couleur, { emissive: p.couleur, emissiveIntensity: 0.6 + 0.3 * k });
+  const md = modele('ame-' + p.forme, matA, y);
+  if (md) { g.add(md); return { g }; }
+  matA.dispose();
   const pastille = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.012, 0.004, 32), mat(0x1b1e23, { metalness: 0.2 }));
   pastille.position.y = y + 0.002;
   g.add(pastille);

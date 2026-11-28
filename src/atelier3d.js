@@ -20,7 +20,7 @@ const ciel = new THREE.Mesh(new THREE.SphereGeometry(6, 32, 16), new THREE.Shade
 vitrine.add(ciel);
 vitrine.background = null;
 const projecteurs = [0xff8a3d, 0x3dc8ff, 0xff4fa3].map((c, i) => {
-  const l = new THREE.PointLight(c, 1.4, 1.6);
+  const l = new THREE.PointLight(c, 0.8, 1.6); // projecteurs colorés plus doux (ils brûlaient la toupie)
   l.userData.phase = (i / 3) * Math.PI * 2;
   vitrine.add(l);
   return l;

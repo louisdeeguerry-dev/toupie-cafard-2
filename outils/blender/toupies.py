@@ -346,9 +346,136 @@ def lanceur_boitier():  # coque Ø 68 mm, h = 16 mm, crantée pour la prise en m
     exporter('lanceur-boitier')
 
 
+# ================================================================ ÂMES (partent de y = 0 : socle sombre de 4 mm, symbole au-dessus)
+# Le symbole porte le rôle « corps » : le jeu lui donne la couleur de l'âme et sa LUEUR (plus forte à chaque niveau).
+def socle():
+    revolution('socle_sombre', [(0.0, 0.0), (0.0118, 0.0), (0.0122, 0.0007), (0.0114, 0.0040), (0.0082, 0.0042),
+        (0.0078, 0.0034), (0.0, 0.0034)])
+    couronne_vis('vis', 6, 0.0100, 0.0041, 0.0007)
+
+
+def courbe(nom, pts, fil, ferme=False):
+    cu = bpy.data.curves.new(nom, 'CURVE')
+    cu.dimensions = '3D'
+    sp = cu.splines.new('POLY')
+    sp.points.add(len(pts) - 1)
+    for i, (x, y, z) in enumerate(pts):
+        sp.points[i].co = (x, y, z, 1)
+    sp.use_cyclic_u = ferme
+    cu.bevel_depth = fil
+    cu.bevel_resolution = 3
+    cu.use_fill_caps = True
+    ob = bpy.data.objects.new(nom, cu)
+    bpy.context.collection.objects.link(ob)
+    bpy.context.view_layer.objects.active = ob
+    ob.select_set(True)
+    bpy.ops.object.convert(target='MESH')
+    ob = bpy.context.object
+    lisser(ob, 80)
+    return ob
+
+
+def ame_vide():  # sans pouvoir : une simple bille polie dans son socle
+    vider(); socle()
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=24, ring_count=12, radius=0.0042, location=(0, 0, 0.0052))
+    lisser(objet_actif('bille_corps'), 80)
+    exporter('ame-vide')
+
+
+def ame_oeil():  # Œil de lynx : globe blanc, iris lumineux, pupille fendue
+    vider(); socle()
+    revolution('globe_blanc', [(0.0, 0.0034), (0.0060, 0.0040), (0.0064, 0.0058), (0.0050, 0.0074), (0.0, 0.0080)])
+    revolution('iris_corps', [(0.0, 0.0081), (0.0034, 0.0078), (0.0036, 0.0080), (0.0, 0.0084)])
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(0, 0, 0.0085))
+    pup = objet_actif('pupille_sombre'); pup.scale = (0.0010, 0.0048, 0.0006)
+    exporter('ame-oeil')
+
+
+def ame_aimant():  # aimant en fer à cheval debout, pôles d'acier
+    vider(); socle()
+    pts = [(0.0050 * math.cos(t), 0.0, 0.0080 + 0.0050 * math.sin(t)) for t in [i * math.pi / 20 for i in range(21)]]
+    pts = [(0.0050, 0.0, 0.0046)] + pts + [(-0.0050, 0.0, 0.0046)]
+    courbe('arc_corps', pts, 0.0016)
+    for sx in (-1, 1):
+        cylindre(f'pole{sx}_acier', 0.0017, 0.0018, sx * 0.0050, 0.0, 0.0044, 12)
+    exporter('ame-aimant')
+
+
+def ame_ressort():  # petit ressort hélicoïdal, spires de bout jointives
+    vider(); socle()
+    pts = []
+    for i in range(3 * 32 + 1):
+        a = i / 32 * 2 * math.pi
+        t = i / 96
+        z = 0.0040 + (0.0012 * t * 3 if t < 1 / 3 else 0.0012 + (t - 1 / 3) * 3 * 0.0040 if t < 2 / 3 else 0.0052 + (t - 2 / 3) * 3 * 0.0012)
+        pts.append((0.0050 * math.cos(a), 0.0050 * math.sin(a), z))
+    courbe('spire_corps', pts, 0.0011)
+    exporter('ame-ressort')
+
+
+def ame_flamme():  # flamme torsadée (trois langues)
+    vider(); socle()
+    for j in range(3):
+        a0 = j * 2 * math.pi / 3
+        pts = []
+        for i in range(25):
+            t = i / 24
+            r = 0.0032 * math.sin(math.pi * min(1, t * 1.2)) * (1 - t) + 0.0004
+            a = a0 + t * 2.2
+            pts.append((r * math.cos(a), r * math.sin(a), 0.0040 + t * (0.0140 - j * 0.0022)))
+        courbe(f'langue{j}_corps', pts, 0.0016 - j * 0.0002)
+    exporter('ame-flamme')
+
+
+def ame_sangsue():  # sangsue annelée, enroulée sur elle-même
+    vider(); socle()
+    for i in range(9):
+        t = i / 8
+        a = t * 1.6 * math.pi
+        r = 0.0055 - t * 0.0035
+        bpy.ops.mesh.primitive_uv_sphere_add(segments=16, ring_count=8, radius=0.0022 - t * 0.0008,
+                                             location=(r * math.cos(a), r * math.sin(a), 0.0058 + t * 0.0030))
+        seg = objet_actif(f'anneau{i}_corps'); seg.scale = (1, 1, 0.8); lisser(seg, 80)
+    exporter('ame-sangsue')
+
+
+def ame_cyclone():  # tourbillon : spirale conique qui s'élève
+    vider(); socle()
+    pts = []
+    for i in range(121):
+        t = i / 120
+        a = t * 3 * 2 * math.pi
+        r = 0.0068 * (1 - t) + 0.0012
+        pts.append((r * math.cos(a), r * math.sin(a), 0.0044 + t * 0.0080))
+    courbe('spirale_corps', pts, 0.0009)
+    exporter('ame-cyclone')
+
+
+def ame_fer():  # fer à cheval porte-bonheur, debout, avec ses trous de clous
+    vider(); socle()
+    pts = [(0.0058 * math.cos(t), 0.0, 0.0100 + 0.0058 * math.sin(t)) for t in [-0.3 * math.pi + i * 1.6 * math.pi / 30 for i in range(31)]]
+    fer = courbe('fer_corps', pts, 0.0017)
+    fer.scale = (1, 1.6, 1)  # fer plat (plus large qu'épais)
+    for i in range(5):
+        t = -0.15 * math.pi + i * 1.3 * math.pi / 4
+        bpy.ops.mesh.primitive_uv_sphere_add(segments=8, ring_count=4, radius=0.0006, location=(0.0058 * math.cos(t), -0.0026, 0.0100 + 0.0058 * math.sin(t)))
+        objet_actif(f'clou{i}_sombre')
+    exporter('ame-fer')
+
+
+def ame_carapace():  # carapace bombée à écailles hexagonales (elle bloque le premier gros choc)
+    vider(); socle()
+    revolution('dome_corps', [(0.0, 0.0034), (0.0082, 0.0036), (0.0080, 0.0050), (0.0060, 0.0072), (0.0030, 0.0082), (0.0, 0.0084)], pas=6)
+    for p in bpy.data.objects['dome_corps'].data.polygons:
+        p.use_smooth = False
+    revolution('ecaille_sombre', [(0.0, 0.0084), (0.0024, 0.0083), (0.0024, 0.0086), (0.0, 0.0087)], pas=6)
+    exporter('ame-carapace')
+
+
 if __name__ == '__main__':
     for f in (pointe_standard, pointe_clou, pointe_foreuse, pointe_diamant, pointe_bille, pointe_ventouse,
               base_standard, base_lourde, base_legere, base_gyro, base_noyau,
               couronne_standard, couronne_large, couronne_dents, couronne_bouclier, couronne_lames, couronne_inertie,
-              lanceur_boitier):
+              lanceur_boitier, ame_vide, ame_oeil, ame_aimant, ame_ressort, ame_flamme, ame_sangsue, ame_cyclone,
+              ame_fer, ame_carapace):
         f()

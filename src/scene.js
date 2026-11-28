@@ -38,7 +38,7 @@ export function rendre(sc, cam) {
   passeRendu.scene = sc; passeRendu.camera = cam;
   // La vitrine est déjà très éclairée (projecteurs) : halo plus discret et réservé aux vraies sources de lumière
   const vit = sc === vitrine;
-  halo.strength = vit ? 0.22 : 0.45; halo.threshold = vit ? 1.15 : 0.92;
+  halo.strength = vit ? 0.12 : 0.35; halo.threshold = vit ? 1.35 : 1.0; // plus discret : les détails des pièces restent lisibles
   composeur.render();
 }
 
@@ -230,8 +230,8 @@ vitrine.background = new THREE.Color(0x15110e);
 export const vitrineCam = new THREE.PerspectiveCamera(35, 1, 0.01, 10);
 vitrineCam.position.set(0, 0.1, 0.4);
 vitrineCam.lookAt(0, 0.035, 0);
-vitrine.add(new THREE.HemisphereLight(0xffffff, 0x302018, 1.0));
-const spot = new THREE.SpotLight(0xffe7c4, 6, 2, 0.6, 0.5);
+vitrine.add(new THREE.HemisphereLight(0xffffff, 0x302018, 0.7)); // éclairage adouci (28/11) : les détails des pièces ne sont plus « brûlés »
+const spot = new THREE.SpotLight(0xffe7c4, 4, 2, 0.6, 0.5);
 spot.position.set(0.15, 0.5, 0.25);
 spot.castShadow = true;
 vitrine.add(spot);
@@ -262,6 +262,8 @@ function studio() {
   panneau(0x80aaff, 1.3, [5, 1.5, -1], [0.1, 2, 3]); // néon froid
   panneau(0xffffff, 0.7, [0, 1, 5], [3, 1.5, 0.1]); // fenêtre devant
   panneau(0x3a281c, 1, [0, -2, 0], [12, 0.1, 12]); // sol
+  panneau(0xffffff, 3, [-2.5, 3.5, 0], [0.12, 0.1, 4]); // deux bandes de lumière (boîtes à lumière de studio) : elles
+  panneau(0xffffff, 3, [2.5, 3.5, 0], [0.12, 0.1, 4]); //   dessinent des reflets nets sur les métaux arrondis
   const tex = pm.fromScene(s, 0.035).texture;
   pm.dispose(); boite.dispose();
   return tex;
