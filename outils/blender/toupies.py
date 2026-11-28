@@ -261,19 +261,51 @@ def base_gyro():  # base tournée creusée d'une fenêtre où tourne le gyroscop
     exporter('base-gyro')
 
 
-def base_noyau():  # fragment de météorite (noyau rocheux) tenu par un cerclage doré ; dessus à 17 mm
+def base_noyau():  # noyau de météorite : roche lumineuse sertie de 4 griffes dans une coupelle tournée (dessus à 17 mm)
     vider()
     import random
-    random.seed(7)
-    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=3, radius=0.0200, location=(0, 0, 0.0100))
+    random.seed(11)
+    revolution('coupelle_sombre', [(0.0, 0.0), (0.0110, 0.0), (0.0112, 0.0010), (0.0200, 0.0016), (0.0236, 0.0050),
+        (0.0236, 0.0062), (0.0220, 0.0068), (0.0150, 0.0060), (0.0, 0.0060)])
+    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=2, radius=0.0135, location=(0, 0, 0.0105))
     roc = objet_actif('roc_corps')
-    for v in roc.data.vertices:  # surface irrégulière, aplatie (même encombrement que la forme simple)
-        k = 1 + random.uniform(-0.09, 0.09)
-        v.co.x *= k; v.co.y *= k; v.co.z *= 0.7 * k
+    for v in roc.data.vertices:  # roche facettée, irrégulière mais centrée (elle reste équilibrée sur l'axe)
+        k = 1 + random.uniform(-0.07, 0.07)
+        v.co.x *= k; v.co.y *= k; v.co.z *= 0.62 * k
     for p in roc.data.polygons:
         p.use_smooth = False
-    tore('cerclage_or', 0.0186, 0.0012, 0.0100, 64, 8)
+    for i in range(4):  # griffes d'acier qui tiennent la roche
+        a = i * math.pi / 2 + math.pi / 4
+        pts = [(0.0215 * math.cos(a), 0.0215 * math.sin(a), 0.0062), (0.0160 * math.cos(a), 0.0160 * math.sin(a), 0.0120),
+               (0.0100 * math.cos(a), 0.0100 * math.sin(a), 0.0160)]
+        courbe(f'griffe{i}_acier', pts, 0.0011)
+    tore('jonc_or', 0.0228, 0.0009, 0.0060, 64, 8)
     exporter('base-noyau')
+
+
+def base_tresor():  # base au trésor : corps doré, piles de pièces, joyaux et collier de perles, symétrie d'ordre 8 (dessus à 17 mm)
+    vider()
+    revolution('tresor_corps', [(0.0, 0.0), (0.0110, 0.0), (0.0112, 0.0010), (0.0200, 0.0016), (0.0236, 0.0060),
+        (0.0262, 0.0100), (0.0262, 0.0112), (0.0250, 0.0120), (0.0, 0.0120)])
+    for i in range(8):  # 8 piles de pièces de monnaie (2 ou 3 pièces, en alternance)
+        a = i * math.pi / 4
+        for j in range(3 if i % 2 else 2):
+            cylindre(f'piece{i}_{j}_or', 0.0034, 0.0011, 0.0185 * math.cos(a), 0.0185 * math.sin(a), 0.0126 + j * 0.0012, 24, 30)
+    # Rubis central taillé
+    gem = revolution('rubis_centre_rubis', [(0.0, 0.0118), (0.0060, 0.0128), (0.0060, 0.0134), (0.0034, 0.0168), (0.0, 0.0170)], pas=8)
+    for p in gem.data.polygons:
+        p.use_smooth = False
+    for i in range(4):  # saphirs et émeraudes entre les piles
+        a = i * math.pi / 2 + math.pi / 8
+        bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=1, radius=0.0021, location=(0.0105 * math.cos(a), 0.0105 * math.sin(a), 0.0132))
+        j = objet_actif(f'joyau{i}_' + ('saphir' if i % 2 else 'emeraude'))
+        for p in j.data.polygons:
+            p.use_smooth = False
+    for i in range(24):  # collier de perles sur le bord
+        a = i * 2 * math.pi / 24
+        bpy.ops.mesh.primitive_uv_sphere_add(segments=10, ring_count=6, radius=0.0011, location=(0.0250 * math.cos(a), 0.0250 * math.sin(a), 0.0124))
+        lisser(objet_actif(f'perle{i}_perle'), 80)
+    exporter('base-tresor')
 
 
 # ================================================================ COURONNES (centrées sur leur plan, y = 0)
@@ -474,7 +506,7 @@ def ame_carapace():  # carapace bombée à écailles hexagonales (elle bloque le
 
 if __name__ == '__main__':
     for f in (pointe_standard, pointe_clou, pointe_foreuse, pointe_diamant, pointe_bille, pointe_ventouse,
-              base_standard, base_lourde, base_legere, base_gyro, base_noyau,
+              base_standard, base_lourde, base_legere, base_gyro, base_noyau, base_tresor,
               couronne_standard, couronne_large, couronne_dents, couronne_bouclier, couronne_lames, couronne_inertie,
               lanceur_boitier, ame_vide, ame_oeil, ame_aimant, ame_ressort, ame_flamme, ame_sangsue, ame_cyclone,
               ame_fer, ame_carapace):

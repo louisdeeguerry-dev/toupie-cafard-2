@@ -1124,3 +1124,10 @@ nervuré/lames/volant d'inertie ; boîtier de lanceur cranté) ; branchement gé
 et améliorer le rendu (halo moins envahissant, reflets de studio, matériaux plus fins) sans perdre en fluidité.
 **Réalisé** : 9 âmes Blender (socle vissé ; œil à pupille fendue, aimant à pôles, ressort, flamme torsadée, sangsue annelée,
 cyclone, fer à clous, carapace à écailles) ; matériaux vernis ; bandes de lumière de studio ; halo et éclairage de l'atelier adoucis.
+
+## 2026-11-28 — Barre retirée, textures, base au trésor
+**Prompt optimisé** (artiste 3D) : retirer la barre blanche (repère de rotation) ; faire apparaître les textures sur les pièces ;
+redessiner le noyau de météorite et créer une vraie base au trésor (pièces de monnaie, bijoux, joyaux), symétriques et jolies.
+**Réalisé** : repère supprimé ; coordonnées de texture cylindriques générées au chargement (motifs tourné, moleté… visibles) ;
+noyau : roche facettée sertie de 4 griffes dans une coupelle ; trésor (forme `tresor`) : 8 piles de pièces, rubis, saphirs,
+émeraudes, collier de 24 perles (symétrie d'ordre 8), matériaux de pierres et de perle.

@@ -7,7 +7,7 @@ import { GLTFLoader } from '../vendor/jsm/loaders/GLTFLoader.js';
 // Chargés au démarrage ; tant qu'ils ne sont pas là (ou s'ils manquent), le jeu garde les formes simples.
 // Chaque objet du modèle a un RÔLE (corps / acier / sombre) : on lui applique les matériaux du jeu (couleur de la pièce…).
 export const MODELES_DISPO = ['standard', 'clou', 'foreuse', 'diamant', 'bille', 'ventouse'].map(f => 'pointe-' + f)
-  .concat(['standard', 'lourde', 'legere', 'gyro', 'noyau'].map(f => 'base-' + f))
+  .concat(['standard', 'lourde', 'legere', 'gyro', 'noyau', 'tresor'].map(f => 'base-' + f))
   .concat(['standard', 'large', 'dents', 'bouclier', 'lames', 'inertie'].map(f => 'couronne-' + f), ['lanceur-boitier'])
   .concat(['vide', 'oeil', 'aimant', 'ressort', 'flamme', 'sangsue', 'cyclone', 'fer', 'carapace'].map(f => 'ame-' + f));
 export const modeleCharge = nom => !!MODELES[nom];
@@ -19,11 +19,30 @@ export function chargerModeles() {
   return (chargement ||= Promise.all(MODELES_DISPO.map(nom => l.loadAsync(`assets/modeles/${nom}.glb?v=${V}`).then(g => {
     const parts = [];
     g.scene.updateMatrixWorld(true);
-    g.scene.traverse(o => { if (o.isMesh) parts.push({ geo: o.geometry, role: ['acier', 'sombre', 'or', 'blanc'].find(r => o.name.includes(r)) || 'corps', matrice: o.matrixWorld.clone() }); });
+    g.scene.traverse(o => { if (o.isMesh && !o.geometry.attributes.uv) uvCylindre(o.geometry); });
+    g.scene.traverse(o => { if (o.isMesh) parts.push({ geo: o.geometry, role: ROLES.find(r => o.name.includes(r)) || 'corps', matrice: o.matrixWorld.clone() }); });
     MODELES[nom] = parts;
   }).catch(() => { /* modèle absent : formes simples */ }))));
 }
 let matAcierM = null, matSombreM = null, matBlancM = null;
+const PIERRES_ROLES = ['rubis', 'saphir', 'emeraude', 'perle'];
+const ROLES = ['acier', 'sombre', 'or', 'blanc', 'rubis', 'saphir', 'emeraude', 'perle'];
+// Pierres et perles (base au trésor) : matériaux partagés, brillants
+const PIERRES = {};
+const pierre = role => (PIERRES[role] ||= new THREE.MeshPhysicalMaterial(role === 'perle'
+  ? { color: 0xf6efe4, roughness: 0.25, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.1, sheen: 1, sheenColor: 0xffe6f0 }
+  : { color: { rubis: 0xd4102c, saphir: 0x1f4fe0, emeraude: 0x10a858 }[role], roughness: 0.05, metalness: 0.1, clearcoat: 1, emissive: { rubis: 0x4a0008, saphir: 0x08164a, emeraude: 0x053a1c }[role] }));
+// Les modèles Blender n'ont pas de coordonnées de texture : projection cylindrique autour de l'axe (u = tour, v = hauteur),
+// pour que les motifs du jeu (tourné, moleté, brossé, martelé) apparaissent sur les pièces
+function uvCylindre(geo) {
+  const p = geo.attributes.position, uv = new Float32Array(p.count * 2);
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), y = p.getY(i), z = p.getZ(i), r = Math.hypot(x, z);
+    uv[2 * i] = Math.atan2(z, x) / (2 * Math.PI) + 0.5;
+    uv[2 * i + 1] = y * 40 + r * 25; // les faces planes (dessus) reçoivent aussi un motif, en anneaux
+  }
+  geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+}
 export const modeleDetaille = (nom, matCorps, y = 0) => modele(nom, matCorps, y);
 function modele(nom, matCorps, y) {
   const parts = MODELES[nom];
@@ -34,7 +53,7 @@ function modele(nom, matCorps, y) {
   const g = new THREE.Group();
   g.position.y = y;
   for (const p of parts) {
-    const m = new THREE.Mesh(p.geo, p.role === 'acier' ? matAcierM : p.role === 'sombre' ? matSombreM : p.role === 'or' ? matRivetOr : p.role === 'blanc' ? matBlancM : matCorps);
+    const m = new THREE.Mesh(p.geo, p.role === 'acier' ? matAcierM : p.role === 'sombre' ? matSombreM : p.role === 'or' ? matRivetOr : p.role === 'blanc' ? matBlancM : PIERRES_ROLES.includes(p.role) ? pierre(p.role) : matCorps);
     p.matrice.decompose(m.position, m.quaternion, m.scale);
     m.userData.geoPartagee = true; // géométrie partagée entre toutes les toupies : ne pas la détruire
     m.userData.matPartage = p.role !== 'corps';
@@ -203,7 +222,7 @@ function base(p, y, k = 1) {
       g.add(t);
     }
     if (p.forme === 'legere') return { g, top: y + 0.014 };
-    if (p.forme === 'noyau') return { g, top: y + 0.017 };
+    if (p.forme === 'noyau' || p.forme === 'tresor') return { g, top: y + 0.017 };
     if (p.forme === 'lourde') { r = 0.029; h = 0.017; }
     rivetsNiveau(g, k, r * 0.78, y + h + 0.0006);
     return { g, top: y + h };
@@ -395,10 +414,6 @@ export function creerToupie(equipe, nivPieces = {}) {
   const cr = couronne(P(equipe.couronne), pt.h + (bs.top - pt.h) * 0.45, N(equipe.couronne));
   const am = ame(P(equipe.ame), bs.top, N(equipe.ame));
   rotor.add(pt.g, bs.g, cr.g, am.g);
-  // Un repère coloré pour qu'on voie la toupie tourner
-  const repere = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.0025, 0.022), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x666666 }));
-  repere.position.set(0.012, bs.top + 0.001, 0);
-  bs.g.add(repere); // le repère suit la base (vue éclatée de l'atelier)
   racine.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
   // parts : chaque pièce est un groupe à part (vue éclatée de l'atelier)
   return { racine, inclinaison, rotor, parts: { pointe: pt.g, base: bs.g, couronne: cr.g, ame: am.g } };
