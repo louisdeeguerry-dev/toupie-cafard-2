@@ -1090,3 +1090,9 @@ pour tous les builds (Endurance 29 %, Élan bureau rond 19 %, 27 % avec Enduranc
 très spécialisés (Nid, Élan…) avec un robot qui compense ses faiblesses (dégâts, survie) ; rendre le jeu plus fluide.
 **Réalisé** : tableau redonné ; `tests/builds-malins.js` (10 builds × 3 parties) ; fluidité : taille du canvas en cache
 pour les barres de vie, étincelles réutilisées, shaders précompilés, vérification synchrone des shaders coupée.
+
+## 2026-11-28 — Passe d'équilibrage après les builds malins
+**Prompt optimisé** (game designer) : corriger Lames dominantes, Puissance inutile contre les cafards, builds d'économie et
+Feu faibles ; vérifier au simulateur puis en parties avec le robot malin ; publier.
+**Réalisé** : pièces : si les bonus pèsent plus que les malus, on réduit les bonus (au lieu de tripler des malus d'Élan) ;
+`parLames` 0,0375 ; robot malin : la compensation passe avant la spécialité. Simulateur : builds spécialisés de 31 à 60 %.

@@ -180,7 +180,10 @@ for (const p of PIECES) {
   let plus = 0, moins = 0;
   for (const [s, v] of Object.entries(p.niveaux)) if (v > 0) plus += v * poidsStat(s); else moins -= v * poidsStat(s);
   if (!moins || !plus) continue;
-  for (const [s, v] of Object.entries(p.niveaux)) if (v < 0) p.niveaux[s] = Math.round(v * (plus / moins) * 100) / 100;
+  // Malus trop lourds : on les allège. Bonus trop lourds : on réduit les BONUS (gonfler les malus rendait par exemple
+  // les pièces de défense presque immobiles, avec un malus d'Élan triplé)
+  if (plus <= moins || p.niveaux.multi) { for (const [s, v] of Object.entries(p.niveaux)) if (v < 0) p.niveaux[s] = Math.round(v * (plus / moins) * 100) / 100; }
+  else for (const [s, v] of Object.entries(p.niveaux)) if (v > 0) p.niveaux[s] = Math.round(v * (moins / plus) * 100) / 100;
 }
 
 export const PIECE = Object.fromEntries(PIECES.map(p => [p.id, p]));

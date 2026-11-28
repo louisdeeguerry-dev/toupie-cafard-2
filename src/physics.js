@@ -34,7 +34,7 @@ export function modeDuel(oui) { duel = !!oui; }
 // masseDuel : exposant du rapport de masses sur les pertes (1 = plein effet) ; seuilMaxDuel : seuil de chute maximal en duel.
 // inertieDuel : exposant de l'Inertie de la cible sur les pertes (1 = plein effet, 0,5 = effet adouci).
 // usureTassee : 0 = usure de duel selon l'Endurance seule ; 1 = même usure pour tous (les malus d'Endurance comptent moins).
-export const CHOC = { ref: 600, base: 0.01, parLames: 0.04, parVitesse: 0.12, attraction: 0.1, parAgressivite: 0.3, rebondBoost: 1.35, rebondPlafond: 1.9,
+export const CHOC = { ref: 600, base: 0.01, parLames: 0.0375, parVitesse: 0.12, attraction: 0.1, parAgressivite: 0.3, rebondBoost: 1.35, rebondPlafond: 1.9,
   // Réglages calés au simulateur (tests/duels-sim.js, 27/11, 2e passe) : Élan 46 % (77 % sur terrain rebondissant), Puissance 69 %
   cuvette: 1.1, partRelative: 0.85, usureTassee: 0.45, deriveDuel: 0.2, inertieDuel: 0.5, masseDuel: 0.5, seuilMaxDuel: 0.3, approcheMax: 99, frottementDuel: 1, glissementDuel: 0, glissant: 0, recul: 0.2, poussee: 0.12, delai: 0.2, rebond: 0.5, usureDuel: 0.22 };
 

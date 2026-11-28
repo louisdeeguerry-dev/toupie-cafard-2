@@ -65,9 +65,9 @@ const VEUT = BUILDS[STRAT];
         const moyTues = M.tues.length >= 3 ? M.tues.slice(-3).reduce((x, y) => x + y, 0) / 3 : 9;
         const perd = M.duels.slice(-2).includes(0);
         const DEGATS = ['lames', 'elan', 'diametre'], SURVIE = ['endurance', 'lames', 'inertie'];
-        // Score de chaque offre : spécialité (1re stat 3, autres 2), compensation 2,5 si besoin, économie au début
+        // Score de chaque offre : spécialité (1re stat 3, autres 2), compensation 3,5 si besoin (prioritaire : un joueur réfléchi change de cap), économie au début
         const score = id => (VEUT[0] === id ? 3 : VEUT.includes(id) ? 2 : 0)
-          + (moyTues < 3 && DEGATS.includes(id) ? 2.5 : 0) + (perd && SURVIE.includes(id) ? 2.5 : 0)
+          + (moyTues < 3 && DEGATS.includes(id) ? 3.5 : 0) + (perd && SURVIE.includes(id) ? 3.5 : 0)
           + (etape < 2 && ['prime', 'tirelire'].includes(id) ? 1 : 0);
         const btns = [...document.querySelectorAll('#bilanContenu .offre:not([disabled])')].filter(x => score(x.dataset.a) > 0);
         const px = x => parseInt(x.querySelector('.px').textContent);
