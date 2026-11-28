@@ -13,6 +13,7 @@ const BUILDS = {
   endurance: ['endurance', 'equilibre', 'inertie', 'souffle'],
   critique: ['critique', 'lames', 'precision', 'feu'],
   agressivite: ['agressivite', 'lames', 'elan', 'poids'],
+  tourbillon: ['tornade', 'lames', 'poids'],
 };
 (async () => {
   const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader'] });

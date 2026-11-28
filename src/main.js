@@ -295,7 +295,9 @@ function boucle(maintenant) {
         ecart: Math.hypot(Math.max(...xs) - Math.min(...xs), Math.max(...zs) - Math.min(...zs)) };
     }
     majCamera(dtReel, suivi);
-    const mesT = (partie.mesToupies || []).filter(x => x.lancee && !x.tombe);
+    // Ronronnement des toupies : seulement pendant le jeu (silence dès que le lancer ou le duel est fini : bilan, boutique, défi)
+    const enCours = mode === 'partie' && partie.phase === 'jeu' && !partie.resultat && !partie.ami?.verdictVu;
+    const mesT = enCours ? (partie.mesToupies || []).filter(x => x.lancee && !x.tombe) : [];
     ronron(mesT.length ? Math.max(...mesT.map(x => x.rotation / x.rotationMax)) : 0);
     rendre(scene, camera);
   }

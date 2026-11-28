@@ -37,7 +37,7 @@ export const STATS = [
   { id: 'souffle', groupe: 'toupie', nom: 'Second souffle', icone: '🌬️', special: true, desc: 'Chaque cafard écrasé redonne un peu de rotation (plafonné à chaque lancer).',
     fmt: s => s.souffle ? `+${Math.round(s.souffle * 100)} % par cafard, ${Math.round(s.souffleMax * 100)} % max` : '—' },
   { id: 'tornade', groupe: 'toupie', nom: 'Tourbillon', icone: '🌪️', special: true, desc: 'La toupie aspire les cafards proches vers elle.',
-    fmt: s => s.tornade ? `rayon ${Math.round(s.tornadeRayon * 100)} cm` : '—' },
+    fmt: s => s.tornade ? `${Math.round((s.tornadeRayon - 0.046) * 100)} cm autour du bord` : '—' },
   { id: 'puissance', groupe: 'lanceur', nom: 'Puissance', icone: '🚀', desc: 'La toupie démarre en tournant plus vite : elle encaisse plus de chocs avant de s\'arrêter (sa « vie » en duel).',
     fmt: s => `${Math.round(s.tours).toLocaleString('fr-FR')} tr/min` },
   { id: 'elan', groupe: 'lanceur', nom: 'Élan', icone: '💨', desc: 'La toupie part plus vite et plus loin.',

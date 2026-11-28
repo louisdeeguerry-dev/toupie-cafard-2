@@ -1164,3 +1164,10 @@ passer à un vrai éclairage HDRI de studio (Poly Haven, CC0), avec repli et san
 (5 parties par build) ; puis agents testeurs PC et téléphone et réorganisation des écrans (atelier sur téléphone : voir la
 toupie changer, barres de stats visibles) ; retenir que le jeu est multiplateforme.
 **Réalisé (en cours)** : règle 6 « multiplateforme » ajoutée à CLAUDE.md ; série de 50 parties lancée.
+
+## 2026-11-28 — Tourbillon (portée depuis le bord, gravité sur les toupies) et silence après les combats
+**Prompt optimisé** (dev gameplay + audio) : portée du Tourbillon mesurée depuis le bord (même marge qu'une toupie standard) ;
+en duel, attraction des toupies adverses comme une gravité (accélération ÷ masse, qui faiblit avec la distance) ; couper le
+ronronnement des toupies dès la fin d'un lancer ou d'un duel (boutique, bilan, défi).
+**Réalisé** : physics.js (`portee`, `CHOC.tornadeToupie` 0,5, réglé au simulateur : build Tourbillon 63 → 66 %) ; affichage
+« X cm autour du bord » ; ronronnement limité à la phase de jeu ; série de référence relancée sur cette version.

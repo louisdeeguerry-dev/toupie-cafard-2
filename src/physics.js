@@ -25,6 +25,7 @@ export function modeDuel(oui) { duel = !!oui; }
 // finissent par se retrouver au milieu, comme dans une vraie arène de toupies (la Cuve est la version très creusée).
 // partRelative : 0 = pertes en tr/min absolus, 1 = en part de la rotation de la cible ; entre les deux, moyenne géométrique.
 // deriveDuel : part de la « danse » aléatoire gardée en duel (moins de danse = la toupie ralentie finit au fond de l'arène).
+// tornadeToupie : force du Tourbillon sur une toupie adverse de 20 g (accélération en m/s² par point de tourbillon).
 // glissant : coup glissant, une toupie qui file vite (au-delà de 0,5 m/s) encaisse moins (contact bref).
 // recul : frapper une toupie stable (Inertie, Équilibre) fait perdre de la rotation à l'attaquant (comme cogner un mur).
 // glissementDuel : 0 = frottement en traînée (la vitesse fond d'une même part chaque seconde) ; 1 = vrai frottement de
@@ -34,9 +35,10 @@ export function modeDuel(oui) { duel = !!oui; }
 // masseDuel : exposant du rapport de masses sur les pertes (1 = plein effet) ; seuilMaxDuel : seuil de chute maximal en duel.
 // inertieDuel : exposant de l'Inertie de la cible sur les pertes (1 = plein effet, 0,5 = effet adouci).
 // usureTassee : 0 = usure de duel selon l'Endurance seule ; 1 = même usure pour tous (les malus d'Endurance comptent moins).
+const RAYON_STANDARD = 0.046; // rayon d'une toupie standard (stats.js)
 export const CHOC = { ref: 600, base: 0.01, parLames: 0.0375, parVitesse: 0.12, attraction: 0.1, parAgressivite: 0.3, rebondBoost: 1.35, rebondPlafond: 1.9,
   // Réglages calés au simulateur (tests/duels-sim.js, 27/11, 2e passe) : Élan 46 % (77 % sur terrain rebondissant), Puissance 69 %
-  cuvette: 1.1, partRelative: 0.85, usureTassee: 0.45, deriveDuel: 0.2, inertieDuel: 0.5, masseDuel: 0.5, seuilMaxDuel: 0.3, approcheMax: 99, frottementDuel: 1, glissementDuel: 0, glissant: 0, recul: 0.2, poussee: 0.12, delai: 0.2, rebond: 0.5, usureDuel: 0.22 };
+  cuvette: 1.1, partRelative: 0.85, usureTassee: 0.45, deriveDuel: 0.2, inertieDuel: 0.5, masseDuel: 0.5, seuilMaxDuel: 0.3, approcheMax: 99, frottementDuel: 1, glissementDuel: 0, glissant: 0, recul: 0.2, tornadeToupie: 0.5, poussee: 0.12, delai: 0.2, rebond: 0.5, usureDuel: 0.22 };
 
 // Les toupies sont un peu étirées en hauteur pour être lisibles vues de haut (la hauteur ne compte pas dans la physique)
 const HAUTEUR_VUE = 1.35;
@@ -243,11 +245,23 @@ export function majToupies(dt, cb) {
       if (t.flammeT > 0.03) { t.flammeT = 0; nouvelleFlamme(t.x, t.z, r * 0.75, s.feuDuree, s.feu * DEGATS_BASE * s.lames, t); }
     }
 
-    // Tourbillon : aspire les cafards proches
+    // Tourbillon : portée mesurée depuis le BORD de la toupie (une toupie large attire aussi) ; la marge au-delà du bord
+    // est celle d'une toupie standard (rayon 4,6 cm) : une toupie large ne gagne pas de portée en plus
+    const portee = s.tornadeRayon - RAYON_STANDARD;
     if (s.tornade) for (const c of cafards) {
       if (c.mort || c.chute > 0) continue;
       const dx = t.x - c.x, dz = t.z - c.z, d = Math.hypot(dx, dz);
-      if (d < s.tornadeRayon && d > 0.001) { c.x += (dx / d) * s.tornade * ratio * dt; c.z += (dz / d) * s.tornade * ratio * dt; }
+      if (d - r < portee && d > 0.001) { c.x += (dx / d) * s.tornade * ratio * dt; c.z += (dz / d) * s.tornade * ratio * dt; }
+    }
+    // En duel, il attire aussi la toupie adverse, comme une gravité : une ACCÉLÉRATION (elle garde son élan et sa trajectoire
+    // se courbe), divisée par sa masse (une toupie légère est bien déviée, une lourde résiste), qui faiblit avec la distance
+    if (s.tornade && duel) for (const o of toupies) {
+      if (o.camp === t.camp || !enJeu(o)) continue;
+      const dx = t.x - o.x, dz = t.z - o.z, d = Math.hypot(dx, dz), bord = d - r - o.s.rayon;
+      if (bord < portee && d > 0.001) {
+        const a = CHOC.tornadeToupie * s.tornade * ratio * (20 / o.s.masse) * (1 - Math.max(0, bord) / portee);
+        o.vx += (dx / d) * a * dt; o.vz += (dz / d) * a * dt;
+      }
     }
 
     // Chocs avec les cafards
