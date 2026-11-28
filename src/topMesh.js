@@ -9,7 +9,10 @@ import { GLTFLoader } from '../vendor/jsm/loaders/GLTFLoader.js';
 export const MODELES_DISPO = ['standard', 'clou', 'foreuse', 'diamant', 'bille', 'ventouse'].map(f => 'pointe-' + f)
   .concat(['standard', 'lourde', 'legere', 'gyro', 'noyau', 'tresor'].map(f => 'base-' + f))
   .concat(['standard', 'large', 'dents', 'bouclier', 'lames', 'inertie'].map(f => 'couronne-' + f), ['lanceur-boitier'])
-  .concat(['vide', 'oeil', 'aimant', 'ressort', 'flamme', 'sangsue', 'cyclone', 'fer', 'carapace'].map(f => 'ame-' + f));
+  .concat(['vide', 'oeil', 'aimant', 'ressort', 'flamme', 'sangsue', 'cyclone', 'fer', 'carapace'].map(f => 'ame-' + f))
+  .concat(['lanceur-pied', 'lanceur-manche', 'cafard']);
+// Géométries d'un modèle, par nom d'objet, avec sa position déjà appliquée (cafards : bugs.js)
+export const geometriesModele = nom => MODELES[nom] && Object.fromEntries(MODELES[nom].map(p => [p.nom, p.geo.clone().applyMatrix4(p.matrice)]));
 export const modeleCharge = nom => !!MODELES[nom];
 const MODELES = {};
 const V = new URL(import.meta.url).searchParams.get('v') || '0'; // anti-cache : même empreinte que ce module (outils/versionner.mjs)
@@ -20,7 +23,7 @@ export function chargerModeles() {
     const parts = [];
     g.scene.updateMatrixWorld(true);
     g.scene.traverse(o => { if (o.isMesh && !o.geometry.attributes.uv) uvCylindre(o.geometry); });
-    g.scene.traverse(o => { if (o.isMesh) parts.push({ geo: o.geometry, role: ROLES.find(r => o.name.includes(r)) || 'corps', matrice: o.matrixWorld.clone() }); });
+    g.scene.traverse(o => { if (o.isMesh) parts.push({ nom: o.name, geo: o.geometry, role: ROLES.find(r => o.name.includes(r)) || 'corps', matrice: o.matrixWorld.clone() }); });
     MODELES[nom] = parts;
   }).catch(() => { /* modèle absent : formes simples */ }))));
 }

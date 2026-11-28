@@ -1136,3 +1136,9 @@ noyau : roche facettée sertie de 4 griffes dans une coupelle ; trésor (forme `
 **Prompt optimisé** (game designer) : remplacer le malus de Poids de la Base au trésor par un malus d'Équilibre (même valeur),
 cohérent avec son modèle chargé d'or et de joyaux (règle 5).
 **Réalisé** : `poids: -4` → `equilibre: -4`, description mise à jour ; test d'équilibrage OK.
+
+## 2026-11-28 — 3D : lanceur et cafards
+**Prompt optimisé** (artiste technique 3D + dev Three.js) : modéliser le pied et le manche du lanceur (roues dentées calculées
+gardées) et des cafards détaillés (espèces, marche et dorés conservés), sans perdre en fluidité.
+**Réalisé** : modèles `lanceur-pied` (socle, jonc doré, colonne, collier) et `lanceur-manche` (75 mm, 6 bagues, butée) ;
+`cafard` en pièces unité (abdomen annelé, tête à mandibules, pronotum à rebord, patte articulée épineuse en miroir).

@@ -8,9 +8,16 @@ import { TYPES } from './data/cafards.js';
 export const cafards = [];
 export const toiles = [];
 
-const corpsGeo = new THREE.SphereGeometry(1, 14, 10);
-const patteGeo = new THREE.CylinderGeometry(0.06, 0.04, 1, 5);
+// Formes simples, remplacées par le modèle détaillé (Blender : abdomen annelé, tête à mandibules, pronotum à rebord,
+// patte articulée épineuse) dès qu'il est chargé — voir adopterModeleCafard
+let corpsGeo = new THREE.SphereGeometry(1, 14, 10), teteGeo = corpsGeo, pronotumGeo = corpsGeo, patteArticulee = false;
+let patteGeo = new THREE.CylinderGeometry(0.06, 0.04, 1, 5);
 patteGeo.translate(0, -0.5, 0);
+export function adopterModeleCafard(g) {
+  if (!g?.abdomen) return;
+  corpsGeo = g.abdomen; teteGeo = g.tete || corpsGeo; pronotumGeo = g.pronotum || corpsGeo;
+  if (g.patte) { patteGeo = g.patte; patteArticulee = true; }
+}
 const matDore = new THREE.MeshStandardMaterial({ color: 0xffc531, roughness: 0.25, metalness: 0.9, emissive: 0x6b4a00, emissiveIntensity: 0.4 });
 const matTete = new THREE.MeshStandardMaterial({ color: 0x2b170a, roughness: 0.5 });
 const matPatte = new THREE.MeshStandardMaterial({ color: 0x1e1108, roughness: 0.8 });
@@ -64,7 +71,7 @@ function modele(type, r, dore) {
   const corps = new THREE.Mesh(corpsGeo, dore ? matDore : matCorps(type));
   corps.scale.set(r * (araignee ? 0.8 : 0.75), r * (larve ? 0.5 : 0.38), r * (araignee ? 0.8 : type === 'coureur' ? 1.15 : 1));
   corps.position.y = r * 0.42;
-  const tete = new THREE.Mesh(corpsGeo, matTete);
+  const tete = new THREE.Mesh(teteGeo, matTete);
   tete.scale.setScalar(r * 0.32);
   tete.position.set(0, r * 0.4, r * (araignee ? 0.75 : 0.95));
   g.add(corps, tete);
@@ -80,7 +87,8 @@ function modele(type, r, dore) {
   for (let i = 0; i < nb; i++) {
     const cote = i < nb / 2 ? -1 : 1, rang = i % (nb / 2);
     const p = new THREE.Mesh(patteGeo, matPatte);
-    p.scale.set(r * 0.5, r * (araignee ? 1.2 : 0.7), r * 0.5);
+    // patte articulée : en miroir de chaque côté (le genou remonte toujours vers l'extérieur)
+    p.scale.set(r * 0.5 * (patteArticulee ? cote : 1), r * (araignee ? 1.2 : 0.7), r * 0.5);
     p.position.set(cote * r * 0.55, r * 0.4, (rang - (nb / 2 - 1) / 2) * r * 0.5);
     p.rotation.z = cote * (araignee ? 0.8 : 1.1);
     p.userData = { cote, phase: rang * 2.1 + (cote > 0 ? Math.PI : 0) };
@@ -89,7 +97,7 @@ function modele(type, r, dore) {
   }
   if (!araignee && !larve) {
     // Pronotum : le « bouclier » entre la tête et les ailes, typique du cafard
-    const pr = new THREE.Mesh(corpsGeo, dore ? matDore : matPronotum);
+    const pr = new THREE.Mesh(pronotumGeo, dore ? matDore : matPronotum);
     pr.scale.set(r * 0.62, r * 0.26, r * 0.4);
     pr.position.set(0, r * 0.5, r * 0.62);
     g.add(pr);

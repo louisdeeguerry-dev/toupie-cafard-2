@@ -7,7 +7,8 @@ import { lancerDansEtape, lancersDansEtape, capacite } from './match.js';
 import { partie, nouvellePartie, commencerManche, majPartie, brancherInterface, lancer, abandonner, acheter, _interne } from './match.js';
 import { majFx, majBarres, majEtincelles, facteurTemps } from './fx.js';
 import { majCamera, rendre } from './scene.js';
-import { creerToupie, libererToupie, chargerModeles } from './topMesh.js';
+import { creerToupie, libererToupie, chargerModeles, geometriesModele } from './topMesh.js';
+import { adopterModeleCafard } from './bugs.js';
 import { activerAudio, ronron, musique, basculerMusique, musiqueActive, sfx, baisserMusique } from './audio.js';
 import * as UI from './ui.js';
 import { VERSION } from './config.js';
@@ -39,7 +40,7 @@ const atelier = UI.creerAtelier(save, {
 });
 majVitrine();
 // Modèles détaillés des pièces (Blender) : dès qu'ils sont chargés, la vitrine de l'atelier est refaite avec eux
-chargerModeles().then(() => majVitrine());
+chargerModeles().then(() => { adopterModeleCafard(geometriesModele('cafard')); majVitrine(); });
 
 // ---------------------------------------------------------------- Écrans hors partie : menu, atelier, boutique, collection
 const ECRANS = ['menu', 'atelier', 'boutiqueMeta', 'collection', 'parametres', 'ami'];

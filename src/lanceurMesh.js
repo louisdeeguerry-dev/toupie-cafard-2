@@ -158,14 +158,20 @@ export function creerLanceur(equipe) {
   pignon.userData.rapport = -eng.children[0].userData.dents / n;
   corps.add(pignon);
   const pz = pignon.position.z;
-  ajouter(corps, new THREE.CylinderGeometry(0.018, 0.021, 0.005, 32), sombre, 0, 0.0025, pz);
-  ajouter(corps, new THREE.TorusGeometry(0.0195, 0.0014, 8, 32), accent, 0, 0.005, pz).rotation.x = Math.PI / 2;
-  ajouter(corps, new THREE.CylinderGeometry(0.0042, 0.0055, HY, 16), acier, 0, HY / 2, pz);
-  ajouter(corps, new THREE.CylinderGeometry(0.0065, 0.0065, 0.006, 16), sombre, 0, HY, pz); // collier qui tient le manche
+  const pied = modeleDetaille('lanceur-pied', sombre, 0); // modèle détaillé (Blender) : socle, jonc, colonne, collier
+  if (pied) { pied.position.z = pz; corps.add(pied); } else {
+    ajouter(corps, new THREE.CylinderGeometry(0.018, 0.021, 0.005, 32), sombre, 0, 0.0025, pz);
+    ajouter(corps, new THREE.TorusGeometry(0.0195, 0.0014, 8, 32), accent, 0, 0.005, pz).rotation.x = Math.PI / 2;
+    ajouter(corps, new THREE.CylinderGeometry(0.0042, 0.0055, HY, 16), acier, 0, HY / 2, pz);
+    ajouter(corps, new THREE.CylinderGeometry(0.0065, 0.0065, 0.006, 16), sombre, 0, HY, pz); // collier qui tient le manche
+  }
   // Manche : une tige ronde (le ressort l'entoure et peut en glisser), terminée par une butée
   const long = NZ1 - NZ0, NZ = (NZ0 + NZ1) / 2;
-  ajouter(corps, new THREE.CylinderGeometry(0.0055, 0.0055, long, 20), coque, 0, HY, NZ).rotation.x = Math.PI / 2;
-  ajouter(corps, new THREE.CylinderGeometry(0.0072, 0.0072, 0.004, 20), accent, 0, HY, NZ1 - 0.002).rotation.x = Math.PI / 2;
+  const manche = modeleDetaille('lanceur-manche', coque, HY); // modèle détaillé : bagues de prise, butée
+  if (manche) { manche.position.z = NZ0; corps.add(manche); } else {
+    ajouter(corps, new THREE.CylinderGeometry(0.0055, 0.0055, long, 20), coque, 0, HY, NZ).rotation.x = Math.PI / 2;
+    ajouter(corps, new THREE.CylinderGeometry(0.0072, 0.0072, 0.004, 20), accent, 0, HY, NZ1 - 0.002).rotation.x = Math.PI / 2;
+  }
   const voyants = [];
   for (let i = 0; i < 4; i++) {
     const v = ajouter(corps, new THREE.SphereGeometry(0.0022, 12, 8), M(0x3fcf6e, 0, 0.3, { emissive: 0x3fcf6e, emissiveIntensity: 0.1 }), 0, HY + 0.0052, NZ0 + 0.012 + i * ((long - 0.024) / 3));

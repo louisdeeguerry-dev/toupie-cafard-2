@@ -504,10 +504,88 @@ def ame_carapace():  # carapace bombée à écailles hexagonales (elle bloque le
     exporter('ame-carapace')
 
 
+
+def lanceur_pied():  # pied du lanceur : socle sombre, jonc doré, colonne d'acier (h = 50 mm), collier qui tient le manche
+    vider()
+    revolution('socle_sombre', [(0.0, 0.0), (0.0210, 0.0), (0.0212, 0.0010), (0.0185, 0.0050), (0.0, 0.0050)])
+    tore('jonc_or', 0.0195, 0.0014, 0.0050, 48, 8)
+    revolution('colonne_acier', [(0.0, 0.0050), (0.0060, 0.0050), (0.0055, 0.0080), (0.0046, 0.0120), (0.0042, 0.0460),
+        (0.0048, 0.0470), (0.0, 0.0470)], pas=32)
+    revolution('collier_sombre', [(0.0, 0.0470), (0.0068, 0.0470), (0.0070, 0.0478), (0.0070, 0.0522), (0.0068, 0.0530), (0.0, 0.0530)], pas=32)
+    exporter('lanceur-pied')
+
+
+def lanceur_manche():  # manche rond (75 mm) le long de l'axe de tir, bagues de prise sombres, butée dorée au bout
+    vider()
+    long = 0.075
+    prof = [(0.0, 0.0), (0.0055, 0.0), (0.0055, long - 0.004), (0.0, long - 0.004)]
+    m = revolution('manche_corps', prof, pas=32)
+    for i in range(6):  # bagues de prise
+        z = 0.010 + i * 0.0095
+        revolution(f'bague{i}_sombre', [(0.0054, z), (0.0062, z + 0.0006), (0.0062, z + 0.0024), (0.0054, z + 0.0030)], pas=32)
+    revolution('butee_or', [(0.0, long - 0.004), (0.0072, long - 0.004), (0.0076, long - 0.002), (0.0072, long), (0.0, long)], pas=32)
+    # le manche est couché le long de l'axe de tir : on le bascule (axe vertical de Blender → axe « avant »)
+    for ob in bpy.data.objects:
+        ob.rotation_euler = (math.radians(90), 0, 0)
+    exporter('lanceur-manche')
+
+
+# ================================================================ CAFARDS (pièces de taille unité : le jeu les met à l'échelle)
+def cafard():
+    vider()
+    # Abdomen : sphère unité aplatie dessous, anneaux sur l'arrière, fente des élytres sur le dos (avant = −Y de Blender)
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=32, ring_count=16, radius=1.0, location=(0, 0, 0))
+    ab = objet_actif('abdomen')
+    for v in ab.data.vertices:
+        x, y, z = v.co
+        if z < 0: z *= 0.55  # ventre plat
+        if y > 0.1: k = 1 + 0.045 * math.cos(y * 14); x *= k; z *= k if z > 0 else 1  # anneaux de l'abdomen
+        if z > 0.6 and abs(x) < 0.07 and y < 0.4: z -= 0.05  # fente entre les élytres
+        v.co = (x, y, z)
+    lisser(ab, 60)
+    # Tête : petite sphère unité avec deux mandibules à l'avant
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=20, ring_count=10, radius=1.0, location=(0, 0, 0))
+    te = objet_actif('tete')
+    for v in te.data.vertices:
+        x, y, z = v.co
+        if y < -0.6 and z < 0.1: y -= 0.35 * (1 - abs(x)) * (abs(x) > 0.25)  # deux pointes de mandibules
+        v.co = (x, y, z * 0.8)
+    lisser(te, 60)
+    # Pronotum : bouclier bombé avec un rebord relevé
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=28, ring_count=12, radius=1.0, location=(0, 0, 0))
+    pr = objet_actif('pronotum')
+    for v in pr.data.vertices:
+        x, y, z = v.co
+        if z < 0: z *= 0.3
+        if 0.0 < z < 0.25: x *= 1.06; y *= 1.06  # rebord
+        v.co = (x, y, z)
+    lisser(pr, 60)
+    # Patte articulée (longueur unité vers le bas) : fémur qui monte vers le genou, tibia épineux qui redescend
+    pts = [(0.0, 0.0, 0.0), (0.24, 0.0, -0.42), (0.20, 0.0, -0.70), (0.08, 0.0, -1.0)]
+    cu = bpy.data.curves.new('patte', 'CURVE'); cu.dimensions = '3D'
+    sp = cu.splines.new('POLY'); sp.points.add(len(pts) - 1)
+    for i, (x, y, z) in enumerate(pts):
+        sp.points[i].co = (x, y, z, 1)
+        sp.points[i].radius = 1.0 - 0.45 * i / 3
+    cu.bevel_depth = 0.06; cu.bevel_resolution = 1; cu.use_fill_caps = True
+    ob = bpy.data.objects.new('patte', cu); bpy.context.collection.objects.link(ob)
+    bpy.context.view_layer.objects.active = ob; ob.select_set(True)
+    bpy.ops.object.convert(target='MESH')
+    pa = bpy.context.object
+    for k in range(3):  # épines du tibia
+        bpy.ops.mesh.primitive_cone_add(vertices=4, radius1=0.02, depth=0.12, location=(0.20 - k * 0.04, 0.0, -0.55 - k * 0.12),
+                                        rotation=(0, math.radians(-60), 0))
+        ep = bpy.context.object
+        ep.select_set(True); pa.select_set(True); bpy.context.view_layer.objects.active = pa
+        bpy.ops.object.join()
+    lisser(pa, 70)
+    exporter('cafard')
+
+
 if __name__ == '__main__':
     for f in (pointe_standard, pointe_clou, pointe_foreuse, pointe_diamant, pointe_bille, pointe_ventouse,
               base_standard, base_lourde, base_legere, base_gyro, base_noyau, base_tresor,
               couronne_standard, couronne_large, couronne_dents, couronne_bouclier, couronne_lames, couronne_inertie,
               lanceur_boitier, ame_vide, ame_oeil, ame_aimant, ame_ressort, ame_flamme, ame_sangsue, ame_cyclone,
-              ame_fer, ame_carapace):
+              ame_fer, ame_carapace, lanceur_pied, lanceur_manche, cafard):
         f()
