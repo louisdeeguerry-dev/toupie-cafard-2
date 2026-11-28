@@ -55,7 +55,7 @@ initParametres();
 function allerA(ecran) {
   for (const e of ECRANS) UI.montrer(e, e === ecran);
   document.querySelectorAll('#nav [data-nav]').forEach(b => b.classList.toggle('on', b.dataset.nav === ecran));
-  placerVitrine(ecran === 'menu' ? 0.24 : 0); // accueil (PC) : la toupie à gauche, la carte à droite
+  placerVitrine({ menu: 0.24, parametres: 0.16 }[ecran] || 0); // accueil (PC) : la toupie à gauche, la carte à droite
   controlesActifs(ecran === 'atelier'); // dans l'atelier : glisser pour pivoter, molette pour zoomer
   if (ecran === 'collection') UI.rendreCollection(save);
   if (ecran === 'boutiqueMeta') selectionAtelier('boutique', null); // la caméra va au comptoir
